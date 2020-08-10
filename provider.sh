@@ -20,7 +20,9 @@ PROVIDER_DOWNLOAD=$(curl -sL ${HASHICORPURL}${PROVIDER_URN}${PROVIDER_VER} |grep
 if [[ $PROVIDER_DOWNLOAD != "" ]]; then 
 	curl -OL ${HASHICORPURL}${PROVIDER_DOWNLOAD} #-i |awk '/[cC]ontent-[lL]ength/{print $2}'
 	unzip terraform-provider-*.zip && rm -rf terraform-provider-*.zip
-	mv terraform-provider-* /data/
+#	mv terraform-provider-* /data/
+	mkdir -p ~/.terraform/plugins/linux_amd64/ 
+	mv terraform-provider-* ~/.terraform/plugins/linux_amd64/
 else 
 	echo "Rechecking provider release version"
 fi
