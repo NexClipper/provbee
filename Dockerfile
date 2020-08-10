@@ -1,4 +1,4 @@
-FROM golang:alpine AS installer
+FROM golang:alpine
 LABEL maintainer="NexCloud Peter <peter@nexclipper.io>"
 
 RUN apk add --update git bash unzip gcc curl musl-dev make
@@ -25,9 +25,10 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s 
 
 ## Helm v3 Download ##
 RUN curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v2'|grep linux-amd64 |head -n1|awk -F"\"" '{print $2}'` && \
-    tar zxvfp helm*.tar.gz && rm -rf helm*.tar.gz && \
+    tar zxfp helm*.tar.gz && \
     chmod +x linux-amd64/helm && \
-    mv linux-amd64/helm /usr/local/bin/
+    mv linux-amd64/helm /usr/local/bin/ && \
+    rm -rf helm*.tar.gz linux-amd64
 
 COPY .ssh /root/.ssh
 COPY entrypoint.sh /entrypoint.sh

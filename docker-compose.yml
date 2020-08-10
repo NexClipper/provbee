@@ -1,9 +1,9 @@
 version: '3'
 services:
   terraform:
-    hostname: provb
-    container_name: provb
-    image: folimy/provb 
+    hostname: provbee
+    container_name: provbee
+    image: folimy/provbee
 #    restart: always
     volumes:
 #      - ./zzz:/data
@@ -14,8 +14,8 @@ services:
 #      - "443:443"
     environment:
       - ZZZ=ZZZ
-      - TERRAVERSION=0.12.18
-      - KUCTLVERSION=v1.18.4
-      - HELMVERSION=v3.2.1
+#      - TERRAVERSION=0.12.18
+#      - KUCTLVERSION=v1.18.4
+#      - HELMVERSION=v3.2.1
 
 #    command: tail -F anything

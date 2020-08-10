@@ -34,7 +34,7 @@ if [[ $HELMVERSION != "" ]]; then
 	HELMVERIONCHK=$(curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v2'|grep linux-amd64|grep $HELMVERSION |head -n1|awk -F"\"" '{print $2}')
 	if [[ $HELMVERIONCHK != "" ]]; then
 		curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v2'|grep linux-amd64|grep $HELMVERSION |head -n1|awk -F"\"" '{print $2}'`
-		tar zxvfp helm*.tar.gz 
+		tar zxfp helm*.tar.gz 
 		chmod +x linux-amd64/helm 
 		mv linux-amd64/helm /usr/local/bin/
 		rm -rf helm*.tar.gz linux-amd64
