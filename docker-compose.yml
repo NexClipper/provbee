@@ -1,7 +1,9 @@
 version: '3'
 services:
   terraform:
-    image: zzz:0.2 
+    hostname: terraform-provider
+    container_name: terraform-provider
+    image: folimy/terraform-provider 
 #    restart: always
     volumes:
 #      - ./zzz:/data

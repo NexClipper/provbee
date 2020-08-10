@@ -17,8 +17,11 @@ else
 fi
 
 PROVIDER_DOWNLOAD=$(curl -sL ${HASHICORPURL}${PROVIDER_URN}${PROVIDER_VER} |grep linux_amd64| sed 's/^.*href=//'|sed 's/>.*$//' |sed 's/"//g')
-
-curl -OL ${HASHICORPURL}${PROVIDER_DOWNLOAD} #-i |awk '/[cC]ontent-[lL]ength/{print $2}'
-unzip terraform-provider-*.zip && rm -rf terraform-provider-*.zip
-mv terraform-provider-* /data/
+if [[ $PROVIDER_DOWNLOAD != "" ]]; then 
+	curl -OL ${HASHICORPURL}${PROVIDER_DOWNLOAD} #-i |awk '/[cC]ontent-[lL]ength/{print $2}'
+	unzip terraform-provider-*.zip && rm -rf terraform-provider-*.zip
+	mv terraform-provider-* /data/
+else 
+	echo "Rechecking provider release version"
+fi
 
