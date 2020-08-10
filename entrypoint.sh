@@ -14,6 +14,7 @@ if [[ $TERRAVERSION != "" ]]; then
 		mv terraform /usr/local/bin/
 	fi
 fi
+
 #KubeCTL Download
 if [[ $KUCTLVERSION != "" ]]; then
 	KUCTLVERSIONCHK=$(curl -sL -o /tmp/kubectl -w "%{http_code}" https://storage.googleapis.com/kubernetes-release/release/$KUCTLVERSION/bin/linux/amd64/kubectl)
@@ -28,8 +29,21 @@ if [[ $KUCTLVERSION != "" ]]; then
 	fi
 fi
 
-
-
+#Helm Download
+if [[ $HELMVERSION != "" ]]; then
+	HELMVERIONCHK=$(curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v2'|grep linux-amd64|grep $HELMVERSION |head -n1|awk -F"\"" '{print $2}')
+	if [[ $HELMVERIONCHK != "" ]]; then
+		curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v2'|grep linux-amd64|grep $HELMVERSION |head -n1|awk -F"\"" '{print $2}'`
+		tar zxvfp helm*.tar.gz 
+		chmod +x linux-amd64/helm 
+		mv linux-amd64/helm /usr/local/bin/
+		rm -rf helm*.tar.gz linux-amd64
+	else
+		echo "Version checking plz : $HELMVERSION"
+                echo "Version info (now) : "
+		helm version
+	fi
+fi
 
 
 
