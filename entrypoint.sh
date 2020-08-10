@@ -20,7 +20,7 @@ if [[ $KUCTLVERSION != "" ]]; then
 	if [[ $KUCTLVERSIONCHK -eq 200 ]]; then 
 		#curl -LO https://storage.googleapis.com/kubernetes-release/release/$KUCTLVERSION/bin/linux/amd64/kubectl
 		chmod +x /tmp/kubectl
-		sudo mv /tmp/kubectl /usr/local/bin/kubectl
+		mv /tmp/kubectl /usr/local/bin/kubectl
 	else
 		echo "Version checking plz : $KUCTLVERSION"
 		echo "Version info (now) : "

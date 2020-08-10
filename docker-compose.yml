@@ -1,7 +1,7 @@
 version: '3'
 services:
   terraform:
-    image: zzz:0.1 
+    image: zzz:0.2 
 #    restart: always
     volumes:
 #      - ./zzz:/data
