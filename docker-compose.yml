@@ -3,7 +3,7 @@ services:
   terraform:
     hostname: provb
     container_name: provb
-    image: folimy/terraform-provider 
+    image: folimy/provb 
 #    restart: always
     volumes:
 #      - ./zzz:/data
