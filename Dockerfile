@@ -25,10 +25,6 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s 
 
 
 
-
-
-
-
 COPY .ssh /root/.ssh
 COPY entrypoint.sh /entrypoint.sh
 copy provider.sh /provider.sh
