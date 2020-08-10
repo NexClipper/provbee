@@ -10,13 +10,15 @@ ENV TF_RELEASE=1
 ENV WKDIR=/data
 RUN mkdir -p $WKDIR /tmp/zzz ~/.terraform.d/plugins/ /terraform_state
 
-## Terraform Download
+
+### Default Terraform & KubeCTL latest version download ###
+## Terraform Download ##
 RUN curl -o $WKDIR/terraform.zip $(curl -sL "https://www.terraform.io/downloads.html" | grep amd64 | grep linux | awk -F "\"" '{print $2}') && \
     unzip -o $WKDIR/terraform.zip && rm -rf $WKDIR/terraform.zip && \
     chmod +x terraform && \
     mv terraform /usr/local/bin/
 
-##KubeCTL Download
+## KubeCTL Download ##
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl && \
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
@@ -29,6 +31,7 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s 
 
 COPY .ssh /root/.ssh
 COPY entrypoint.sh /entrypoint.sh
+copy provider.sh /provider.sh
 
 WORKDIR	$WKDIR
 CMD ["/bin/bash", "/entrypoint.sh"]

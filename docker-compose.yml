@@ -1,9 +1,6 @@
 version: '3'
 services:
   terraform:
-          #    build:
-          #      context: .
-          #      dockerfile: ./Dockerfile
     image: zzz:0.1 
 #    restart: always
     volumes:
@@ -15,8 +12,6 @@ services:
 #      - "443:443"
     environment:
       - ZZZ=ZZZ
-      #- LIBVIRT_VMNAME=PTR
-      #- LIBVIRT_SV=192.168.1.13
       - TERRAVERSION=0.12.15
       - KUCTLVERSION=v1.18.3
 

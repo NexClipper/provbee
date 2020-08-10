@@ -4,8 +4,8 @@
 if [[ $TERRAVERSION != "" ]]; then
 	TERRAVERSIONCHK=$(curl -s https://releases.hashicorp.com/terraform/|grep -Ev "rc|beta|alpha|oci" |grep "/terraform/"|grep $TERRAVERSION |awk -F"\"" '{print $2}')
 	if [[ $TERRAVERSIONCHK == "" ]]; then
-		echo "version checking plz : $TERRAVERSION"
-		echo "Version info : "
+		echo "Version checking plz : $TERRAVERSION"
+		echo "Version info (now) : "
 		terraform version
 	else
 		TERRADOWN=$(curl -sL https://releases.hashicorp.com$TERRAVERSIONCHK|grep "linux_amd64"|cut -d "\"" -f 10)
@@ -22,8 +22,8 @@ if [[ $KUCTLVERSION != "" ]]; then
 		chmod +x /tmp/kubectl
 		sudo mv /tmp/kubectl /usr/local/bin/kubectl
 	else
-		echo "version checking plz : $KUCTLVERSION"
-		echo "Version info : "
+		echo "Version checking plz : $KUCTLVERSION"
+		echo "Version info (now) : "
 		kubectl version -o yaml
 	fi
 fi
