@@ -1,0 +1,23 @@
+version: '3'
+services:
+  terraform:
+          #    build:
+          #      context: .
+          #      dockerfile: ./Dockerfile
+    image: zzz:0.1 
+#    restart: always
+    volumes:
+#      - ./zzz:/data
+      - /root/.ssh:/root/.ssh
+      - /etc/localtime:/etc/localtime:ro
+#    ports:
+#      - "80:80"
+#      - "443:443"
+    environment:
+      - ZZZ=ZZZ
+      #- LIBVIRT_VMNAME=PTR
+      #- LIBVIRT_SV=192.168.1.13
+      - TERRAVERSION=0.12.15
+      - KUCTLVERSION=v1.18.3
+
+#    command: tail -F anything
