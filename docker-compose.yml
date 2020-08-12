@@ -17,5 +17,4 @@ services:
 #      - TERRAVERSION=0.12.18
 #      - KUCTLVERSION=v1.18.4
 #      - HELMVERSION=v3.2.1
-
 #    command: tail -F anything
