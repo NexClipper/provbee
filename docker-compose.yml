@@ -3,7 +3,7 @@ services:
   terraform:
     hostname: provbee
     container_name: provbee
-    image: folimy/provbee
+    image: nexclipper/provbee
 #    restart: always
     volumes:
 #      - ./zzz:/data

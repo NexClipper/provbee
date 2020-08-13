@@ -8,7 +8,7 @@ ENV TF_RELEASE=1
 ## WorkDIR & tmpDIR make
 #RUN mkdir -p /data/tmp && mkdir -p ~/.terraform.d/plugins/
 ENV WKDIR=/data
-RUN mkdir -p $WKDIR /tmp/zzz ~/.terraform.d/plugins/ $WKDIR/terraform_state
+RUN mkdir -p $WKDIR /tmp/zzz ~/.terraform.d/plugins/ $WKDIR/terraform_state ~/.kube/
 
 
 ### Default Terraform & KubeCTL latest version download ###

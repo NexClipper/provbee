@@ -25,7 +25,7 @@ curl -sfL https://get.k3s.io | K3S_URL=https://$HOSTIP:6443 K3S_TOKEN=$(cat /var
 
 }
 #########################################################################
-if [[ $K3S_INST =~ ^([yY][eE][sS]|[yY])$ ]]; then echo "ZZZZZZZZZZ"; fi
+if [[ $K3S_INST =~ ^([yY][eE][sS]|[yY])$ ]]; then k3s_install ; fi
 
 ## kube.config file gen
 kubeconfig_gen() {
@@ -36,11 +36,11 @@ kubeconfig_gen() {
 	sed -i "/    server: https:/ c\    server: https:\/\/$HOSTIP:6443" /tmp/kube/k8s-$KUBEUSER-$KUBENS-conf
 	cp -Rfvp /tmp/kube/k8s-$KUBEUSER-$KUBENS-conf ../
 }
-#kubeconfig_gen
+kubeconfig_gen
 
 #git clone https://github.com/NexClipper/klevry-deploy
 #kubectl apply -f ./klevry-deploy/00-namespace.yaml
 
 kubectl apply -f https://raw.githubusercontent.com/NexClipper/klevry-deploy/master/00-namespace.yaml?token=AGEQNG24A6J2HBC7PHOQODK7HYLDS
-
-
+echo "kubectl TEST"
+kubectl get ns klevry
