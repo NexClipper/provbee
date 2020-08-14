@@ -1,7 +1,7 @@
 FROM golang:alpine
 LABEL maintainer="NexCloud Peter <peter@nexclipper.io>"
 
-RUN apk add --update git bash unzip gcc curl musl-dev make
+RUN apk add --update git bash unzip gcc curl musl-dev make openssh-server
 ENV TF_DEV=true
 ENV TF_RELEASE=1
 
@@ -10,6 +10,8 @@ ENV TF_RELEASE=1
 ENV WKDIR=/data
 RUN mkdir -p $WKDIR /tmp/zzz ~/.terraform.d/plugins/ $WKDIR/terraform_state ~/.kube/
 
+## USER create
+RUN useradd zzz & echo "zzz:zzz" | chpasswd
 
 ### Default Terraform & KubeCTL latest version download ###
 ## Terraform Download ##
