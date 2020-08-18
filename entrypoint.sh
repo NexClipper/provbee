@@ -51,4 +51,10 @@ if [ -f /data/klevry/kube-config ]; then cp -Rfvp /data/klevry/kube-config ~/.ku
 
 ##ssh start
 rc-service sshd start
+
+##ssh keygen
+ssh-keygen -t rsa -b 4096 -q -P "" -f ~/.ssh/id_rsa
+cat ~/.ssh/id_rsa >> ~/.ssh/authorized_keys
+
+##waiting
 tail -F anything
