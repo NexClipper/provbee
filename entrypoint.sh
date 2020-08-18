@@ -55,6 +55,8 @@ rc-service sshd start
 ##ssh keygen
 ssh-keygen -t rsa -b 4096 -q -P "" -f ~/.ssh/id_rsa
 cat ~/.ssh/id_rsa >> ~/.ssh/authorized_keys
+cp -Rfvp ~/.ssh /data/
+touch /data/.ssh/lastupdate-$(date +%N)
 
 ##waiting
 tail -F anything
