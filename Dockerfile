@@ -1,7 +1,10 @@
 FROM golang:alpine
 LABEL maintainer="NexCloud Peter <peter@nexclipper.io>"
 
-RUN apk add --update git bash unzip gcc curl musl-dev make openssh-server
+RUN apk add --update git bash unzip gcc curl musl-dev make openssh-server openssh-client openssh-keygen openrc && \
+    mkdir -p /run/openrc && touch /run/openrc/softlevel && \
+    rc-update add sshd 
+
 ENV TF_DEV=true
 ENV TF_RELEASE=1
 
