@@ -47,7 +47,7 @@ fi
 
 
 
-
+if [ -f /data/klevry/kube-config ]; then cp -Rfvp /data/klevry/kube-config ~/.kube/config; fi
 
 
 

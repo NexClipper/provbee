@@ -38,4 +38,5 @@ copy provider.sh /provider.sh
 
 WORKDIR	$WKDIR
 CMD ["/bin/bash", "/entrypoint.sh"]
+
 #ENTRYPOINT ["terraform"]
