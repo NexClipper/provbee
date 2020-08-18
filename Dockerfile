@@ -11,7 +11,7 @@ ENV WKDIR=/data
 RUN mkdir -p $WKDIR /tmp/zzz ~/.terraform.d/plugins/ $WKDIR/terraform_state ~/.kube/
 
 ## USER create
-RUN useradd zzz & echo "zzz:zzz" | chpasswd
+#RUN useradd zzz & echo "zzz:zzz" | chpasswd
 
 ### Default Terraform & KubeCTL latest version download ###
 ## Terraform Download ##
@@ -34,7 +34,7 @@ RUN curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v
 
 COPY .ssh /root/.ssh
 COPY entrypoint.sh /entrypoint.sh
-copy provider.sh /provider.sh
+COPY provider.sh /provider.sh
 
 WORKDIR	$WKDIR
 CMD ["/bin/bash", "/entrypoint.sh"]
