@@ -50,8 +50,8 @@ fi
 if [ -f /data/klevry/kube-config ]; then cp -Rfvp /data/klevry/kube-config ~/.kube/config; fi
 
 ##ssh start
-sudo /etc/init.d/sshd --dry-run start
-sudo /etc/init.d/sshd start
+/etc/init.d/sshd --dry-run start
+/etc/init.d/sshd start
 #rc-service sshd start
 
 ##ssh keygen
