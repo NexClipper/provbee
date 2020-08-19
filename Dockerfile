@@ -38,6 +38,7 @@ RUN curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v
 COPY .ssh /root/.ssh
 COPY entrypoint.sh /entrypoint.sh
 COPY provider.sh /provider.sh
+RUN echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
 
 WORKDIR	$WKDIR
 CMD ["/bin/bash", "/entrypoint.sh"]
