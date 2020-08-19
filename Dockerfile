@@ -1,10 +1,7 @@
 FROM golang:alpine
 LABEL maintainer="NexCloud Peter <peter@nexclipper.io>"
 
-RUN apk add --update git bash unzip gcc curl musl-dev make openssh-server openssh-client openssh-keygen openrc && \
-    mkdir -p /run/openrc && touch /run/openrc/softlevel && \
-    rc-update add sshd 
-
+RUN apk add --update git bash unzip gcc curl musl-dev make openssh-server openssh-client openssh-keygen openrc
 ENV TF_DEV=true
 ENV TF_RELEASE=1
 
@@ -38,7 +35,16 @@ RUN curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v
 COPY .ssh /root/.ssh
 COPY entrypoint.sh /entrypoint.sh
 COPY provider.sh /provider.sh
-RUN echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+
+# ssh setting
+RUN sed -i 's/^#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config
+RUN sed -i 's/^#PermitRootLogin yes/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
+RUN sed -i 's/^#PermitUserEnvironment no/PermitUserEnvironment no/' /etc/ssh/sshd_config
+RUN sed -i 's/cgroup_add_service$/echo "NexClipper" #cgroup_add_service/g' /lib/rc/sh/openrc-run.sh
+RUN rc-update add sshd
+RUN mkdir /run/openrc && touch /run/openrc/softlevel
+RUN rc-status
 
 WORKDIR	$WKDIR
 CMD ["/bin/bash", "/entrypoint.sh"]
