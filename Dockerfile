@@ -39,10 +39,10 @@ COPY provider.sh /provider.sh
 # ssh setting
 #RUN sed -i 's/^#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config
 #RUN sed -i 's/^#PermitRootLogin yes/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN echo "root:dkdhajfldkvmek!" | chpasswd
 RUN sed -i 's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
 RUN sed -i 's/^#PermitUserEnvironment no/PermitUserEnvironment no/' /etc/ssh/sshd_config
 RUN sed -i 's/^#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
-RUN sed -i 's#.ssh/authorized_keys#/data/.ssh/authorized_keys#g' /etc/ssh/sshd_config
 RUN echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
 RUN sed -i 's/cgroup_add_service$/echo "NexClipper" #cgroup_add_service#/g' /lib/rc/sh/openrc-run.sh
 RUN rc-update add sshd
