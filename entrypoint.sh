@@ -58,7 +58,7 @@ sudo /etc/init.d/sshd start
 ssh-keygen -t rsa -b 4096 -q -P "" -f ~/.ssh/id_rsa
 cat ~/.ssh/id_rsa >> ~/.ssh/authorized_keys
 cp -Rfvp ~/.ssh /data/
-touch /data/.ssh/lastupdate-$(date +%N)
+touch /data/.ssh/lastupdate-$(date +%Y%m%d%H%M%S)
 
 ##waiting
 tail -F anything
