@@ -8,6 +8,7 @@ ENV TF_RELEASE=1
 ## WorkDIR & tmpDIR make
 #RUN mkdir -p /data/tmp && mkdir -p ~/.terraform.d/plugins/
 ENV WKDIR=/data
+ENV PATH /usr/local/bin:$PATH
 RUN mkdir -p $WKDIR /tmp/zzz ~/.terraform.d/plugins/ $WKDIR/terraform_state ~/.kube/
 
 ## USER create
@@ -48,7 +49,7 @@ RUN sed -i 's/cgroup_add_service$/echo "NexClipper" #cgroup_add_service#/g' /lib
 RUN rc-update add sshd
 RUN mkdir /run/openrc && touch /run/openrc/softlevel
 RUN rc-status
-RUN cat /etc/profile >> /root/.profile
+#RUN cat /etc/profile >> /root/.profile
 
 WORKDIR	$WKDIR
 CMD ["/bin/bash", "/entrypoint.sh"]
