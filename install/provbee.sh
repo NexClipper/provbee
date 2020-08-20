@@ -205,43 +205,44 @@ roleRef:
 ---
 EOF
 
-echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Pod
-metadata:
-  namespace: ${NAMESPACE} 
-  name: klevry-provbee
-  labels:
-    app.kubernetes.io/name: klevry-deploy
-spec:
-  serviceAccountName: ${USERNAME} 
-  containers:
-  - name: klevry-provbee
-    image: nexclipper/provbee:latest
-    command: ['sh', '-c', 'tail -F anything']
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "250m"
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
-    volumeMounts:
-    - name: terraformstpath
-      mountPath: /data/terraform_state
-    - name: zzz
-      mountPath: /data/klevry
-  volumes:
-  - name: terraformstpath
-    hostPath:
-      path: /tmp/
-      type: Directory
-  - name: zzz
-    hostPath:
-      path: /data/klevry
-      type: Directory
-EOF
+#echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
+#cat <<EOF | kubectl apply -f -
+#apiVersion: v1
+#kind: Pod
+#metadata:
+#  namespace: ${NAMESPACE} 
+#  name: klevry-provbee
+#  labels:
+#    app.kubernetes.io/name: klevry-deploy
+#spec:
+#  hostname: klevry-provbee 
+#  serviceAccountName: ${USERNAME} 
+#  containers:
+#  - name: klevry-provbee
+#    image: nexclipper/provbee:latest
+#    command: ['bash', '-c', '/entrypoint.sh']
+#    resources:
+#      requests:
+#        memory: "64Mi"
+#        cpu: "250m"
+#      limits:
+#        memory: "128Mi"
+#        cpu: "500m"
+#    volumeMounts:
+#    - name: terraformstpath
+#      mountPath: /data/terraform_state
+#    - name: zzz
+#      mountPath: /data/klevry
+#  volumes:
+#  - name: terraformstpath
+#    hostPath:
+#      path: /tmp/
+#      type: Directory
+#  - name: zzz
+#    hostPath:
+#      path: /data/klevry
+#      type: Directory
+#EOF
 
 #FILE gen
 kubeconfig_gen
