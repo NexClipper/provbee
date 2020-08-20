@@ -48,6 +48,7 @@ RUN sed -i 's/cgroup_add_service$/echo "NexClipper" #cgroup_add_service#/g' /lib
 RUN rc-update add sshd
 RUN mkdir /run/openrc && touch /run/openrc/softlevel
 RUN rc-status
+RUN cat /etc/profile >> /root/.profile
 
 WORKDIR	$WKDIR
 CMD ["/bin/bash", "/entrypoint.sh"]
