@@ -205,46 +205,117 @@ roleRef:
 ---
 EOF
 
-#echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
-#cat <<EOF | kubectl apply -f -
-#apiVersion: v1
-#kind: Pod
-#metadata:
-#  namespace: ${NAMESPACE} 
-#  name: klevry-provbee
-#  labels:
-#    app.kubernetes.io/name: klevry-deploy
-#spec:
-#  hostname: klevry-provbee 
-#  serviceAccountName: ${USERNAME} 
-#  containers:
-#  - name: klevry-provbee
-#    image: nexclipper/provbee:latest
-#    command: ['bash', '-c', '/entrypoint.sh']
-#    resources:
-#      requests:
-#        memory: "64Mi"
-#        cpu: "250m"
-#      limits:
-#        memory: "128Mi"
-#        cpu: "500m"
-#    volumeMounts:
-#    - name: terraformstpath
-#      mountPath: /data/terraform_state
-#    - name: zzz
-#      mountPath: /data/klevry
-#  volumes:
-#  - name: terraformstpath
-#    hostPath:
-#      path: /tmp/
-#      type: Directory
-#  - name: zzz
-#    hostPath:
-#      path: /data/klevry
-#      type: Directory
-#EOF
+echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  name: provbee-service
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    name: klevr
+  clusterIP: None
+  ports:
+  - name: provbee # Actually, no port is needed.
+    port: 22
+    targetPort: 22
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: ${NAMESPACE}
+  name: provbee
+  labels:
+    name: klevr
+spec:
+  hostname: provbee
+  subdomain: provbee-service
+  serviceAccountName: ${USERNAME}
+  containers:
+  - name: provbee
+    image: nexclipper/provbee:latest
+    command: ['bash', '-c', '/entrypoint.sh']
+    volumeMounts:
+    - name: terraformstpath
+      mountPath: /data/terraform_state
+    - name: zzz
+      mountPath: /data/klevry
+    - name: ssh
+      mountPath: /root/.ssh/
+  volumes:
+  - name: terraformstpath
+    hostPath:
+      path: /tmp/
+      type: Directory
+  - name: zzz
+    hostPath:
+      path: /data/klevry
+      type: Directory
+  - name: ssh
+    hostPath:
+      path: /root/.ssh/
+      type: Directory
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: agent
+  namespace: ${NAMESPACE}
+  labels:
+    name: klevr
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: klevr-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: klevr-agent
+    spec:
+#      hostname: agent
+#      subdomain: provbee-service
+      containers:
+      - image: klevry/klevr-agent:latest
+        name: agent
+        env:
+        - name: K_API_KEY
+          value: "wnskslxptmxmrPwjd123"
+        - name: K_PLATFORM
+          value: "linux_laptop"
+        - name: K_MANAGER_URL
+          value: "192.168.15.163:8090"
+        - name: K_ZONE_ID
+          value: "8282"
+        ports:
+        - containerPort: 18800
+          name: klevr-agent
+        volumeMounts:
+        - name: ssh
+          mountPath: /root/.ssh/
+      volumes:
+      - name: ssh
+        hostPath:
+          path: /root/.ssh/
+          type: Directory
+
+EOF
 
 #FILE gen
-kubeconfig_gen
 
+
+temp_ssh(){
+cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f ~/.ssh/id_rsa
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+cat << EOF >> ~/.ssh/config
+Host *
+	StrictHostKeyChecking no
+	UserKnownHostsFile /dev/null
+EOF
+#cp -Rfvp ~/.ssh /data/
+#touch /data/.ssh/lastupdate-$(date +%Y%m%d%H%M%S)
+}
+temp_ssh
+
+kubeconfig_gen
 fi
