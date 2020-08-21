@@ -2,7 +2,8 @@
 ![ProvBee_logo.png](https://github.com/NexClipper/provbee/raw/master/assets/ProvBee_logo.png)
 
 ## Property map and positions
-![Property_map_overview.png](## terraform & kubectl & helm command )
+![Property_map_overview.png](https://github.com/NexClipper/provbee/raw/master/assets/Property_map_overview.png)
+
 
 ## terraform & kubectl & helm command 
 ## terraform officer provider add command
