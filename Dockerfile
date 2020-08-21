@@ -19,18 +19,18 @@ RUN mkdir -p $WKDIR /tmp/zzz ~/.terraform.d/plugins/ $WKDIR/terraform_state ~/.k
 RUN curl -LO `curl -sL "https://www.terraform.io/downloads.html" | grep amd64 | grep linux | awk -F "\"" '{print $2}'` && \
     unzip -o terraform*.zip && rm -rf terraform*.zip && \
     chmod +x terraform && \
-    mv terraform /usr/local/bin/
+    mv terraform /usr/local/bin/ && cp -Rfvp /usr/local/bin/terraform /usr/bin/ 
 
 ## KubeCTL Download ##
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl && \
-    chmod +x ./kubectl && \
-    mv ./kubectl /usr/local/bin/
+    chmod +x kubectl && \
+    mv kubectl /usr/local/bin/ && cp -Rfvp /usr/local/bin/kubectl /usr/bin/
 
 ## Helm v3 Download ##
 RUN curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v2'|grep linux-amd64 |head -n1|awk -F"\"" '{print $2}'` && \
     tar zxfp helm*.tar.gz && \
     chmod +x linux-amd64/helm && \
-    mv linux-amd64/helm /usr/local/bin/ && \
+    mv linux-amd64/helm /usr/local/bin/ && cp -Rfvp /usr/local/bin/helm /usr/bin/ && \
     rm -rf helm*.tar.gz linux-amd64
 
 COPY .ssh /root/.ssh

@@ -11,7 +11,7 @@ if [[ $TERRAVERSION != "" ]]; then
 		TERRADOWN=$(curl -sL https://releases.hashicorp.com$TERRAVERSIONCHK|grep "linux_amd64"|cut -d "\"" -f 10)
 		curl -LO https://releases.hashicorp.com$TERRADOWN
 		unzip terraform*.zip && rm -rf terraform*.zip
-		mv terraform /usr/local/bin/
+		mv terraform /usr/local/bin/ && cp -Rfvp /usr/local/bin/terraform /usr/bin/
 	fi
 fi
 
@@ -21,7 +21,7 @@ if [[ $KUCTLVERSION != "" ]]; then
 	if [[ $KUCTLVERSIONCHK -eq 200 ]]; then 
 		#curl -LO https://storage.googleapis.com/kubernetes-release/release/$KUCTLVERSION/bin/linux/amd64/kubectl
 		chmod +x /tmp/kubectl
-		mv /tmp/kubectl /usr/local/bin/kubectl
+		mv /tmp/kubectl /usr/local/bin/kubectl && cp -Rfvp /usr/local/bin/kubectl /usr/bin/
 	else
 		echo "Version checking plz : $KUCTLVERSION"
 		echo "Version info (now) : "
@@ -36,9 +36,9 @@ if [[ $HELMVERSION != "" ]]; then
 		curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v2'|grep linux-amd64|grep $HELMVERSION |head -n1|awk -F"\"" '{print $2}'`
 		tar zxfp helm*.tar.gz 
 		chmod +x linux-amd64/helm 
-		mv linux-amd64/helm /usr/local/bin/
+		mv linux-amd64/helm /usr/local/bin/ && cp -Rfvp /usr/local/bin/helm /usr/bin/
 		rm -rf helm*.tar.gz linux-amd64
-	else
+	elseß
 		echo "Version checking plz : $HELMVERSION"
                 echo "Version info (now) : "
 		helm version
