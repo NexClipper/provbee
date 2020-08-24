@@ -6,11 +6,11 @@
 
 ## Provbee's Job!
 # He is workman.
-# Kubernetes Role, Namespace, ServiceAccount and etc create.(for NexClipper)
-# Provbee, Klevr-Agent container include
-# If you want, I will install K3s as well.
+ Kubernetes Role, Namespace, ServiceAccount and etc create.(for NexClipper)
+ Provbee, Klevr-Agent container include
+ If you want, I will install K3s as well.
 
-# default run : curl -sL http://gg.gg/provbee | K3S_SET=Y PLATFORM=kubernetes USERNAME=nexc bash -x
+ default run : curl -sL http://gg.gg/provbee | K3S_SET=Y PLATFORM=kubernetes USERNAME=nexc bash -x
 
 ## terraform & kubectl & helm command 
 
