@@ -1,27 +1,27 @@
 #!/bin/bash
 WORKDIR="/data/klevry"
 if [ ! -d $WORKDIR ]; then mkdir -p $WORKDIR; fi
-for i in "$@"
-do
-case $i in
-        --platform=*)
-        PLATFORM="${i#*=}"
-        shift
-        ;;
-        --instance-name=*)
-        INSTANCENAME="${i#*=}"
-        shift
-        ;;
-        --api-token=*)
-        APITOKEN="${i#*=}"
-        shift
-        ;;
-        --user-name=*)
-        USERNAME="${i#*=}"
-        shift
-        ;;
-esac
-done
+#for i in "$@"
+#do
+#case $i in
+#        --platform=*)
+#        PLATFORM="${i#*=}"
+#        shift
+#        ;;
+#        --instance-name=*)
+#        INSTANCENAME="${i#*=}"
+#        shift
+#        ;;
+#        --api-token=*)
+#        APITOKEN="${i#*=}"
+#        shift
+#        ;;
+#        --user-name=*)
+#        USERNAME="${i#*=}"
+#        shift
+#        ;;
+#esac
+#done
 
 #echo "PLATFORM          = ${PLATFORM}"
 #echo "INSTANCENAME      = ${INSTANCENAME}"
@@ -30,7 +30,6 @@ done
 ######################################################################################
 KUBENAMESPACE="nexclipper"
 KUBESERVICEACCOUNT="nexc"
-INSTANCENAME="zzzzzz"
 #Host IP Check
 if [[ $HOSTIP == "" ]]; then
 	HOSTIP=$(ip a | grep "inet " | grep -v  "127.0.0.1" | awk -F " " '{print $2}'|awk -F "/" '{print $1}'|head -n1)
@@ -40,7 +39,7 @@ fi
 ############
 # BAREMATAL
 ############
-if [[ $PLATFORM == "baremetal" ]]; then
+if [[ $K_PLATFORM == "baremetal" ]]; then
 	echo "baremetal install"
     echo "curl zxz.kr/docker|bash ............ Docker install test"
 fi
@@ -67,20 +66,28 @@ fi
 #curl -sfL https://get.k3s.io | K3S_URL=https://$MASTERIP:6443 K3S_TOKEN=///SERVER$(cat /var/lib/rancher/k3s/server/node-token) sh -
 
 ############ TOKEN
-if [[ $APITOKEN == "" ]];then APITOKEN=$(cat /var/lib/rancher/k3s/server/node-token); fi
+#if [[ $APITOKEN == "" ]];then APITOKEN=$(cat /var/lib/rancher/k3s/server/node-token); fi
 }
 if [[ $K3S_SET =~ ^([yY][eE][sS]|[yY])$ ]]; then k3s_install ; fi
 #########################################################################
-
-
+########## TEST MODE 
+# GET Kube config Setting ##
+# nexcloud internal k8s cluster test 
+devtest(){
+  mkdir -p ~/.kube 
+  curl pubkey.nexclipper.io:9876/kube-config -o ~/.kube/config
+  exit 1
+}
+## TEST LINE
+if [[ $DEVTEST =~ ^([yY][eE][sS]|[yY])$ ]]; then devtest ; fi
+############################################## TEST MODE END LINE
 
 ############
 # KUBERNETES
 ############
-if [[ $PLATFORM == "kubernetes" ]]; then
+if [[ $K_PLATFORM == "kubernetes" ]]; then
     if [ $(which kubectl|wc -l) -eq 0 ]; then echo "Kubectl run failed!, Your command server check plz."; exit 1; fi
     if [ $(kubectl version --short | grep Server | wc -l) -eq 0 ]; then echo "kubernetes cluster check plz."; exit 1; fi 
-
 ############## kube-config file gen.
 kubeconfig_gen() {
 KUBECONFIG_FILE="$WORKDIR/kube-config"
@@ -323,9 +330,12 @@ fi
 
 
 #END TSET
-rm ./zzz.tmp 
-echo $K_API_KEY >> ./zzz.tmp
-echo $K_PLATFORM >> ./zzz.tmp
-echo $K_MANAGER_URL >> ./zzz.tmp
-echo $K_ZONE_ID >> ./zzz.tmp
-echo $K3S_SET >> ./zzz.tmp
+endtest(){
+  rm ./zzz.tmp 
+  echo $K_API_KEY >> ./zzz.tmp
+  echo $K_PLATFORM >> ./zzz.tmp
+  echo $K_MANAGER_URL >> ./zzz.tmp
+  echo $K_ZONE_ID >> ./zzz.tmp
+  echo $K3S_SET >> ./zzz.tmp
+}
+endtest
