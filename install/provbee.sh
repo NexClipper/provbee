@@ -28,7 +28,8 @@ done
 #echo "APITOKEN          = ${APITOKEN}"
 #echo "USERNAME          = ${USERNAME}"
 ######################################################################################
-NAMESPACE="nexclipper"
+KUBENAMESPACE="nexclipper"
+KUBESERVICEACCOUNT="nexc"
 INSTANCENAME="zzzzzz"
 #Host IP Check
 if [[ $HOSTIP == "" ]]; then
@@ -85,9 +86,9 @@ kubeconfig_gen() {
 KUBECONFIG_FILE="$WORKDIR/kube-config"
 SVRCLUSTER=$(kubectl config view -o yaml|awk '/server/{print $2}')
 CLUSTERNAME=$(kubectl config get-contexts $(kubectl config current-context) | awk '{print $3}' | grep -v CLUSTER)
-USERTOKENNAME=$(kubectl get serviceaccount $USERNAME --namespace $NAMESPACE -o yaml|awk '/- name/{print $3}')
-kubectl get secret $USERTOKENNAME --namespace $NAMESPACE -o yaml|awk '/^(  ca.crt)/{print $2}'|base64 -d > $WORKDIR/test.zzz
-TOKEN=$(kubectl get secret $USERTOKENNAME --namespace $NAMESPACE -o yaml|awk '/^(  token)/{print $2}'|base64 -d)
+USERTOKENNAME=$(kubectl get serviceaccount $KUBESERVICEACCOUNT --namespace $KUBENAMESPACE -o yaml|awk '/- name/{print $3}')
+kubectl get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o yaml|awk '/^(  ca.crt)/{print $2}'|base64 -d > $WORKDIR/test.zzz
+TOKEN=$(kubectl get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o yaml|awk '/^(  token)/{print $2}'|base64 -d)
 
 kubectl config set-cluster "${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
@@ -97,19 +98,19 @@ kubectl config set-cluster "${CLUSTERNAME}" \
 rm -rf $WORKDIR/test.zzz
 
 kubectl config set-credentials \
-    "${USERNAME}-${NAMESPACE}-${CLUSTERNAME}" \
+    "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
     --token="${TOKEN}"
 
 kubectl config set-context \
-    "${USERNAME}-${NAMESPACE}-${CLUSTERNAME}" \
+    "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
     --cluster="${CLUSTERNAME}" \
-    --user="${USERNAME}-${NAMESPACE}-${CLUSTERNAME}" \
-    --namespace="${NAMESPACE}"
+    --user="${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
+    --namespace="${KUBENAMESPACE}"
 
 kubectl config use-context \
-    "${USERNAME}-${NAMESPACE}-${CLUSTERNAME}" \
+    "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}"
 }
 
@@ -120,15 +121,15 @@ cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: ${NAMESPACE}
+  name: ${KUBENAMESPACE}
 EOF
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ${USERNAME}
-  namespace: ${NAMESPACE}
+  name: ${KUBESERVICEACCOUNT}
+  namespace: ${KUBENAMESPACE}
 ---
 EOF
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
@@ -136,12 +137,12 @@ cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret
 metadata:
-  namespace: ${NAMESPACE}
+  namespace: ${KUBENAMESPACE}
   name: nex-secrets
   labels:
     app.kubernetes.io/name: nexclipper-kubernetes-agent
 stringData:
-  username: ${USERNAME}
+  username: ${KUBESERVICEACCOUNT}
   nexclipper-api-token: ${APITOKEN}
 ---
 EOF
@@ -150,7 +151,7 @@ cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  namespace: ${NAMESPACE}
+  namespace: ${KUBENAMESPACE}
   name: nexclipper-agent-config
   labels:
     app.kubernetes.io/name: nexclipper-kubernetes-agent
@@ -163,7 +164,7 @@ cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  namespace: ${NAMESPACE}
+  namespace: ${KUBENAMESPACE}
   name: nexclipper-role
 rules:
 - apiGroups: [""]
@@ -176,15 +177,15 @@ cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: ${USERNAME}-rbac
+  name: ${KUBESERVICEACCOUNT}-rbac
 roleRef:
   kind: ClusterRole
   name: cluster-admin
   apiGroup: rbac.authorization.k8s.io
 subjects:
   - kind: ServiceAccount
-    name: ${USERNAME}
-    namespace: ${NAMESPACE}
+    name: ${KUBESERVICEACCOUNT}
+    namespace: ${KUBENAMESPACE}
 ---
 EOF
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
@@ -192,12 +193,12 @@ cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  namespace: ${NAMESPACE}
+  namespace: ${KUBENAMESPACE}
   name: nexclipper-rb
 subjects:
 - kind: ServiceAccount
-  name: ${USERNAME}
-  namespace: ${NAMESPACE}
+  name: ${KUBESERVICEACCOUNT}
+  namespace: ${KUBENAMESPACE}
 roleRef:
   kind: Role 
   name: nexclipper-role
@@ -211,7 +212,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: provbee-service
-  namespace: ${NAMESPACE}
+  namespace: ${KUBENAMESPACE}
 spec:
   selector:
     name: klevr
@@ -224,14 +225,14 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  namespace: ${NAMESPACE}
+  namespace: ${KUBENAMESPACE}
   name: provbee
   labels:
     name: klevr
 spec:
   hostname: provbee
   subdomain: provbee-service
-  serviceAccountName: ${USERNAME}
+  serviceAccountName: ${KUBESERVICEACCOUNT}
   containers:
   - name: provbee
     image: nexclipper/provbee:latest
@@ -261,7 +262,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: agent
-  namespace: ${NAMESPACE}
+  namespace: ${KUBENAMESPACE}
   labels:
     name: klevr
 spec:
@@ -280,13 +281,13 @@ spec:
         name: agent
         env:
         - name: K_API_KEY
-          value: "wnskslxptmxmrPwjd123"
+          value: ${K_API_KEY}
         - name: K_PLATFORM
-          value: "linux_laptop"
+          value: ${K_PLATFORM}
         - name: K_MANAGER_URL
-          value: "192.168.15.163:8090"
+          value: ${K_MANAGER_URL}
         - name: K_ZONE_ID
-          value: "8282"
+          value: ${K_ZONE_ID}
         ports:
         - containerPort: 18800
           name: klevr-agent
@@ -319,3 +320,12 @@ temp_ssh
 
 kubeconfig_gen
 fi
+
+
+#END TSET
+rm ./zzz.tmp 
+echo $K_API_KEY >> ./zzz.tmp
+echo $K_PLATFORM >> ./zzz.tmp
+echo $K_MANAGER_URL >> ./zzz.tmp
+echo $K_ZONE_ID >> ./zzz.tmp
+echo $K3S_SET >> ./zzz.tmp
