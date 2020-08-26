@@ -315,8 +315,6 @@ spec:
 #          mountPath: /root/.ssh/
         - name: ssh-auth
           mountPath: /root/.ssh/
-        - name: ssh-conf
-          mountPath: /root/.ssh/
       volumes:
 #      - name: ssh
 #        hostPath:
@@ -329,7 +327,6 @@ spec:
           items:
           - key: prikey
             path: id_rsa
-      - name: ssh-conf
         secret:
           secretName: $KUBESERVICEACCOUNT-ssh-key
           defaultMode: 0644
