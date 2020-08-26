@@ -123,8 +123,6 @@ kubectl config use-context \
 }
 
 ############################################### kubectl command RUN
-#sample ssh secret
-kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config zxz=0
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -141,6 +139,8 @@ metadata:
   namespace: ${KUBENAMESPACE}
 ---
 EOF
+#sample ssh secret
+kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config zxz=0
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
