@@ -76,6 +76,7 @@ if [[ $K3S_SET =~ ^([yY][eE][sS]|[yY])$ ]]; then k3s_install ; fi
 devtest(){
   mkdir -p ~/.kube 
   curl pubkey.nexclipper.io:9876/kube-config -o ~/.kube/config
+  if [ $(which kubectl|wc -l) -eq 0 ]; then curl -sL zxz.kr/kubectl|bash; fi
   exit 1
 }
 ## TEST LINE
@@ -150,7 +151,7 @@ metadata:
     app.kubernetes.io/name: nexclipper-kubernetes-agent
 stringData:
   username: ${KUBESERVICEACCOUNT}
-  nexclipper-api-token: ${APITOKEN}
+  nexclipper-api-token: ${K_API_KEY}
 ---
 EOF
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
@@ -163,7 +164,7 @@ metadata:
   labels:
     app.kubernetes.io/name: nexclipper-kubernetes-agent
 data:
-  instance-name: ${INSTANCENAME}
+  instance-name: ${K_ZONE_ID}
 ---
 EOF
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
