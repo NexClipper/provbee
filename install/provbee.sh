@@ -123,7 +123,8 @@ kubectl config use-context \
 }
 
 ############################################### kubectl command RUN
-zxz=0
+#sample ssh secret
+kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config zxz=0
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -160,7 +161,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   namespace: ${KUBENAMESPACE}
-  name: nexclipper-agent-config
+  name: ${KUBENAMESPACE}-agent-config
   labels:
     app.kubernetes.io/name: nexclipper-kubernetes-agent
 data:
@@ -246,25 +247,34 @@ spec:
     image: nexclipper/provbee:latest
     command: ['bash', '-c', '/entrypoint.sh']
     volumeMounts:
-    - name: terraformstpath
-      mountPath: /data/terraform_state
-    - name: zzz
-      mountPath: /data/klevry
-    - name: ssh
+#    - name: terraformstpath
+#      mountPath: /data/terraform_state
+#    - name: zzz
+#      mountPath: /data/klevry
+#    - name: ssh
+#      mountPath: /root/.ssh/
+    - name: ssh-auth
       mountPath: /root/.ssh/
   volumes:
-  - name: terraformstpath
-    hostPath:
-      path: /tmp/
-      type: Directory
-  - name: zzz
-    hostPath:
-      path: /data/klevry
-      type: Directory
-  - name: ssh
-    hostPath:
-      path: /root/.ssh/
-      type: Directory
+#  - name: terraformstpath
+#    hostPath:
+#      path: /tmp/
+#      type: Directory
+#  - name: zzz
+#    hostPath:
+#      path: /data/klevry
+#      type: Directory
+#  - name: ssh
+#    hostPath:
+#      path: /root/.ssh/
+#      type: Directory
+  - name: ssh-auth
+    secret:
+      secretName: $KUBESERVICEACCOUNT-ssh-key
+      defaultMode: 0644
+      items:
+      - key: pubkey
+        path: authorized_keys
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -300,23 +310,39 @@ spec:
         - containerPort: 18800
           name: klevr-agent
         volumeMounts:
-        - name: ssh
+#        - name: ssh
+#          mountPath: /root/.ssh/
+        - name: ssh-auth
           mountPath: /root/.ssh/
       volumes:
-      - name: ssh
-        hostPath:
-          path: /root/.ssh/
-          type: Directory
-
+#      - name: ssh
+#        hostPath:
+#          path: /root/.ssh/
+#          type: Directory
+      - name: ssh-auth
+        secret:
+          secretName: $KUBESERVICEACCOUNT-ssh-key
+          defaultMode: 0600
+          items:
+          - key: prikey
+            path: id_rsa
+      - name: ssh-auth
+        secret:
+          secretName: $KUBESERVICEACCOUNT-ssh-key
+          defaultMode: 0644
+          items:
+          - key: conf
+            path: config
 EOF
 
 #FILE gen
 
 
 temp_ssh(){
-cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f ~/.ssh/id_rsa
-cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-cat << EOF >> ~/.ssh/config
+  mkdir -p $WORKDIR/.ssh
+  cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f $WORKDIR/.ssh/id_rsa
+  cat $WORKDIR/.ssh/id_rsa.pub >> $WORKDIR/.ssh/authorized_keys
+  cat << EOF > ${WORKDIR}/.ssh/config
 Host *
 	StrictHostKeyChecking no
 	UserKnownHostsFile /dev/null
@@ -329,7 +355,7 @@ temp_ssh
 kubeconfig_gen
 fi
 
-
+######################################################################END LINE
 #END TSET
 endtest(){
   rm ./zzz.tmp 
@@ -340,3 +366,19 @@ endtest(){
   echo $K3S_SET >> ./zzz.tmp
 }
 endtest
+
+
+#DELETE TEST
+delete_test(){
+  kubectl delete -n nexclipper svc provbee-service
+  kubectl delete -n nexclipper provbee
+  kubectl delete -n nexclipper clusterrolebinding ${KUBESERVICEACCOUNT}-rbac
+  kubectl delete -n nexclipper sa ${KUBESERVICEACCOUNT}
+  kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-secrets
+  kubectl delete -n nexclipper configmap ${KUBENAMESPACE}-agent-config
+  kubectl delete -n nexclipper role nexclipper-role
+  kubectl delete -n nexclipper rolebinding ${KUBENAMESPACE}-rb
+  kubectl delete -n nexclipper ns ${KUBENAMESPACE}
+# agent???
+}
+if [[ $DELTEST =~ ^([yY][eE][sS]|[yY])$ ]]; then delete_test ; fi
