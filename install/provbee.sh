@@ -141,7 +141,7 @@ metadata:
 ---
 EOF
 #sample ssh secret
-kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config
+#kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -248,34 +248,34 @@ spec:
     image: nexclipper/provbee:latest
     command: ['bash', '-c', '/entrypoint.sh']
     volumeMounts:
-#    - name: terraformstpath
-#      mountPath: /data/terraform_state
-#    - name: zzz
-#      mountPath: /data/klevry
-#    - name: ssh
-#      mountPath: /root/.ssh/
-    - name: ssh-auth
+    - name: terraformstpath
+      mountPath: /data/terraform_state
+    - name: zzz
+      mountPath: /data/klevry
+    - name: ssh
       mountPath: /root/.ssh/
+#    - name: ssh-auth
+#      mountPath: /root/.ssh/
   volumes:
-#  - name: terraformstpath
-#    hostPath:
-#      path: /tmp/
-#      type: Directory
-#  - name: zzz
-#    hostPath:
-#      path: /data/klevry
-#      type: Directory
-#  - name: ssh
-#    hostPath:
-#      path: /root/.ssh/
-#      type: Directory
-  - name: ssh-auth
-    secret:
-      secretName: $KUBESERVICEACCOUNT-ssh-key
-      defaultMode: 0644
-      items:
-      - key: pubkey
-        path: authorized_keys
+  - name: terraformstpath
+    hostPath:
+      path: /tmp/
+      type: Directory
+  - name: zzz
+    hostPath:
+      path: /data/klevry
+      type: Directory
+  - name: ssh
+    hostPath:
+      path: /root/.ssh/
+      type: Directory
+#  - name: ssh-auth
+#    secret:
+#      secretName: $KUBESERVICEACCOUNT-ssh-key
+#      defaultMode: 0644
+#      items:
+#      - key: pubkey
+#        path: authorized_keys
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -311,38 +311,34 @@ spec:
         - containerPort: 18800
           name: klevr-agent
         volumeMounts:
-#        - name: ssh
-#          mountPath: /root/.ssh/
-        - name: ssh-auth
+        - name: ssh
           mountPath: /root/.ssh/
+#        - name: ssh-auth
+#          mountPath: /root/.ssh/
       volumes:
-#      - name: ssh
-#        hostPath:
-#          path: /root/.ssh/
-#          type: Directory
-      - name: ssh-auth
-        secret:
-          secretName: $KUBESERVICEACCOUNT-ssh-key
-          defaultMode: 0600
-          items:
-          - key: prikey
-            path: id_rsa
-        secret:
-          secretName: $KUBESERVICEACCOUNT-ssh-key
-          defaultMode: 0644
-          items:
-          - key: conf
-            path: config
+      - name: ssh
+        hostPath:
+          path: /root/.ssh/
+          type: Directory
+#      - name: ssh-auth
+#        secret:
+#          secretName: $KUBESERVICEACCOUNT-ssh-key
+#          defaultMode: 0600
+#          items:
+#          - key: prikey
+#            path: id_rsa
+#          - key: conf
+#            path: config
 EOF
 
 #FILE gen
 
 
 temp_ssh(){
-  mkdir -p $WORKDIR/.ssh
-  cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f $WORKDIR/.ssh/id_rsa
-  cat $WORKDIR/.ssh/id_rsa.pub >> $WORKDIR/.ssh/authorized_keys
-  cat << EOF > ${WORKDIR}/.ssh/config
+  mkdir -p ~/.ssh
+  cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f ~/.ssh/id_rsa
+  cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+  cat << EOF > ~/.ssh/config
 Host *
 	StrictHostKeyChecking no
 	UserKnownHostsFile /dev/null
