@@ -9,7 +9,7 @@ ENV TF_RELEASE=1
 #RUN mkdir -p /data/tmp && mkdir -p ~/.terraform.d/plugins/
 ENV WKDIR=/data
 ENV PATH /usr/local/bin:$PATH
-RUN mkdir -p $WKDIR /tmp/zzz ~/.terraform.d/plugins/ $WKDIR/terraform_state ~/.kube/
+RUN mkdir -p $WKDIR/klevry /tmp/zzz ~/.terraform.d/plugins/ $WKDIR/terraform_state ~/.kube/ 
 
 ## USER create
 #RUN useradd zzz & echo "zzz:zzz" | chpasswd

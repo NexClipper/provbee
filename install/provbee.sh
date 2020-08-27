@@ -1,9 +1,10 @@
 #!/bin/bash
-WORKDIR="/data/klevry"
+if [[ $WORKDIR == "" ]]; then WORKDIR="/data/klevry"; fi
 if [ ! -d $WORKDIR ]; then mkdir -p $WORKDIR; fi
 ######################################################################################
 KUBENAMESPACE="nexclipper"
 KUBESERVICEACCOUNT="nexc"
+KUBECONFIG_FILE="$WORKDIR/kube-config-nexc"
 #Host IP Check
 if [[ $HOSTIP == "" ]]; then
 	HOSTIP=$(ip a | grep "inet " | grep -v  "127.0.0.1" | awk -F " " '{print $2}'|awk -F "/" '{print $1}'|head -n1)
@@ -60,10 +61,10 @@ if [[ $DEVTEST =~ ^([yY][eE][sS]|[yY])$ ]]; then devtest ; fi
 ############
 if [[ $K_PLATFORM == "kubernetes" ]]; then
     if [ $(which kubectl|wc -l) -eq 0 ]; then echo "Kubectl run failed!, Your command server check plz."; exit 1; fi
-    if [ $(kubectl version --short | grep Server | wc -l) -eq 0 ]; then echo "kubernetes cluster check plz."; exit 1; fi 
+    if [ $(kubectl version --short | grep Server | wc -l) -eq 0 ]; then echo "kubernetes cluster check plz."; cat ~/.kube/config; exit 1; fi 
 ############## kube-config file gen.
 kubeconfig_gen() {
-KUBECONFIG_FILE="$WORKDIR/kube-config"
+
 SVRCLUSTER=$(kubectl config view -o yaml|awk '/server/{print $2}')
 CLUSTERNAME=$(kubectl config get-contexts $(kubectl config current-context) | awk '{print $3}' | grep -v CLUSTER)
 USERTOKENNAME=$(kubectl get serviceaccount $KUBESERVICEACCOUNT --namespace $KUBENAMESPACE -o yaml|awk '/- name/{print $3}')
@@ -94,12 +95,27 @@ kubectl config use-context \
     --kubeconfig="${KUBECONFIG_FILE}"
 
 #kube config file secert
-kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-kubeconfig --from-file=kubeconfig=$WORKDIR/kube-config
+kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-kubeconfig --from-file=kubeconfig=$KUBECONFIG_FILE
 }
+####################################### SSH KEY Create
+ssh_keycreate(){
+  mkdir -p $WORKDIR/.ssh
+  cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f $WORKDIR/.ssh/id_rsa
+  cat $WORKDIR/.ssh/id_rsa.pub > $WORKDIR/.ssh/authorized_keys
+  cat << EOF > $WORKDIR/.ssh/config
+Host *
+	StrictHostKeyChecking no
+	UserKnownHostsFile /dev/null
+EOF
+#cp -Rfvp ~/.ssh /data/
+#touch /data/.ssh/lastupdate-$(date +%Y%m%d%H%M%S)
+}
+ssh_keycreate
 
 ############################################### kubectl command RUN
 zxz=0
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
+### Namespace create
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Namespace
@@ -107,6 +123,7 @@ metadata:
   name: ${KUBENAMESPACE}
 EOF
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
+### ServiceAccount create
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ServiceAccount
@@ -119,6 +136,7 @@ EOF
 echo "SECERT KEYKEYKEY"
 kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
+### Secret??? create
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret
@@ -133,6 +151,7 @@ stringData:
 ---
 EOF
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
+### agent configmap create
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
@@ -146,6 +165,7 @@ data:
 ---
 EOF
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
+### Provbee k8s authorization create
 cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -191,8 +211,11 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ---
 EOF
+############## kubeconfig gen
+kubeconfig_gen
 
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
+### Provbee Service, klevr-agent pod create
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Service
@@ -225,15 +248,24 @@ spec:
     command: ['bash', '-c', '/entrypoint.sh']
     volumeMounts:
     - name: ssh-auth
-      mountPath: /data/
+      mountPath: /data/.provbee/
+    - name: kube-config
+      mountPath: /root/
   volumes:
   - name: ssh-auth
     secret:
       secretName: nexc-ssh-key
-      defaultMode: 0644
+#      defaultMode: 0644
       items:
       - key: pubkey
         path: configmap_authkey
+  - name: kube-config
+    secret:
+      secretName: nexc-kubeconfig
+      defaultMode: 0644
+      items:
+      - key: kubeconfig
+        path: .kube/config
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -284,21 +316,9 @@ EOF
 #FILE gen
 
 
-temp_ssh(){
-  mkdir -p $WORKDIR/.ssh
-  cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f $WORKDIR/.ssh/id_rsa
-  cat $WORKDIR/.ssh/id_rsa.pub > $WORKDIR/.ssh/authorized_keys
-  cat << EOF > $WORKDIR/.ssh/config
-Host *
-	StrictHostKeyChecking no
-	UserKnownHostsFile /dev/null
-EOF
-#cp -Rfvp ~/.ssh /data/
-#touch /data/.ssh/lastupdate-$(date +%Y%m%d%H%M%S)
-}
-temp_ssh
 
-kubeconfig_gen
+
+
 fi
 
 ######################################################################END LINE
@@ -311,7 +331,7 @@ endtest(){
   echo $K_ZONE_ID >> ./zzz.tmp
   echo $K3S_SET >> ./zzz.tmp
 }
-endtest
+#endtest
 
 
 #DELETE TEST
@@ -327,9 +347,9 @@ delete_test(){
   kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-kubeconfig
   kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-ssh-key
   kubectl delete -n nexclipper ns ${KUBENAMESPACE}
+  rm $KUBECONFIG_FILE
 # agent???
 #/usr/local/bin/k3s-killall.sh
 #/usr/local/bin/k3s-uninstall.sh
 }
 if [[ $DELTEST =~ ^([yY][eE][sS]|[yY])$ ]]; then delete_test ; fi
-##################

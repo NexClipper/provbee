@@ -1,2 +1,2 @@
 #!/bin/bash
-echo "$(cat /data/configmap_authkey)"
+echo "$(cat /data/.provbee/configmap_authkey)"

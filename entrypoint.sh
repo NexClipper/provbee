@@ -47,7 +47,7 @@ fi
 
 
 
-if [ -f /data/klevry/kube-config ]; then cp -Rfvp /data/klevry/kube-config ~/.kube/config; fi
+#if [ -f /data/klevry/kube-config ]; then cp -Rfvp /data/klevry/kube-config ~/.kube/config; fi
 
 ##ssh start
 /etc/init.d/sshd --dry-run start
@@ -55,10 +55,10 @@ if [ -f /data/klevry/kube-config ]; then cp -Rfvp /data/klevry/kube-config ~/.ku
 #rc-service sshd start
 
 ##ssh keygen
-ssh-keygen -t rsa -b 4096 -q -P "" -f ~/.ssh/id_rsa
-cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-cp -Rfvp ~/.ssh /data/
-touch /data/.ssh/lastupdate-$(date +%Y%m%d%H%M%S)
+#ssh-keygen -t rsa -b 4096 -q -P "" -f ~/.ssh/id_rsa
+#cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+#cp -Rfvp ~/.ssh /data/
+#touch /data/.ssh/lastupdate-$(date +%Y%m%d%H%M%S)
 
 ##waiting
 tail -F anything
