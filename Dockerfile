@@ -37,6 +37,7 @@ COPY .ssh /root/.ssh
 COPY entrypoint.sh /entrypoint.sh
 COPY provider.sh /provider.sh
 COPY get_pubkey.sh /usr/local/bin/get_pubkey.sh
+COPY nodesearch.sh /nodesearch.sh
 
 # ssh setting
 #RUN sed -i 's/^#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config

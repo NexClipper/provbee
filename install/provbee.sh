@@ -65,11 +65,11 @@ if [[ $K_PLATFORM == "kubernetes" ]]; then
 ############## kube-config file gen.
 kubeconfig_gen() {
 
-SVRCLUSTER=$(kubectl config view -o yaml|awk '/server/{print $2}')
 CLUSTERNAME=$(kubectl config get-contexts $(kubectl config current-context) | awk '{print $3}' | grep -v CLUSTER)
-USERTOKENNAME=$(kubectl get serviceaccount $KUBESERVICEACCOUNT --namespace $KUBENAMESPACE -o yaml|awk '/- name/{print $3}')
-kubectl get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o yaml|awk '/^(  ca.crt)/{print $2}'|base64 -d > $WORKDIR/test.zzz
-TOKEN=$(kubectl get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o yaml|awk '/^(  token)/{print $2}'|base64 -d)
+SVRCLUSTER=$(kubectl config view -o jsonpath='{.clusters[?(@.name == "'$CLUSTERNAME'")].cluster.server}')
+USERTOKENNAME=$(kubectl get serviceaccount $KUBESERVICEACCOUNT --namespace $KUBENAMESPACE -o jsonpath='{.secrets[*].name}')
+kubectl get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.ca\.crt}'|base64 -d > $WORKDIR/test.zzz
+TOKEN=$(kubectl get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.token}'|base64 -d)
 
 kubectl config set-cluster "${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
@@ -107,8 +107,6 @@ Host *
 	StrictHostKeyChecking no
 	UserKnownHostsFile /dev/null
 EOF
-#cp -Rfvp ~/.ssh /data/
-#touch /data/.ssh/lastupdate-$(date +%Y%m%d%H%M%S)
 }
 ssh_keycreate
 
@@ -250,7 +248,7 @@ spec:
     - name: ssh-auth
       mountPath: /data/.provbee/
     - name: kube-config
-      mountPath: /root/
+      mountPath: /root/.kube/
   volumes:
   - name: ssh-auth
     secret:
@@ -265,7 +263,7 @@ spec:
       defaultMode: 0644
       items:
       - key: kubeconfig
-        path: .kube/config
+        path: config
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -339,13 +337,13 @@ delete_test(){
   kubectl delete -n nexclipper svc provbee-service
   kubectl delete -n nexclipper provbee
   kubectl delete -n nexclipper clusterrolebinding ${KUBESERVICEACCOUNT}-rbac
-  kubectl delete -n nexclipper sa ${KUBESERVICEACCOUNT}
   kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-secrets
   kubectl delete -n nexclipper configmap ${KUBENAMESPACE}-agent-config
   kubectl delete -n nexclipper role nexclipper-role
   kubectl delete -n nexclipper rolebinding ${KUBENAMESPACE}-rb
   kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-kubeconfig
   kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-ssh-key
+  kubectl delete -n nexclipper sa ${KUBESERVICEACCOUNT}
   kubectl delete -n nexclipper ns ${KUBENAMESPACE}
   rm $KUBECONFIG_FILE
 # agent???
