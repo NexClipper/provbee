@@ -1,32 +1,6 @@
 #!/bin/bash
 WORKDIR="/data/klevry"
 if [ ! -d $WORKDIR ]; then mkdir -p $WORKDIR; fi
-#for i in "$@"
-#do
-#case $i in
-#        --platform=*)
-#        PLATFORM="${i#*=}"
-#        shift
-#        ;;
-#        --instance-name=*)
-#        INSTANCENAME="${i#*=}"
-#        shift
-#        ;;
-#        --api-token=*)
-#        APITOKEN="${i#*=}"
-#        shift
-#        ;;
-#        --user-name=*)
-#        USERNAME="${i#*=}"
-#        shift
-#        ;;
-#esac
-#done
-
-#echo "PLATFORM          = ${PLATFORM}"
-#echo "INSTANCENAME      = ${INSTANCENAME}"
-#echo "APITOKEN          = ${APITOKEN}"
-#echo "USERNAME          = ${USERNAME}"
 ######################################################################################
 KUBENAMESPACE="nexclipper"
 KUBESERVICEACCOUNT="nexc"
@@ -41,7 +15,7 @@ fi
 ############
 if [[ $K_PLATFORM == "baremetal" ]]; then
 	echo "baremetal install"
-    echo "curl zxz.kr/docker|bash ............ Docker install test"
+  echo "curl zxz.kr/docker|bash ............ Docker install test"
 fi
 #########################################################################
 
@@ -50,7 +24,6 @@ fi
 ############
 
 k3s_install() {
-
 #K3s Server Install
 curl -sfL https://get.k3s.io | sh -
 
@@ -64,7 +37,6 @@ fi
 
 ##K3s agent Install
 #curl -sfL https://get.k3s.io | K3S_URL=https://$MASTERIP:6443 K3S_TOKEN=///SERVER$(cat /var/lib/rancher/k3s/server/node-token) sh -
-
 ############ TOKEN
 #if [[ $APITOKEN == "" ]];then APITOKEN=$(cat /var/lib/rancher/k3s/server/node-token); fi
 }
@@ -120,6 +92,9 @@ kubectl config set-context \
 kubectl config use-context \
     "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}"
+
+#kube config file secert
+kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-kubeconfig --from-file=kubeconfig=$WORKDIR/kube-config
 }
 
 ############################################### kubectl command RUN
@@ -141,7 +116,8 @@ metadata:
 ---
 EOF
 #sample ssh secret
-#kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config
+echo "SECERT KEYKEYKEY"
+kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -166,7 +142,7 @@ metadata:
   labels:
     app.kubernetes.io/name: nexclipper-kubernetes-agent
 data:
-  instance-name: ${K_ZONE_ID}
+  instance-name: "${K_ZONE_ID}"
 ---
 EOF
 echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
@@ -248,34 +224,16 @@ spec:
     image: nexclipper/provbee:latest
     command: ['bash', '-c', '/entrypoint.sh']
     volumeMounts:
-    - name: terraformstpath
-      mountPath: /data/terraform_state
-    - name: zzz
-      mountPath: /data/klevry
-    - name: ssh
-      mountPath: /root/.ssh/
-#    - name: ssh-auth
-#      mountPath: /root/.ssh/
+    - name: ssh-auth
+      mountPath: /data/
   volumes:
-  - name: terraformstpath
-    hostPath:
-      path: /tmp/
-      type: Directory
-  - name: zzz
-    hostPath:
-      path: /data/klevry
-      type: Directory
-  - name: ssh
-    hostPath:
-      path: /root/.ssh/
-      type: Directory
-#  - name: ssh-auth
-#    secret:
-#      secretName: $KUBESERVICEACCOUNT-ssh-key
-#      defaultMode: 0644
-#      items:
-#      - key: pubkey
-#        path: authorized_keys
+  - name: ssh-auth
+    secret:
+      secretName: nexc-ssh-key
+      defaultMode: 0644
+      items:
+      - key: pubkey
+        path: configmap_authkey
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -293,52 +251,44 @@ spec:
       labels:
         app.kubernetes.io/name: klevr-agent
     spec:
-#      hostname: agent
-#      subdomain: provbee-service
       containers:
       - image: klevry/klevr-agent:latest
         name: agent
         env:
         - name: K_API_KEY
-          value: ${K_API_KEY}
+          value: "${K_API_KEY}"
         - name: K_PLATFORM
-          value: ${K_PLATFORM}
+          value: "${K_PLATFORM}"
         - name: K_MANAGER_URL
-          value: ${K_MANAGER_URL}
+          value: "${K_MANAGER_URL}"
         - name: K_ZONE_ID
-          value: ${K_ZONE_ID}
+          value: "${K_ZONE_ID}"
         ports:
         - containerPort: 18800
           name: klevr-agent
         volumeMounts:
-        - name: ssh
+        - name: ssh-auth
           mountPath: /root/.ssh/
-#        - name: ssh-auth
-#          mountPath: /root/.ssh/
       volumes:
-      - name: ssh
-        hostPath:
-          path: /root/.ssh/
-          type: Directory
-#      - name: ssh-auth
-#        secret:
-#          secretName: $KUBESERVICEACCOUNT-ssh-key
-#          defaultMode: 0600
-#          items:
-#          - key: prikey
-#            path: id_rsa
-#          - key: conf
-#            path: config
+      - name: ssh-auth
+        secret:
+          secretName: $KUBESERVICEACCOUNT-ssh-key
+          defaultMode: 0600
+          items:
+          - key: prikey
+            path: id_rsa
+          - key: conf
+            path: config
 EOF
 
 #FILE gen
 
 
 temp_ssh(){
-  mkdir -p ~/.ssh
-  cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f ~/.ssh/id_rsa
-  cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-  cat << EOF > ~/.ssh/config
+  mkdir -p $WORKDIR/.ssh
+  cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f $WORKDIR/.ssh/id_rsa
+  cat $WORKDIR/.ssh/id_rsa.pub > $WORKDIR/.ssh/authorized_keys
+  cat << EOF > $WORKDIR/.ssh/config
 Host *
 	StrictHostKeyChecking no
 	UserKnownHostsFile /dev/null
@@ -374,7 +324,12 @@ delete_test(){
   kubectl delete -n nexclipper configmap ${KUBENAMESPACE}-agent-config
   kubectl delete -n nexclipper role nexclipper-role
   kubectl delete -n nexclipper rolebinding ${KUBENAMESPACE}-rb
+  kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-kubeconfig
+  kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-ssh-key
   kubectl delete -n nexclipper ns ${KUBENAMESPACE}
 # agent???
+#/usr/local/bin/k3s-killall.sh
+#/usr/local/bin/k3s-uninstall.sh
 }
 if [[ $DELTEST =~ ^([yY][eE][sS]|[yY])$ ]]; then delete_test ; fi
+##################

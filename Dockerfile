@@ -36,6 +36,7 @@ RUN curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v
 COPY .ssh /root/.ssh
 COPY entrypoint.sh /entrypoint.sh
 COPY provider.sh /provider.sh
+COPY get_pubkey.sh /usr/local/bin/get_pubkey.sh
 
 # ssh setting
 #RUN sed -i 's/^#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config
@@ -45,6 +46,8 @@ RUN sed -i 's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
 RUN sed -i 's/^#PermitUserEnvironment no/PermitUserEnvironment no/' /etc/ssh/sshd_config
 RUN sed -i 's/^#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
 RUN echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+RUN echo "AuthorizedKeysCommand /usr/local/bin/get_pubkey.sh" >> /etc/ssh/sshd_config
+RUN echo "AuthorizedKeysCommandUser nobody" >> /etc/ssh/sshd_config
 RUN sed -i 's/cgroup_add_service$/echo "NexClipper" #cgroup_add_service#/g' /lib/rc/sh/openrc-run.sh
 RUN rc-update add sshd
 RUN mkdir /run/openrc && touch /run/openrc/softlevel
