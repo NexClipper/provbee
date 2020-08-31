@@ -1,13 +1,24 @@
 #!/bin/bash
-if [[ $WORKDIR == "" ]]; then WORKDIR="/data/klevry"; fi
-if [ ! -d $WORKDIR ]; then mkdir -p $WORKDIR; fi
-######################################################################################
+UNAMECHK=`uname`
 KUBENAMESPACE="nexclipper"
 KUBESERVICEACCOUNT="nexc"
+######################################################################################
+if [[ $UNAMECHK == "Darwin" ]]; then
+  if [[ $WORKDIR == "" ]]; then WORKDIR="$HOME/klevry"; fi
+else
+  if [[ $WORKDIR == "" ]]; then WORKDIR="$HOME/klevry"; fi
+fi
+
+if [ ! -d $WORKDIR ]; then mkdir -p $WORKDIR; fi
 KUBECONFIG_FILE="$WORKDIR/kube-config-nexc"
+
 #Host IP Check
 if [[ $HOSTIP == "" ]]; then
-	HOSTIP=$(ip a | grep "inet " | grep -v  "127.0.0.1" | awk -F " " '{print $2}'|awk -F "/" '{print $1}'|head -n1)
+	if [[ $UNAMECHK == "Darwin" ]]; then
+		HOSTIP=$(ifconfig | grep "inet " | grep -v  "127.0.0.1" | awk -F " " '{print $2}'|head -n1)
+	else
+		HOSTIP=$(ip a | grep "inet " | grep -v  "127.0.0.1" | awk -F " " '{print $2}'|awk -F "/" '{print $1}'|head -n1)
+	fi
 fi
 ######################################################################################
 
@@ -23,6 +34,14 @@ fi
 ############
 # K3S INSTALL
 ############
+k3s_checking(){
+if [[ $UNAMECHK == "Linux" ]]; then
+  k3s_install
+  else
+  echo ">> K3s Install - only Linux"
+  echo ">> https://rancher.com/docs/k3s/latest/en/installation/installation-requirements/#operating-systems"
+fi  
+}
 
 k3s_install() {
 #K3s Server Install
@@ -41,7 +60,7 @@ fi
 ############ TOKEN
 #if [[ $APITOKEN == "" ]];then APITOKEN=$(cat /var/lib/rancher/k3s/server/node-token); fi
 }
-if [[ $K3S_SET =~ ^([yY][eE][sS]|[yY])$ ]]; then k3s_install ; fi
+if [[ $K3S_SET =~ ^([yY][eE][sS]|[yY])$ ]]; then k3s_checking ; fi
 #########################################################################
 ########## TEST MODE 
 # GET Kube config Setting ##
@@ -336,6 +355,7 @@ endtest(){
 delete_test(){
   kubectl delete -n nexclipper svc provbee-service
   kubectl delete -n nexclipper provbee
+  kubectl get po -n nexclipper -o jsonpath='{range $.items[?(@.metadata.ownerReferences[*].name == "agent")]}{.metadata.name}{"\n"}{end}'| xargs kubectl delete -n nexclipper po
   kubectl delete -n nexclipper clusterrolebinding ${KUBESERVICEACCOUNT}-rbac
   kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-secrets
   kubectl delete -n nexclipper configmap ${KUBENAMESPACE}-agent-config
@@ -346,7 +366,6 @@ delete_test(){
   kubectl delete -n nexclipper sa ${KUBESERVICEACCOUNT}
   kubectl delete -n nexclipper ns ${KUBENAMESPACE}
   rm $KUBECONFIG_FILE
-# agent???
 #/usr/local/bin/k3s-killall.sh
 #/usr/local/bin/k3s-uninstall.sh
 }
