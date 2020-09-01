@@ -21,13 +21,27 @@ if [[ $HOSTIP == "" ]]; then
 	fi
 fi
 ######################################################################################
+##
+info(){
+  echo -en '\033[92m[INFO] \033[0m' "$@"
+}
+warn()
+{
+  echo -e '\033[93m[WARN] \033[0m' "$@" >&2
+}
+fatal()
+{
+  echo -e '\033[91m[ERROR] \033[0m' "$@" >&2
+  exit 1
+}
+
 
 ############
 # BAREMATAL
 ############
 if [[ $K_PLATFORM == "baremetal" ]]; then
-	echo "baremetal install"
-  echo "curl zxz.kr/docker|bash ............ Docker install test"
+	info "baremetal install" echo
+  info "curl zxz.kr/docker|bash ............ Docker install test" echo
 fi
 #########################################################################
 
@@ -79,8 +93,8 @@ if [[ $DEVTEST =~ ^([yY][eE][sS]|[yY])$ ]]; then devtest ; fi
 # KUBERNETES
 ############
 if [[ $K_PLATFORM == "kubernetes" ]]; then
-    if [ $(which kubectl|wc -l) -eq 0 ]; then echo "Kubectl run failed!, Your command server check plz."; exit 1; fi
-    if [ $(kubectl version --short | grep Server | wc -l) -eq 0 ]; then echo "kubernetes cluster check plz."; cat ~/.kube/config; exit 1; fi 
+    if [ $(which kubectl|wc -l) -eq 0 ]; then fatal "Kubectl run failed!, Your command server check plz."; fi
+    if [ $(kubectl version --short | grep Server | wc -l) -eq 0 ]; then warn "kubernetes cluster check plz."; cat ~/.kube/config; exit 1; fi 
 ############## kube-config file gen.
 kubeconfig_gen() {
 
@@ -90,6 +104,7 @@ USERTOKENNAME=$(kubectl get serviceaccount $KUBESERVICEACCOUNT --namespace $KUBE
 kubectl get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.ca\.crt}'|base64 -d > $WORKDIR/test.zzz
 TOKEN=$(kubectl get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.token}'|base64 -d)
 
+info
 kubectl config set-cluster "${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
     --server="${SVRCLUSTER}" \
@@ -97,29 +112,32 @@ kubectl config set-cluster "${CLUSTERNAME}" \
     --embed-certs=true
 rm -rf $WORKDIR/test.zzz
 
+info
 kubectl config set-credentials \
     "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
     --token="${TOKEN}"
 
+info
 kubectl config set-context \
     "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
     --cluster="${CLUSTERNAME}" \
     --user="${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --namespace="${KUBENAMESPACE}"
-
+info
 kubectl config use-context \
     "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}"
 
 #kube config file secert
+info
 kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-kubeconfig --from-file=kubeconfig=$KUBECONFIG_FILE
 }
 ####################################### SSH KEY Create
 ssh_keycreate(){
   mkdir -p $WORKDIR/.ssh
-  cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f $WORKDIR/.ssh/id_rsa
+  cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f $WORKDIR/.ssh/id_rsa > /dev/null
   cat $WORKDIR/.ssh/id_rsa.pub > $WORKDIR/.ssh/authorized_keys
   cat << EOF > $WORKDIR/.ssh/config
 Host *
@@ -130,17 +148,15 @@ EOF
 ssh_keycreate
 
 ############################################### kubectl command RUN
-zxz=0
-echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
-### Namespace create
+info 
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Namespace
 metadata:
   name: ${KUBENAMESPACE}
 EOF
-echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
-### ServiceAccount create
+
+info 
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ServiceAccount
@@ -149,11 +165,13 @@ metadata:
   namespace: ${KUBENAMESPACE}
 ---
 EOF
-#sample ssh secret
-echo "SECERT KEYKEYKEY"
+
+
+#info '### sample ssh secret'
+info
 kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config
-echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
-### Secret??? create
+#info '### Secret??? create'
+info
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret
@@ -167,8 +185,7 @@ stringData:
   nexclipper-api-token: ${K_API_KEY}
 ---
 EOF
-echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
-### agent configmap create
+info
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
@@ -181,8 +198,8 @@ data:
   instance-name: "${K_ZONE_ID}"
 ---
 EOF
-echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
-### Provbee k8s authorization create
+info
+# '### Provbee k8s authorization create'
 cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -195,7 +212,7 @@ rules:
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"] # Action 제어 
 ---
 EOF
-echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
+info
 cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -211,7 +228,7 @@ subjects:
     namespace: ${KUBENAMESPACE}
 ---
 EOF
-echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
+info
 cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -228,11 +245,11 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ---
 EOF
-############## kubeconfig gen
+
 kubeconfig_gen
 
-echo ">>>>> kube yaml test - $zxz"; zxz=$((zxz+1))
-### Provbee Service, klevr-agent pod create
+############ProvBee-Service
+info
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Service
@@ -248,6 +265,10 @@ spec:
     port: 22
     targetPort: 22
 ---
+EOF
+############ProvBee Pod
+info
+cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
 metadata:
@@ -271,19 +292,23 @@ spec:
   volumes:
   - name: ssh-auth
     secret:
-      secretName: nexc-ssh-key
+      secretName: ${KUBESERVICEACCOUNT}-ssh-key
 #      defaultMode: 0644
       items:
       - key: pubkey
         path: configmap_authkey
   - name: kube-config
     secret:
-      secretName: nexc-kubeconfig
+      secretName: ${KUBESERVICEACCOUNT}-kubeconfig
       defaultMode: 0644
       items:
       - key: kubeconfig
         path: config
 ---
+EOF
+##########Klevr-agent
+info
+cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -332,16 +357,15 @@ EOF
 
 #FILE gen
 
-
-
-
+info echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
+kubectl get po,svc -n $KUBENAMESPACE
 
 fi
 
 ######################################################################END LINE
 #END TSET
 endtest(){
-  rm ./zzz.tmp 
+  rm ./zzz.tmp >/dev/null 2>&1 
   echo $K_API_KEY >> ./zzz.tmp
   echo $K_PLATFORM >> ./zzz.tmp
   echo $K_MANAGER_URL >> ./zzz.tmp
@@ -365,7 +389,7 @@ delete_test(){
   kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-ssh-key
   kubectl delete -n nexclipper sa ${KUBESERVICEACCOUNT}
   kubectl delete -n nexclipper ns ${KUBENAMESPACE}
-  rm $KUBECONFIG_FILE
+  rm $KUBECONFIG_FILE >/dev/null 2>&1
 #/usr/local/bin/k3s-killall.sh
 #/usr/local/bin/k3s-uninstall.sh
 }
