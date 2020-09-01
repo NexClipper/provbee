@@ -4,6 +4,8 @@
 ## Property map and positions
 ![Property_map_overview.png](https://github.com/NexClipper/provbee/raw/master/assets/Property_map_overview.png)
 
+[![NexClipper_work_process_flows.png](https://raw.githubusercontent.com/NexClipper/provbee/master/assets/NexClipper_work_process_flows.png)](https://www.youtube.com/watch?v=yg-TvT8-qw8)
+
 ## Provbee's Job!
 # He is workman.  
  Kubernetes Role, Namespace, ServiceAccount and etc create.(for NexClipper)  
