@@ -9,9 +9,6 @@ services:
 #      - ./zzz:/data
       - /root/.ssh:/root/.ssh
       - /etc/localtime:/etc/localtime:ro
-#    ports:
-#      - "80:80"
-#      - "443:443"
     environment:
       - ZZZ=ZZZ
 #      - TERRAVERSION=0.12.18

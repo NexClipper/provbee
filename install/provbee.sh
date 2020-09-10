@@ -377,8 +377,8 @@ endtest(){
 
 #DELETE TEST
 delete_test(){
+  kubectl delete -f /data
   kubectl delete -n nexclipper svc provbee-service
-  kubectl delete -n nexclipper provbee
   kubectl get po -n nexclipper -o jsonpath='{range $.items[?(@.metadata.ownerReferences[*].name == "agent")]}{.metadata.name}{"\n"}{end}'| xargs kubectl delete -n nexclipper po
   kubectl delete -n nexclipper clusterrolebinding ${KUBESERVICEACCOUNT}-rbac
   kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-secrets
@@ -387,6 +387,7 @@ delete_test(){
   kubectl delete -n nexclipper rolebinding ${KUBENAMESPACE}-rb
   kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-kubeconfig
   kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-ssh-key
+  kubectl delete -n nexclipper provbee
   kubectl delete -n nexclipper sa ${KUBESERVICEACCOUNT}
   kubectl delete -n nexclipper ns ${KUBENAMESPACE}
   rm $KUBECONFIG_FILE >/dev/null 2>&1

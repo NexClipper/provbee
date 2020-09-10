@@ -35,10 +35,9 @@ RUN curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v
 
 COPY .ssh /root/.ssh
 COPY entrypoint.sh /entrypoint.sh
-COPY provider.sh /provider.sh
-COPY get_pubkey.sh /usr/local/bin/get_pubkey.sh
-#COPY nodesearch.sh /nodesearch.sh
-COPY provbeecmd.sh /usr/bin/busybee
+COPY ./scripts/provider.sh /usr/bin/tfprovider
+COPY ./scripts/provbeecmd.sh /usr/bin/busybee
+COPY ./scripts/get_pubkey.sh /usr/local/bin/get_pubkey.sh
 
 # ssh setting
 #RUN sed -i 's/^#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config

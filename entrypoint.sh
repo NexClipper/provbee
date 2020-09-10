@@ -52,13 +52,6 @@ fi
 ##ssh start
 /etc/init.d/sshd --dry-run start
 /etc/init.d/sshd start
-#rc-service sshd start
 
-##ssh keygen
-#ssh-keygen -t rsa -b 4096 -q -P "" -f ~/.ssh/id_rsa
-#cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-#cp -Rfvp ~/.ssh /data/
-#touch /data/.ssh/lastupdate-$(date +%Y%m%d%H%M%S)
-
-##waiting
+##waiting test
 tail -F anything
