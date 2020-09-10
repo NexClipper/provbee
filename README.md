@@ -18,7 +18,7 @@ klevr-agent와 연결 시 klevr를 통해 task 등을 전달 받아 job을 실�
 * If you want, I will install K3s as well.  
 
 ## Features
-* **Install script** (with [nexclipper console](https://github.com/NexClipper/nexclipper-server))    
+* **Install script** (with [nexclipper console](http://console.nexclipper.io))    
    * ex) curl -sL http://gg.gg/provbee | K3S_SET=N K_API_KEY="zzzxxx" K_PLATFORM="kubernetes" K_MANAGER_URL="http://console.nexclipper.io:8090" K_ZONE_ID="NUM" bash
    * kubernetes cluster와 기본적으로 연결되어 console에서 사용하는 것을 권장
    * provbee가 사용할 kube-config 를 생성하고, namespace, serviceaccount 도 설정됨 (osx,linux 구분 없음)
