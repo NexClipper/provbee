@@ -312,7 +312,7 @@ cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: agent
+  name: klevr-agent
   namespace: ${KUBENAMESPACE}
   labels:
     name: klevr
@@ -327,7 +327,7 @@ spec:
     spec:
       containers:
       - image: klevry/klevr-agent:latest
-        name: agent
+        name: klevr-agent
         env:
         - name: K_API_KEY
           value: "${K_API_KEY}"
@@ -377,19 +377,19 @@ endtest(){
 
 #DELETE TEST
 delete_test(){
-  kubectl delete -f /data
-  kubectl delete -n nexclipper svc provbee-service
-  kubectl get po -n nexclipper -o jsonpath='{range $.items[?(@.metadata.ownerReferences[*].name == "agent")]}{.metadata.name}{"\n"}{end}'| xargs kubectl delete -n nexclipper po
-  kubectl delete -n nexclipper clusterrolebinding ${KUBESERVICEACCOUNT}-rbac
-  kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-secrets
-  kubectl delete -n nexclipper configmap ${KUBENAMESPACE}-agent-config
-  kubectl delete -n nexclipper role nexclipper-role
-  kubectl delete -n nexclipper rolebinding ${KUBENAMESPACE}-rb
-  kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-kubeconfig
-  kubectl delete -n nexclipper secret ${KUBESERVICEACCOUNT}-ssh-key
-  kubectl delete -n nexclipper provbee
-  kubectl delete -n nexclipper sa ${KUBESERVICEACCOUNT}
-  kubectl delete -n nexclipper ns ${KUBENAMESPACE}
+  kubectl exec -it -n ${KUBENAMESPACE} provbee -- kubectl delete -f /data
+  kubectl delete -n ${KUBENAMESPACE} svc provbee-service
+  kubectl get po -n ${KUBENAMESPACE} -o jsonpath='{range $.items[?(@.metadata.ownerReferences[*].name == "klevr-agent")]}{.metadata.name}{"\n"}{end}'| xargs kubectl delete -n nexclipper po
+  kubectl delete -n ${KUBENAMESPACE} clusterrolebinding ${KUBESERVICEACCOUNT}-rbac
+  kubectl delete -n ${KUBENAMESPACE} secret ${KUBESERVICEACCOUNT}-secrets
+  kubectl delete -n ${KUBENAMESPACE} configmap ${KUBENAMESPACE}-agent-config
+  kubectl delete -n ${KUBENAMESPACE} role nexclipper-role
+  kubectl delete -n ${KUBENAMESPACE} rolebinding ${KUBENAMESPACE}-rb
+  kubectl delete -n ${KUBENAMESPACE} secret ${KUBESERVICEACCOUNT}-kubeconfig
+  kubectl delete -n ${KUBENAMESPACE} secret ${KUBESERVICEACCOUNT}-ssh-key
+  kubectl delete -n ${KUBENAMESPACE} po provbee
+  kubectl delete -n ${KUBENAMESPACE} sa ${KUBESERVICEACCOUNT}
+  kubectl delete -n ${KUBENAMESPACE} ns ${KUBENAMESPACE}
   rm $KUBECONFIG_FILE >/dev/null 2>&1
 #/usr/local/bin/k3s-killall.sh
 #/usr/local/bin/k3s-uninstall.sh
