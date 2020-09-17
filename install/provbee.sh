@@ -50,17 +50,26 @@ fi
 ############
 k3s_checking(){
 if [[ $UNAMECHK == "Linux" ]]; then
-  k3s_install
+  k3s_rootchecking
   else
   echo ">> K3s Install - only Linux"
   echo ">> https://rancher.com/docs/k3s/latest/en/installation/installation-requirements/#operating-systems"
 fi  
 }
 
+k3s_rootchecking(){
+  if [ $(id -u) -eq 0 ]; then 
+    k3s_install 
+  else
+    fatal "run as root user"
+    exit 1
+  fi
+}
+
+
 k3s_install() {
 #K3s Server Install
-#curl -sfL https://get.k3s.io | sh -
-curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" sh -s -
+curl -sfL https://get.k3s.io | sh -
 
 ## cluster-ip change
 if [ -f /etc/systemd/system/k3s.service ]; then
@@ -147,6 +156,16 @@ Host *
 EOF
 }
 ssh_keycreate
+
+#### K3s User permission Checking!
+K3SPERM=$(kubectl cluster-info 2>&1 | grep -E "k3s.*permission"|wc -l)
+if [ $K3SPERM -eq 0 ]; then
+  if [[ $(kubectl get node -o jsonpath='{.items[*].metadata.managedFields[*].manager}') == "k3s" ]]; then
+    if [ $(id -u) -ne 0 ]; then echo "run as root user";exit 1 ; fi
+  fi
+else    
+  echo "run as root user"
+fi
 
 ############################################### kubectl command RUN
 info 
@@ -358,7 +377,7 @@ EOF
 
 #FILE gen
 
-info echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
+info ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 kubectl get po,svc -n $KUBENAMESPACE
 
 fi
