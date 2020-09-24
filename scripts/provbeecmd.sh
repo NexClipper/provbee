@@ -12,8 +12,9 @@ fi
 }
 
 nodesearch(){
-NAMESPACE=monitoring
-NODEPORT=$(kubectl get svc -n $NAMESPACE -o jsonpath='{.items[?(@.metadata.name == "'$beechk'")].spec.ports[0].nodePort}')
+#NAMESPACE=monitoring
+#NODEPORT=$(kubectl get svc -n $NAMESPACE -o jsonpath='{.items[?(@.metadata.name == "'$beechk'")].spec.ports[0].nodePort}')
+NODEPORT=$(kubectl get svc -A -o jsonpath='{.items[?(@.metadata.name == "'$beechk'")].spec.ports[0].nodePort}')
 NODEOSIMAGE=$(kubectl get node -o jsonpath='{.items[*].status.nodeInfo.osImage}')
 if [[ $NODEPORT == "" ]]; then
         echo "Not find $beechk's nodePort"

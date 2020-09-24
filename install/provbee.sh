@@ -153,6 +153,7 @@ ssh_keycreate(){
 Host *
 	StrictHostKeyChecking no
 	UserKnownHostsFile /dev/null
+  LogLevel ERROR
 EOF
 }
 ssh_keycreate
