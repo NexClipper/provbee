@@ -347,7 +347,7 @@ spec:
         app.kubernetes.io/name: klevr-agent
     spec:
       containers:
-      - image: klevry/klevr-agent:latest
+      - image: nexclipper/klevr-agent:latest
         name: klevr-agent
         env:
         - name: K_API_KEY
@@ -378,7 +378,7 @@ EOF
 
 #FILE gen
 
-info ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
+echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 kubectl get po,svc -n $KUBENAMESPACE
 
 fi
@@ -398,8 +398,8 @@ endtest(){
 
 #DELETE TEST
 delete_test(){
-  kubectl exec -it -n ${KUBENAMESPACE} provbee -- kubectl delete -f /data/klevry/kube-prometheus/manifests/
-  kubectl exec -it -n ${KUBENAMESPACE} provbee -- kubectl delete -f /data/klevry/kube-prometheus/manifests/setup
+  kubectl exec -it -n ${KUBENAMESPACE} provbee -- kubectl delete -f /data/klevry/kube-prometheus/
+  kubectl exec -it -n ${KUBENAMESPACE} provbee -- kubectl delete -f /data/klevry/kube-prometheus/setup
   kubectl delete -n ${KUBENAMESPACE} svc provbee-service
   kubectl get po -n ${KUBENAMESPACE} -o jsonpath='{range $.items[?(@.metadata.ownerReferences[*].name == "klevr-agent")]}{.metadata.name}{"\n"}{end}'| xargs kubectl delete -n ${KUBENAMESPACE} po
   kubectl delete -n ${KUBENAMESPACE} po provbee
