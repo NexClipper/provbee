@@ -17,7 +17,7 @@ nodesearch(){
 NODEPORT=$(kubectl get svc -A -o jsonpath='{.items[?(@.metadata.name == "'$beechk'")].spec.ports[0].nodePort}')
 NODEOSIMAGE=$(kubectl get node -o jsonpath='{.items[*].status.nodeInfo.osImage}')
 if [[ $NODEPORT == "" ]]; then
-        echo "Not find $beechk's nodePort"
+        echo "Not found (timeout : 300)"
         exit 1
 else
     if [[ $NODEOSIMAGE == "Docker Desktop" ]]; then
