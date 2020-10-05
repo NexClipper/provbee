@@ -398,8 +398,10 @@ endtest(){
 
 #DELETE TEST
 delete_test(){
-  kubectl exec -it -n ${KUBENAMESPACE} provbee -- kubectl delete -f /data/klevry/kube-prometheus/
-  kubectl exec -it -n ${KUBENAMESPACE} provbee -- kubectl delete -f /data/klevry/kube-prometheus/setup
+  #kubectl exec -it -n ${KUBENAMESPACE} provbee -- kubectl delete -f /data/klevry/kube-prometheus/
+  #kubectl exec -it -n ${KUBENAMESPACE} provbee -- kubectl delete -f /data/klevry/kube-prometheus/setup
+  #helm uninstall nex-pro  $(kubectl config current-context)
+  kubectl exec -it -n ${KUBENAMESPACE} provbee -- helm uninstall nex-pro
   kubectl delete -n ${KUBENAMESPACE} svc provbee-service
   kubectl get po -n ${KUBENAMESPACE} -o jsonpath='{range $.items[?(@.metadata.ownerReferences[*].name == "klevr-agent")]}{.metadata.name}{"\n"}{end}'| xargs kubectl delete -n ${KUBENAMESPACE} po
   kubectl delete -n ${KUBENAMESPACE} po provbee
