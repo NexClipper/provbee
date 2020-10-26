@@ -381,39 +381,39 @@ fi
 
 ##########################################
 #provbee run chk
-echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 #kubectl get po,svc -n $KUBENAMESPACE
 namespacechk(){
+echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 namespchk=$(kubectl get ns $KUBENAMESPACE 2>/dev/null |grep -v NAME| wc -l )
 echo -n -e "## Namespace \"$KUBENAMESPACE\" check\t" "\033[91mwait...\033[0m"
+sleep 3
 while [ $namespchk != "1" ]
 do
         nszzz=$((nszzz+1))
-        echo -e "\b\b\b\b\b\b\b\033[91m ${nszzz}/99 failed. \033[0m"
-        echo -n -e "## Namespace \"$KUBENAMESPACE\" check\t" "\033[91mwait...\033[0m"
+        echo -n -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[91m $(seq -f "%02g" $nszzz|tail -n1)/99 wait...\033[0m"
         namespchk=$(kubectl get ns $KUBENAMESPACE 2>/dev/null |grep -v NAME| wc -l)
         sleep 3
         if [ $nszzz == "99" ]; then echo "failed. restart plz."; exit 1; fi
 done
-echo -e "\b\b\b\b\b\b\b\033[92m OK.   \033[0m"
+echo -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[92m OK.          \033[0m"
 provbeeok
 }
 
 provbeeok(){
+echo -n -e "## Pod,SVC Running check\t" "\033[91mwait...\033[0m"
 sleep 5
 provinstchk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep -v Running | wc -l)
-echo -n -e "## Pod,SVC Running check\t" "\033[91mwait...\033[0m"
 while [ $provinstchk != "0" ];
 do
         przzz=$((przzz+1))
-        echo -e "\b\b\b\b\b\b\b\033[91m ${przzz}/99 failed. \033[0m"
-        echo -n -e "## Pod,SVC Running check\t" "\033[91mwait...\033[0m"
+        echo -n -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[91m $(seq -f "%02g" $przzz|tail -n1)/99 wait...\033[0m"
         provinstchk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep -v Running | wc -l)
         sleep 3
         if [ $przzz == "99" ]; then echo "failed. restart plz."; exit 1; fi
 done
-echo -e "\b\b\b\b\b\b\b\033[92m OK.   \033[0m"
+echo -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[92m OK.            \033[0m"
 echo -e "\033[92m Enjoy NexClipper! :) \033[0m"
+echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 }
 namespacechk
 
