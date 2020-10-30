@@ -381,7 +381,6 @@ fi
 
 ##########################################
 #provbee run chk
-#kubectl get po,svc -n $KUBENAMESPACE
 namespacechk(){
 echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 namespchk=$(kubectl get ns $KUBENAMESPACE 2>/dev/null |grep -v NAME| wc -l )
@@ -390,12 +389,12 @@ sleep 3
 while [ $namespchk != "1" ]
 do
         nszzz=$((nszzz+1))
-        echo -n -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[91m $(seq -f "%02g" $nszzz|tail -n1)/99 wait...\033[0m"
+        echo -n -e "\r## Namespace \"$KUBENAMESPACE\" check\t" "\033[91m $(seq -f "%02g" $nszzz|tail -n1)/99 wait...\033[0m"
         namespchk=$(kubectl get ns $KUBENAMESPACE 2>/dev/null |grep -v NAME| wc -l)
         sleep 3
         if [ $nszzz == "99" ]; then echo "failed. restart plz."; exit 1; fi
 done
-echo -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[92m OK.          \033[0m\a"
+echo -e "\r## Namespace \"$KUBENAMESPACE\" check\t" "\033[92m OK.            \033[0m"
 provbeeok
 }
 
@@ -406,20 +405,21 @@ provinstchk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep
 while [ $provinstchk != "0" ];
 do
         przzz=$((przzz+1))
-        echo -n -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[91m $(seq -f "%02g" $przzz|tail -n1)/99 wait...\033[0m"
-        #provinstchk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep -v Running | wc -l)
         beechk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep provbee | grep unning | wc -l)
         agentchk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep klevr-agent | grep unning | wc -l)
         if [ $beechk -eq 1 ] && [ $agentchk -eq 1 ]; then
           provinstchk=0
         else
           provinstchk=1
+          if [ $beechk -eq 1 ]; then provb="\033[92mProvBee\033[0m";else provb="\033[91mProvBee\033[0m" ;fi
+          if [ $agentchk -eq 1 ]; then klevra="\033[92mKlevr\033[0m";else klevra="\033[91mKlevr\033[0m" ;fi
         fi
+        echo -n -e "\r## $provb / $klevra check\t" "\033[91m $(seq -f "%02g" $przzz|tail -n1)/99 wait...\033[0m"
         sleep 3
         if [ $przzz == "99" ]; then echo "Status check failed. restart plz."; exit 1; fi
 done
-echo -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[92m OK.            \033[0m\a"
-echo -e "\033[92m Enjoy NexClipper! :) \033[0m"
+echo -e "\r## Pod,SVC Running check\t" "\033[92m OK.            \033[0m"
+echo -e "\a\033[92m Enjoy NexClipper! :) \033[0m"
 echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 }
 namespacechk
