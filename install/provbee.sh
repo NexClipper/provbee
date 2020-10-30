@@ -407,9 +407,16 @@ while [ $provinstchk != "0" ];
 do
         przzz=$((przzz+1))
         echo -n -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[91m $(seq -f "%02g" $przzz|tail -n1)/99 wait...\033[0m"
-        provinstchk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep -v Running | wc -l)
+        #provinstchk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep -v Running | wc -l)
+        beechk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep provbee | grep unning | wc -l)
+        agentchk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep klevr-agent | grep unning | wc -l)
+        if [ $beechk -eq 1 ] && [ $agentchk -eq 1 ]; then
+          provinstchk=0
+        else
+          provinstchk=1
+        fi
         sleep 3
-        if [ $przzz == "99" ]; then echo "failed. restart plz."; exit 1; fi
+        if [ $przzz == "99" ]; then echo "Status check failed. restart plz."; exit 1; fi
 done
 echo -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[92m OK.            \033[0m"
 echo -e "\033[92m Enjoy NexClipper! :) \033[0m"
