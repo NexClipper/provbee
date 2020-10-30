@@ -395,7 +395,7 @@ do
         sleep 3
         if [ $nszzz == "99" ]; then echo "failed. restart plz."; exit 1; fi
 done
-echo -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[92m OK.          \033[0m"
+echo -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[92m OK.          \033[0m\a"
 provbeeok
 }
 
@@ -418,7 +418,7 @@ do
         sleep 3
         if [ $przzz == "99" ]; then echo "Status check failed. restart plz."; exit 1; fi
 done
-echo -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[92m OK.            \033[0m"
+echo -e "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\033[92m OK.            \033[0m\a"
 echo -e "\033[92m Enjoy NexClipper! :) \033[0m"
 echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 }
