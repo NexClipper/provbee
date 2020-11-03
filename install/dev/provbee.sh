@@ -347,7 +347,7 @@ spec:
         app.kubernetes.io/name: klevr-agent
     spec:
       containers:
-      - image: nexclipper/klevr-agent:latest
+      - image: nexclipper/klevr-agent:0.2.0-SNAPSHOT
         name: klevr-agent
         env:
         - name: K_API_KEY
