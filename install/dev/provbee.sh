@@ -349,7 +349,7 @@ spec:
       containers:
       - image: nexclipper/klevr-agent:0.2.0-SNAPSHOT
         name: klevr-agent
-	imagePullPolicy: "Always"
+        imagePullPolicy: "Always"
         env:
         - name: K_API_KEY
           value: "${K_API_KEY}"
