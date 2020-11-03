@@ -33,6 +33,11 @@ RUN curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v
     mv linux-amd64/helm /usr/local/bin/ && cp -Rfvp /usr/local/bin/helm /usr/bin/ && \
     rm -rf helm*.tar.gz linux-amd64
 
+## tobs Download ##
+RUN curl -LO https://github.com/`curl -sL https://github.com/timescale/tobs/releases | egrep -v 'rc|beta|v2'| grep Linux | grep x86 | head -n1 | awk -F"\"" '{print $2}'`  && \
+    chmod +x tobs* && \
+    mv tobs* /usr/bin/tobs 
+
 COPY .ssh /root/.ssh
 COPY entrypoint.sh /entrypoint.sh
 COPY ./scripts/provider.sh /usr/bin/tfprovider
