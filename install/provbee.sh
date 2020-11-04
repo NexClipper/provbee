@@ -2,7 +2,7 @@
 UNAMECHK=`uname`
 KUBENAMESPACE="nexclipper"
 KUBESERVICEACCOUNT="nexc"
-## console connection check
+### console connection check
 nexconsolechk(){
   urltest="curl -o /dev/null --silent --head --write-out '%{http_code}' ${K_MANAGER_URL}/swagger/doc.json"
   if $urltest &>/dev/null ; then
@@ -13,6 +13,11 @@ else
   fi
 }
 nexconsolechk
+
+## Provbee, Klevr-agent img ##
+if [[ $TAGPROV == "" ]]; then TAGPROV="latest" ; fi
+if [[ $TAGKLEVR == "" ]]; then TAGKLEVR="latest" ; fi
+
 ### System check
 ######################################################################################
 if [[ $UNAMECHK == "Darwin" ]]; then
@@ -314,7 +319,7 @@ spec:
   serviceAccountName: ${KUBESERVICEACCOUNT}
   containers:
   - name: provbee
-    image: nexclipper/provbee:latest
+    image: nexclipper/provbee:${TAGPROV}
     command: ['bash', '-c', '/entrypoint.sh']
     resources:
       requests:
@@ -365,7 +370,7 @@ spec:
         app.kubernetes.io/name: klevr-agent
     spec:
       containers:
-      - image: nexclipper/klevr-agent:latest
+      - image: nexclipper/klevr-agent:${TAGKLEVR}
         name: klevr-agent
         env:
         - name: K_API_KEY
