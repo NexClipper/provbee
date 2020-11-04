@@ -6,7 +6,7 @@ KUBESERVICEACCOUNT="nexc"
 nexconsolechk(){
   urltest="curl -o /dev/null --silent --head --write-out '%{http_code}' ${K_MANAGER_URL}/swagger/doc.json"
   if $urltest &>/dev/null ; then
-  	printf "%s\n" "Next Step"
+  	printf "%s\n" "NexClipper installer "
 else
   	printf "%b%s\n" "\033[91m$K_MANAGER_URL\033[0m Not connection. check your network"
     exit 1
@@ -407,7 +407,7 @@ fi
 namespacechk(){
 echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 namespchk=$(kubectl get ns $KUBENAMESPACE 2>/dev/null |grep -v NAME| wc -l )
-echo -n -e "## Namespace \"$KUBENAMESPACE\" check\t" "\033[91mwait...\033[0m"
+echo -n -e "## Namespace \"$KUBENAMESPACE\" check\t" "\033[91mwait...🍯 \033[0m"
 sleep 3
 while [ $namespchk != "1" ]
 do
@@ -437,17 +437,15 @@ do
         else
           provinstchk=1
         fi
-        echo -n -e "\r## $provb / $klevra check\t" "\033[91m $(seq -f "%02g" $przzz|tail -n1)/99 wait...🐝\033[0m"
+        echo -n -e "\r## $provb / $klevra check  \t" "\033[91m $(seq -f "%02g" $przzz|tail -n1)/99 wait...🐝\033[0m"
         sleep 3
         if [ $przzz == "99" ]; then echo "Status check failed. restart plz."; exit 1; fi
 done
-echo -e "\r## NexClipper system check  \t" "\033[92m OK. 🍯❤️🐝                \033[0m"
+echo -e "\r## NexClipper system check\t" "\033[92m OK. 🍯❤️🐝                \033[0m"
 echo -e "\a\033[92m ⛵ Enjoy NexClipper! :) \033[0m"
 echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 }
 namespacechk
-
-
 ######################################################################END LINE
 #END TSET
 endtest(){
