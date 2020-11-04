@@ -2,6 +2,18 @@
 UNAMECHK=`uname`
 KUBENAMESPACE="nexclipper"
 KUBESERVICEACCOUNT="nexc"
+## console connection check
+nexconsolechk(){
+  urltest="curl -o /dev/null --silent --head --write-out '%{http_code}' ${K_MANAGER_URL}/swagger/doc.json"
+  if $urltest &>/dev/null ; then
+  	printf "%s\n" "Next Step"
+else
+  	printf "%b%s\n" "\033[91m$K_MANAGER_URL\033[0m Not connection. check your network"
+    exit 1
+  fi
+}
+nexconsolechk
+### System check
 ######################################################################################
 if [[ $UNAMECHK == "Darwin" ]]; then
   if [[ $WORKDIR == "" ]]; then WORKDIR="$HOME/klevry"; fi
@@ -61,7 +73,7 @@ k3s_rootchecking(){
   if [ $(id -u) -eq 0 ]; then 
     k3s_install 
   else
-    fatal "run as root user"
+    fatal "Run as Root user"
     exit 1
   fi
 }
@@ -78,7 +90,7 @@ if [ -f /etc/systemd/system/k3s.service ]; then
 	systemctl daemon-reload
 	systemctl restart k3s
 fi
-
+info "K3s check OK"
 ##K3s agent Install
 #curl -sfL https://get.k3s.io | K3S_URL=https://$MASTERIP:6443 K3S_TOKEN=///SERVER$(cat /var/lib/rancher/k3s/server/node-token) sh -
 ############ TOKEN
@@ -305,6 +317,13 @@ spec:
   - name: provbee
     image: nexclipper/provbee:latest
     command: ['bash', '-c', '/entrypoint.sh']
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "1250m"
+      limits:
+        memory: "1Gi"
+        cpu: "1500m"    
     volumeMounts:
     - name: ssh-auth
       mountPath: /data/.provbee/
@@ -399,7 +418,7 @@ provbeeok
 }
 
 provbeeok(){
-echo -n -e "## Pod,SVC Running check\t" "\033[91mwait...\033[0m"
+echo -n -e "## NexClipper system check\t" "\033[91mwait...🍯 \033[0m"
 sleep 5
 provinstchk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep -v Running | wc -l)
 while [ $provinstchk != "0" ];
@@ -407,19 +426,19 @@ do
         przzz=$((przzz+1))
         beechk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep provbee | grep unning | wc -l)
         agentchk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep klevr-agent | grep unning | wc -l)
+        if [ $beechk -eq 1 ]; then provb="\033[92mProvBee\033[0m";else provb="\033[91mProvBee\033[0m" ;fi
+        if [ $agentchk -eq 1 ]; then klevra="\033[92mKlevr\033[0m";else klevra="\033[91mKlevr\033[0m" ;fi
         if [ $beechk -eq 1 ] && [ $agentchk -eq 1 ]; then
           provinstchk=0
         else
           provinstchk=1
-          if [ $beechk -eq 1 ]; then provb="\033[92mProvBee\033[0m";else provb="\033[91mProvBee\033[0m" ;fi
-          if [ $agentchk -eq 1 ]; then klevra="\033[92mKlevr\033[0m";else klevra="\033[91mKlevr\033[0m" ;fi
         fi
-        echo -n -e "\r## $provb / $klevra check\t" "\033[91m $(seq -f "%02g" $przzz|tail -n1)/99 wait...\033[0m"
+        echo -n -e "\r## $provb / $klevra check\t" "\033[91m $(seq -f "%02g" $przzz|tail -n1)/99 wait...🐝\033[0m"
         sleep 3
         if [ $przzz == "99" ]; then echo "Status check failed. restart plz."; exit 1; fi
 done
-echo -e "\r## Pod,SVC Running check\t" "\033[92m OK.            \033[0m"
-echo -e "\a\033[92m Enjoy NexClipper! :) \033[0m"
+echo -e "\r## NexClipper system check  \t" "\033[92m OK. 🍯❤️🐝                \033[0m"
+echo -e "\a\033[92m ⛵ Enjoy NexClipper! :) \033[0m"
 echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 }
 namespacechk
