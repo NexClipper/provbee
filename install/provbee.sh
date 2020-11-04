@@ -90,7 +90,6 @@ if [ -f /etc/systemd/system/k3s.service ]; then
 	systemctl daemon-reload
 	systemctl restart k3s
 fi
-info "K3s check OK"
 ##K3s agent Install
 #curl -sfL https://get.k3s.io | K3S_URL=https://$MASTERIP:6443 K3S_TOKEN=///SERVER$(cat /var/lib/rancher/k3s/server/node-token) sh -
 ############ TOKEN
