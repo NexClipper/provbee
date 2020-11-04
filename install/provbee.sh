@@ -9,7 +9,7 @@ nexconsolechk(){
   	printf "%s\n" "NexClipper installer "
 else
   	printf "%b%s\n" "\033[91m$K_MANAGER_URL\033[0m Not connection. check your network"
-    exit 1
+    if [[ $DELTEST == "" ]]; then exit 1; fi
   fi
 }
 nexconsolechk
