@@ -1,6 +1,6 @@
 #!/bin/bash
 UNAMECHK=`uname`
-KUBENAMESPACE="nexclipper"
+KUBENAMESPACE="nex-system"
 KUBESERVICEACCOUNT="nexc"
 ### console connection check
 nexconsolechk(){
@@ -83,7 +83,6 @@ k3s_rootchecking(){
   fi
 }
 
-
 k3s_install() {
 #K3s Server Install
 curl -sfL https://get.k3s.io | sh -
@@ -95,25 +94,9 @@ if [ -f /etc/systemd/system/k3s.service ]; then
 	systemctl daemon-reload
 	systemctl restart k3s
 fi
-##K3s agent Install
-#curl -sfL https://get.k3s.io | K3S_URL=https://$MASTERIP:6443 K3S_TOKEN=///SERVER$(cat /var/lib/rancher/k3s/server/node-token) sh -
-############ TOKEN
-#if [[ $APITOKEN == "" ]];then APITOKEN=$(cat /var/lib/rancher/k3s/server/node-token); fi
 }
 if [[ $K3S_SET =~ ^([yY][eE][sS]|[yY])$ ]]; then k3s_checking ; fi
 #########################################################################
-########## TEST MODE 
-# GET Kube config Setting ##
-# nexcloud internal k8s cluster test 
-devtest(){
-  mkdir -p ~/.kube 
-  curl pubkey.nexclipper.io:9876/kube-config -o ~/.kube/config
-  if [ $(which kubectl|wc -l) -eq 0 ]; then curl -sL zxz.kr/kubectl|bash; fi
-  exit 1
-}
-## TEST LINE
-if [[ $DEVTEST =~ ^([yY][eE][sS]|[yY])$ ]]; then devtest ; fi
-############################################## TEST MODE END LINE
 
 ############
 # KUBERNETES
@@ -323,11 +306,11 @@ spec:
     command: ['bash', '-c', '/entrypoint.sh']
     resources:
       requests:
-        memory: "512Mi"
-        cpu: "1250m"
+        memory: "128Mi"
+        cpu: "250m"
       limits:
-        memory: "1Gi"
-        cpu: "1500m"    
+        memory: "256Mi"
+        cpu: "500m"    
     volumeMounts:
     - name: ssh-auth
       mountPath: /data/.provbee/
@@ -447,17 +430,6 @@ echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 }
 namespacechk
 ######################################################################END LINE
-#END TSET
-endtest(){
-  rm ./zzz.tmp >/dev/null 2>&1 
-  echo $K_API_KEY >> ./zzz.tmp
-  echo $K_PLATFORM >> ./zzz.tmp
-  echo $K_MANAGER_URL >> ./zzz.tmp
-  echo $K_ZONE_ID >> ./zzz.tmp
-  echo $K3S_SET >> ./zzz.tmp
-}
-#endtest
-
 
 #DELETE TEST
 delete_test(){
@@ -478,7 +450,6 @@ delete_test(){
   kubectl delete -n ${KUBENAMESPACE} sa ${KUBESERVICEACCOUNT}
   kubectl delete -n ${KUBENAMESPACE} ns ${KUBENAMESPACE}
   rm $KUBECONFIG_FILE >/dev/null 2>&1
-#/usr/local/bin/k3s-killall.sh
-#/usr/local/bin/k3s-uninstall.sh
+
 }
 if [[ $DELTEST =~ ^([yY][eE][sS]|[yY])$ ]]; then delete_test ; fi
