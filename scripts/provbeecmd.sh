@@ -38,7 +38,11 @@ tobscmd(){
     #tobs $beecmd -n nc --namespace $beenamespace -f provbeetmp 
     if [[ $beeC == "" ]]; then beeC="nexclipper"; fi 
     if [[ $beeB == "passwd" ]]; then chpasswd="$beeD"; fi
-    if [[ $beeD =~ ^NexClipper\..*$ ]]; then filepath="-f /tmp/$beeD"; fi
+    if [[ $beeD =~ ^NexClipper\..*$ ]]; then 
+        sed -i 's/\\n//g' /tmp/$beeD.base64
+        base64 -d /tmp/$beeD.base64 > /tmp/$beeD 
+        filepath="-f /tmp/$beeD"
+    fi
     case $beeB in 
         install) tobs install -n nc --namespace $beeC $filepath;; 
         uninstall) 
