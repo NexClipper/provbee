@@ -50,7 +50,8 @@ tobscmd(){
         tobs helm delete-data -n nc --namespace $beeC
         ;;
         passwd)
-        tobs -n nc --namespace $beeC grafana change-password $chpasswd
+        pwchstatus=$(tobs -n nc --namespace $beeC grafana change-password $chpasswd 2>&1 |grep successfully | wc -l)
+        if [ $pwchstatus -eq 1 ]; then echo "OK"; else echo "FAIL"; fi
         ;;
         help|*) echo "busybee tobs {install/uninstall} {NAMESPACE} {opt.FILEPATH}";;
     esac
