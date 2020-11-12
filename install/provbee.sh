@@ -365,6 +365,7 @@ spec:
           value: "${K_MANAGER_URL}"
         - name: K_ZONE_ID
           value: "${K_ZONE_ID}"
+        imagePullPolicy: Always
         ports:
         - containerPort: 18800
           name: klevr-agent
