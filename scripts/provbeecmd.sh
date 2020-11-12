@@ -57,6 +57,52 @@ tobscmd(){
     esac
 }
 
+k8s_api(){
+    promsvr_DNS="http://nc-prometheus-server.$beeC.svc.cluster.local"
+    case $beeB in
+        cluster_age) 
+        curl -sL -G --data-urlencode 'query=sum(time() - kube_service_created{namespace="default",service="kubernetes"})' $promsvr_DNS/api/v1/query ;;
+        cluster_status) 
+        curl -sL -G --data-urlencode 'query=kube_node_status_condition{status="true",condition="Ready"}' $promsvr_DNS/api/v1/query ;;
+        cluster_memory_use) 
+        curl -sL -G --data-urlencode 'query=sum(container_memory_working_set_bytes{id="/"})/sum(machine_memory_bytes)*100' $promsvr_DNS/api/v1/query ;;
+        cluster_cpu_use) 
+        curl -sL -G --data-urlencode 'query=sum(rate(container_cpu_usage_seconds_total{id="/"}[2m]))/sum(machine_cpu_cores)*100' $promsvr_DNS/api/v1/query ;;
+        cluster_store_use) 
+        curl -sL -G --data-urlencode 'query=sum (container_fs_usage_bytes{id="/"}) / sum (container_fs_limit_bytes{id="/"}) * 100' $promsvr_DNS/api/v1/query ;;
+        cluster_pod_use) 
+        curl -sL -G --data-urlencode 'query=sum(kube_pod_info) / sum(kube_node_status_allocatable_pods) * 100' $promsvr_DNS/api/v1/query ;;
+        total_node) 
+        curl -sL -G --data-urlencode 'query=sum(kube_node_info)' $promsvr_DNS/api/v1/query ;;
+        total_unavail_node) 
+        curl -sL -G --data-urlencode 'query=sum(kube_node_spec_unschedulable)' $promsvr_DNS/api/v1/query ;;
+        total_namespace) 
+        curl -sL -G --data-urlencode 'query=count(kube_namespace_created)' $promsvr_DNS/api/v1/query ;;
+        total_pods) 
+        curl -sL -G --data-urlencode 'query=count(kube_pod_info)' $promsvr_DNS/api/v1/query ;;
+        count_restart_pod) 
+        curl -sL -G --data-urlencode 'query=sum (kube_pod_status_phase{}) by (phase)' $promsvr_DNS/api/v1/query ;;
+        count_failed_pod) 
+        curl -sL -G --data-urlencode 'query=sum(kube_pod_status_phase{phase="Failed"})' $promsvr_DNS/api/v1/query ;;
+        count_pending_pod) 
+        curl -sL -G --data-urlencode 'query=sum(kube_pod_status_phase{phase="Pending"})' $promsvr_DNS/api/v1/query ;;
+        total_pvcs) 
+        curl -sL -G --data-urlencode 'query=count(kube_persistentvolumeclaim_info)' $promsvr_DNS/api/v1/query ;;
+        status_prometheus) 
+        curl -sL -G $promsvr_DNS/-/healthy;;
+        status_alertmanager) 
+        curl -sL -G "nc-prometheus-alertmanager.$beeC.svc.cluster.local/-/healthy";;
+        status_cluster_api) 
+        curl -sL -G --data-urlencode 'query=up{job=~".*apiserver.*"}' $promsvr_DNS/api/v1/query ;;
+        rate_cluster_api) 
+        curl -sL -G --data-urlencode 'query=sum by (code) (rate(apiserver_request_total[5m]))' $promsvr_DNS/api/v1/query ;;
+        total_alerts) 
+        curl -sL -G $promsvr_DNS/api/v1/alerts;;
+        help|*) echo "DDDDDDDDD";;
+    esac
+}
+
+
 
 
 while read beeA beeB beeC beeD beeLAST ; do
@@ -70,6 +116,12 @@ while read beeA beeB beeC beeD beeLAST ; do
         ######### tobs command        
         tobs)   tobscmd ;;
 
+        ######### k8s API
+        k8s)    k8s_api;;
+
+        ######### p8s API
+        p8s)    echo "p8s";;
+        
         ############## help
         help|*) echo "beestatus/nodesearch/tobs ...";;
     esac
