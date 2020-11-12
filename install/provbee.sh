@@ -85,8 +85,8 @@ k3s_rootchecking(){
 
 k3s_install() {
 #K3s Server Install
-#curl -sfL https://get.k3s.io | sh -
-curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.18.10+k3s2 sh -
+curl -sfL https://get.k3s.io | sh -
+#curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.18.10+k3s2 sh -
 
 ## cluster-ip change
 if [ -f /etc/systemd/system/k3s.service ]; then

@@ -30,15 +30,24 @@ nodesearch(){
             ;;
         help|HELP)  echo "busybee nodesearch {K8s Service}" ;;
     esac
+#kubectl patch service -n tobs-tset nc-grafana -p '{\"spec\":{\"type\":\"NodePort\"}}'
+#kubectl patch service -n tobs-tset nc-grafana --type='json' -p '[{"op":"replace","path":"/spec/type","value":"ClusterIP"},{"op":"replace","path":"/spec/ports/0/nodePort","value":null}]'
 }
 
 tobscmd(){
     #tobs $beecmd -n nc --namespace $beenamespace -f provbeetmp 
     if [[ $beeC == "" ]]; then beeC="nexclipper"; fi 
+    if [[ $beeB == "passwd" ]]; then chpasswd="$beeD"; fi
     if [[ $beeD =~ ^NexClipper\..*$ ]]; then filepath="-f /tmp/$beeD"; fi
     case $beeB in 
         install) tobs install -n nc --namespace $beeC $filepath;; 
-        uninstall) tobs uninstall -n nc --namespace $beeC $filepath;;
+        uninstall) 
+        tobs uninstall -n nc --namespace $beeC $filepath
+        tobs helm delete-data -n nc --namespace $beeC
+        ;;
+        passwd)
+        tobs -n nc --namespace $beeC grafana change-password $chpasswd
+        ;;
         help|*) echo "busybee tobs {install/uninstall} {NAMESPACE} {opt.FILEPATH}";;
     esac
 }
