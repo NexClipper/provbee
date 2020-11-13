@@ -318,7 +318,8 @@ k8s_api(){
     }
   }
 EOF
-`
+`            
+        echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
            ;;
         help|*) echo "Help me~~~~";;
     esac
@@ -349,4 +350,3 @@ while read beeA beeB beeC beeD beeLAST ; do
     esac
 done < <(echo $busybeecmd)
 
-echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
