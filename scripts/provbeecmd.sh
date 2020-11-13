@@ -326,6 +326,38 @@ EOF
 }
 
 
+p8s_api(){
+    curlcmd="curl -sL -G --data-urlencode"
+    promsvr_DNS="http://nc-prometheus-server.$beeC.svc.cluster.local"
+    status_prometheus(){
+        status_prometheus_va=`curl -sL -G -o /dev/null -w "%{http_code}"  $promsvr_DNS/-/healthy`
+        if [[ $status_prometheus_va == "" ]]; then status_prometheus_va="\""\"; fi
+
+    }
+    case $beeB in
+        wow)
+            status_prometheus
+        wowjson=`cat << EOF
+  {
+    "k8sapi": "provbee-test",
+    "data": {
+      "lookup": [
+        {
+          "name": "status_prometheus",
+          "type": "string",
+          "values": "$status_prometheus_va"
+        }
+      ]
+    }
+  }
+EOF
+`            
+        echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
+           ;;
+        help|*) echo "Help me~~~~";;
+    esac
+}
+
 
 
 while read beeA beeB beeC beeD beeLAST ; do
@@ -343,7 +375,7 @@ while read beeA beeB beeC beeD beeLAST ; do
         k8s)    k8s_api;;
 
         ######### p8s API
-        p8s)    echo "p8s";;
+        p8s)    p8s_api;;
 
         ############## help
         help|*) echo "beestatus/nodesearch/tobs ...";;
