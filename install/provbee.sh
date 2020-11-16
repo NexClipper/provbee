@@ -416,8 +416,8 @@ do
         beechk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep provbee | grep unning | wc -l)
         agentchk=$(kubectl get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep klevr-agent | grep unning | wc -l)
         if [ $beechk -eq 1 ]; then provb="\033[92mProvBee\033[0m";else provb="\033[91mProvBee\033[0m" ;fi
-        if [ $agentchk -eq 1 ]; then klevra="\033[92mKlevr\033[0m";else klevra="\033[91mKlevr\033[0m" ;fi
-        if [ $beechk -eq 1 ] && [ $agentchk -eq 1 ]; then
+        if [ $agentchk -ge 1 ]; then klevra="\033[92mKlevr\033[0m";else klevra="\033[91mKlevr\033[0m" ;fi
+        if [ $beechk -eq 1 ] && [ $agentchk -ge 1 ]; then
           provinstchk=0
         else
           provinstchk=1

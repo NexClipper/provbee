@@ -1,7 +1,7 @@
 #!/bin/bash
 busybeecmd=$@
-
-echo $busybeecmd >> /tmp/zzzbee
+beecmdlog="/tmp/zzzbee"
+echo $busybeecmd >> $beecmdlog
 #beeA -> podsearch, beestatus, tobs etc
 #beeB -> grafana, hello, etc..
 
@@ -51,8 +51,14 @@ tobscmd(){
         tobs helm delete-data -n nc --namespace $beeC
         ;;
         passwd)
-        pwchstatus=$(tobs -n nc --namespace $beeC grafana change-password $chpasswd 2>&1 |grep successfully | wc -l)
-        if [ $pwchstatus -eq 1 ]; then echo "OK"; else echo "FAIL"; fi
+        #pwchstatus=$(tobs -n nc --namespace $beeC grafana change-password $chpasswd 2>&1 |grep successfully | wc -l)
+        tobs -n nc --namespace $beeC grafana change-password $chpasswd >/tmp/gra_pwd 2>&1
+        pwchstatus=$(cat /tmp/gra_pwd |grep successfully | wc -l)
+        if [ $pwchstatus -eq 1 ]; then echo "OK"
+            sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :)/g" $beecmdlog
+        else echo "FAIL"
+            sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :(/g" $beecmdlog
+        fi
         ;;
         help|*) echo "busybee tobs {install/uninstall} {NAMESPACE} {opt.FILEPATH}";;
     esac
@@ -173,6 +179,8 @@ k8s_api(){
         if [[ $total_alerts_va == "" ]]; then total_alerts_va="\""\"; fi
 
     }
+
+    ################ Case
     case $beeB in
 #        cluster_age) cluster_age ;;
 #        cluster_status) cluster_status ;;
@@ -319,7 +327,8 @@ k8s_api(){
   }
 EOF
 `            
-        echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
+        echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/ //g' 
+        #echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
            ;;
         help|*) echo "Help me~~~~";;
     esac
@@ -334,6 +343,17 @@ p8s_api(){
         if [[ $status_prometheus_va == "" ]]; then status_prometheus_va="\""\"; fi
 
     }
+    promcm_get(){
+        echo "ZZ"
+        #kubectl get configmap -n $beeC nc-prometheus-config -o jsonpath="{.data.prometheus\.yml}"  > prometheus.yml
+
+    }
+    promcm_apply(){
+        echo "xx"
+        #kubectl get configmap -n $beeC nc-prometheus-alertmanager -o jsonpath="{.data.alertmanager\.yml}" > alertmanager.yml
+    }
+
+    ################ Case
     case $beeB in
         wow)
             status_prometheus
@@ -352,8 +372,10 @@ p8s_api(){
   }
 EOF
 `            
-        echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
+        echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/ //g' 
+        #echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
            ;;
+        cm) echo "configmap";;
         help|*) echo "Help me~~~~";;
     esac
 }
