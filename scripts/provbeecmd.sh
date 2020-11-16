@@ -358,13 +358,11 @@ p8s_api(){
     }
     cm_get(){
         if [[ $cm_target == "prom" ]]; then
-                #kubectl get configmap -n $beeC nc-prometheus-config -o jsonpath="{.data.prometheus\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'
-                #kubectl get configmap -n $beeC nc-prometheus-config -o json |jq '.data."prometheus.yml"|{"data": {"prometheus.yml": .}}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
                 kubectl get configmap -n $beeC nc-prometheus-config -o json |jq '.data|{"data": .}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
+                #kubectl get configmap -n $beeC nc-prometheus-config -o json |jq '.data."prometheus.yml"'|base64 | tr '\n' ' ' | sed -e 's/ //g'
         elif [[ $cm_target == "alertm" ]]; then
-                #kubectl get configmap -n $beeC nc-prometheus-alertmanager -o jsonpath="{.data.alertmanager\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'
-                #kubectl get configmap -n $beeC nc-prometheus-alertmanager -o json |jq '.data."alertmanager.yml"|{"data": {"alertmanager.yml": .}}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
                 kubectl get configmap -n $beeC nc-prometheus-alertmanager -o json |jq '.data|{"data": .}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
+                #kubectl get configmap -n $beeC nc-prometheus-alertmanager -o json |jq '.data."alertmanager.yml"'|base64 | tr '\n' ' ' | sed -e 's/ //g'
         else
                 echo "ang~"
         fi
@@ -372,25 +370,27 @@ p8s_api(){
     }
     cm_apply(){
         if [[ $p8sconfigfile =~ ^Nex-prom_config\..*$ ]]; then
-            sed -i 's/\\n//g' /tmp/$p8sconfigfile.base64
-            base64 -d /tmp/$p8sconfigfile.base64 > /tmp/$p8sconfigfile
-            filepath="/tmp/$p8sconfigfile"
+            #sed -i 's/\\n//g' /tmp/$p8sconfigfile.base64
+            #base64 -d /tmp/$p8sconfigfile.base64 > /tmp/$p8sconfigfile
+            filepath="/tmp/$p8sconfigfile.base64"
         elif [[ $p8sconfigfile =~ ^Nex-alt_config\..*$ ]]; then
-            sed -i 's/\\n//g' /tmp/$p8sconfigfile.base64
-            base64 -d /tmp/$p8sconfigfile.base64 > /tmp/$p8sconfigfile
-            filepath="/tmp/$p8sconfigfile"
+            #sed -i 's/\\n//g' /tmp/$p8sconfigfile.base64
+            #base64 -d /tmp/$p8sconfigfile.base64 > /tmp/$p8sconfigfile
+            filepath="/tmp/$p8sconfigfile.base64"
         else
             >&2 echo "file not found"
         fi
 
         if [[ $cm_target == "prom" ]]; then
-                echo $filepath
+                #echo $filepath
                 cat $filepath > /tmp/rrrrrrrrr 
-                echo "kubectl patch configmaps -n $beeC nc-prometheus-config --patch "$(cat $filepath)""
+                #echo "kubectl patch configmaps -n $beeC nc-prometheus-config --patch "$(cat $filepath)""
+                kubectl patch configmaps -n $beeC nc-prometheus-config --patch "$(cat $filepath|base64 -d|jq '{"data": {"prometheus.yml": .}}')"
         elif [[ $cm_target == "alertm" ]]; then
-                echo $filepath
+                #echo $filepath
                 cat $filepath > /tmp/aaaaaaaaa 
-                echo "kubectl patch configmaps -n $beeC nc-prometheus-alertmanager --patch "$(cat $filepath)""
+                #echo "kubectl patch configmaps -n $beeC nc-prometheus-alertmanager --patch "$(cat $filepath)""
+                kubectl patch configmaps -n $beeC nc-prometheus-alertmanager --patch "$(cat $filepath|base64 -d|jq '{"data": {"alertmanager.yml": .}}')"
         else
                 echo "ang~"
         fi

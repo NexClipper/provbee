@@ -429,6 +429,11 @@ done
 echo -e "\r## NexClipper system check\t" "\033[92m OK. 🍯❤️🐝                \033[0m"
 echo -e "\a\033[92m ⛵ Enjoy NexClipper! :) \033[0m"
 echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
+cat <<EOF > /usr/bin/beeshell
+#!/bin/bash
+kubectl exec -it -n ${KUBENAMESPACE} provbee -- bash
+EOF
+chmod +x /usr/bin/beeshell
 }
 namespacechk
 ######################################################################END LINE
