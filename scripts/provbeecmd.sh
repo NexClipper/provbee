@@ -383,9 +383,11 @@ p8s_api(){
 
         if [[ $cm_target == "prom" ]]; then
                 echo $filepath
+                cat $filepath > rrrrrrrrr 
                 echo "kubectl patch configmaps -n $beeC nc-prometheus-config --patch "$(cat $filepath)""
         elif [[ $cm_target == "alertm" ]]; then
                 echo $filepath
+                cat $filepath > aaaaaaaaa 
                 echo "kubectl patch configmaps -n $beeC nc-prometheus-alertmanager --patch "$(cat $filepath)""
         else
                 echo "ang~"
