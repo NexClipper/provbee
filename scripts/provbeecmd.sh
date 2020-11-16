@@ -359,9 +359,11 @@ p8s_api(){
     cm_get(){
         if [[ $cm_target == "prom" ]]; then
                 #kubectl get configmap -n $beeC nc-prometheus-config -o jsonpath="{.data.prometheus\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'
+                #kubectl get configmap -n $beeC nc-prometheus-config -o json |jq '.data."prometheus.yml"|{"data": {"prometheus.yml": .}}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
                 kubectl get configmap -n $beeC nc-prometheus-config -o json |jq '.data|{"data": .}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
         elif [[ $cm_target == "alertm" ]]; then
                 #kubectl get configmap -n $beeC nc-prometheus-alertmanager -o jsonpath="{.data.alertmanager\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'
+                #kubectl get configmap -n $beeC nc-prometheus-alertmanager -o json |jq '.data."alertmanager.yml"|{"data": {"alertmanager.yml": .}}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
                 kubectl get configmap -n $beeC nc-prometheus-alertmanager -o json |jq '.data|{"data": .}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
         else
                 echo "ang~"
@@ -383,11 +385,11 @@ p8s_api(){
 
         if [[ $cm_target == "prom" ]]; then
                 echo $filepath
-                cat $filepath > rrrrrrrrr 
+                cat $filepath > /tmp/rrrrrrrrr 
                 echo "kubectl patch configmaps -n $beeC nc-prometheus-config --patch "$(cat $filepath)""
         elif [[ $cm_target == "alertm" ]]; then
                 echo $filepath
-                cat $filepath > aaaaaaaaa 
+                cat $filepath > /tmp/aaaaaaaaa 
                 echo "kubectl patch configmaps -n $beeC nc-prometheus-alertmanager --patch "$(cat $filepath)""
         else
                 echo "ang~"
