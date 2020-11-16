@@ -358,9 +358,9 @@ p8s_api(){
     }
     cm_get(){
         if [[ $cm_target == "prom" ]]; then
-                getconfigmap=`kubectl get configmap -n $beeC nc-prometheus-config -o jsonpath="{.data.prometheus\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'`
+                kubectl get configmap -n $beeC nc-prometheus-config -o jsonpath="{.data.prometheus\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'
         elif [[ $cm_target == "alertm" ]]; then
-                getconfigmap=`kubectl get configmap -n $beeC nc-prometheus-alertmanager -o jsonpath="{.data.alertmanager\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'`
+                kubectl get configmap -n $beeC nc-prometheus-alertmanager -o jsonpath="{.data.alertmanager\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'
         else
                 echo "ang~"
         fi
