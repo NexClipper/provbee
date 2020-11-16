@@ -358,9 +358,11 @@ p8s_api(){
     }
     cm_get(){
         if [[ $cm_target == "prom" ]]; then
-                kubectl get configmap -n $beeC nc-prometheus-config -o jsonpath="{.data.prometheus\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'
+                #kubectl get configmap -n $beeC nc-prometheus-config -o jsonpath="{.data.prometheus\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'
+                kubectl get configmap -n $beeC nc-prometheus-config -o json |jq '.data|{"data": .}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
         elif [[ $cm_target == "alertm" ]]; then
-                kubectl get configmap -n $beeC nc-prometheus-alertmanager -o jsonpath="{.data.alertmanager\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'
+                #kubectl get configmap -n $beeC nc-prometheus-alertmanager -o jsonpath="{.data.alertmanager\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'
+                kubectl get configmap -n $beeC nc-prometheus-alertmanager -o json |jq '.data|{"data": .}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
         else
                 echo "ang~"
         fi
@@ -406,11 +408,9 @@ EOF
                 esac
             done < <(echo $beeLAST)
             case $beeD in
-                    get) cm_get
-                    echo $getconfigmap 
-                    ;;
+                    get) cm_get;;
                     apply) cm_apply;;
-                    *) echo "NAMESPACE get/apply";;
+                    *) >&2 echo ">> p8s cm NAMESPACE get/apply prometheus/alertmanager" ;;
             esac
         ;;
         help|*) echo "Help me~~~~";;
