@@ -356,14 +356,24 @@ p8s_api(){
         if [[ $status_prometheus_va == "" ]]; then status_prometheus_va="\""\"; fi
 
     }
-    promcm_get(){
-        echo "ZZ"
-        #kubectl get configmap -n $beeC nc-prometheus-config -o jsonpath="{.data.prometheus\.yml}"  > prometheus.yml
+    cm_get(){
+        if [[ $cm_target == "prom" ]]; then
+                getconfigmap=`kubectl get configmap -n $beeC nc-prometheus-config -o jsonpath="{.data.prometheus\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'`
+        elif [[ $cm_target == "alertm" ]]; then
+                getconfigmap=`kubectl get configmap -n $beeC nc-prometheus-alertmanager -o jsonpath="{.data.alertmanager\.yml}"|base64 | tr '\n' ' ' | sed -e 's/ //g'`
+        else
+                echo "ang~"
+        fi
 
     }
-    promcm_apply(){
-        echo "xx"
-        #kubectl get configmap -n $beeC nc-prometheus-alertmanager -o jsonpath="{.data.alertmanager\.yml}" > alertmanager.yml
+    cm_apply(){
+        if [[ $cm_target == "prom" ]]; then
+                echo "kubectl apply configmap -n $beeC nc-prometheus-config -o jsonpath="{.data.prometheus\.yml}" |base64 | tr '\n' ' ' | sed -e 's/ //g'"
+        elif [[ $cm_target == "alertm" ]]; then
+                echo "kubectl get configmap -n $beeC nc-prometheus-alertmanager -o jsonpath="{.data.alertmanager\.yml}" |base64 | tr '\n' ' ' | sed -e 's/ //g'"
+        else
+                echo "ang~"
+        fi
     }
 
     ################ Case
@@ -387,8 +397,22 @@ EOF
 `            
         echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/ //g' 
         #echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
-           ;;
-        cm) echo "configmap";;
+        ;;
+        cm)
+            while read LASTA LASTB; do
+                case $LASTA in
+                    prom|prometheus) cm_target="prom";;
+                    alert|alertmanager) cm_target="alertm";;
+                esac
+            done < <(echo $beeLAST)
+            case $beeD in
+                    get) cm_get
+                    echo $getconfigmap 
+                    ;;
+                    apply) cm_apply;;
+                    *) echo "NAMESPACE get/apply";;
+            esac
+        ;;
         help|*) echo "Help me~~~~";;
     esac
 }
