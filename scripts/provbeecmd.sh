@@ -48,11 +48,12 @@ tobscmd(){
         install) 
             tobs install -n nc --namespace $beeC $filepath
         ############ tobs install chk start
-            tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep -E -v 'unning.|ompleted'|wc -l)
-            while [ $tobs_status != "0" ]; do
+            tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l)
                 sleep 3
+            while [ $tobs_status != "0" ]; do
                 tobszzz=$((tobszzz+1))
-                tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep -E -v 'unning.|ompleted'|wc -l) 
+                tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l) 
+                sleep 3
                 if [ $tobszzz == "99" ]; then >&2 echo "tobs install checking time out(300s)" ; exit 1 ; fi
             done
         ######### tobs install chk stop
