@@ -178,7 +178,7 @@ k8s_api(){
         if [[ $status_cluster_api_va == "" ]]; then status_cluster_api_va="\""\"; fi
     }
     rate_cluster_api(){
-        rate_cluster_api_va=`$curlcmd 'query=sum by (code) (rate(apiserver_request_total[1m]))' $promsvr_DNS/api/v1/query \
+        rate_cluster_api_va=`$curlcmd 'query=sum by (code) (rate(apiserver_request_total[5m]))' $promsvr_DNS/api/v1/query \
         | jq '.data'`
         #| jq '.data.result[]'`
         #| jq '.data.result[]' |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g'
@@ -369,10 +369,24 @@ p8s_api(){
 
     }
     cm_apply(){
+        if [[ $p8sconfigfile =~ ^Nex-prom_config\..*$ ]]; then
+            sed -i 's/\\n//g' /tmp/$p8sconfigfile.base64
+            base64 -d /tmp/$p8sconfigfile.base64 > /tmp/$p8sconfigfile
+            filepath="/tmp/$p8sconfigfile"
+        elif [[ $p8sconfigfile =~ ^Nex-alt_config\..*$ ]]; then
+            sed -i 's/\\n//g' /tmp/$p8sconfigfile.base64
+            base64 -d /tmp/$p8sconfigfile.base64 > /tmp/$p8sconfigfile
+            filepath="/tmp/$p8sconfigfile"
+        else
+            >&2 echo "file not found"
+        fi
+
         if [[ $cm_target == "prom" ]]; then
-                echo "kubectl apply configmap -n $beeC nc-prometheus-config -o jsonpath="{.data.prometheus\.yml}" |base64 | tr '\n' ' ' | sed -e 's/ //g'"
+                echo $filepath
+                echo "kubectl patch configmaps -n $beeC nc-prometheus-config --patch "$(cat $filepath)""
         elif [[ $cm_target == "alertm" ]]; then
-                echo "kubectl get configmap -n $beeC nc-prometheus-alertmanager -o jsonpath="{.data.alertmanager\.yml}" |base64 | tr '\n' ' ' | sed -e 's/ //g'"
+                echo $filepath
+                echo "kubectl patch configmaps -n $beeC nc-prometheus-alertmanager --patch "$(cat $filepath)""
         else
                 echo "ang~"
         fi
@@ -401,11 +415,12 @@ EOF
         #echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
         ;;
         cm)
-            while read LASTA LASTB; do
+            while read LASTA LASTB LASTC; do
                 case $LASTA in
                     prom|prometheus) cm_target="prom";;
                     alert|alertmanager) cm_target="alertm";;
                 esac
+                if [[ $LASTB != "" ]]; then p8sconfigfile=$LASTB; fi
             done < <(echo $beeLAST)
             case $beeD in
                     get) cm_get;;
