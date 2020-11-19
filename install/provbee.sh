@@ -268,10 +268,9 @@ roleRef:
 EOF
 
 kubeconfig_gen
-
-############ProvBee-Service
+############# Provbee-Deployment & Service
 info
-cat <<EOF | kubectl apply -f -
+cat <<EOF | kubectl apply -f - 
 apiVersion: v1
 kind: Service
 metadata:
@@ -279,61 +278,131 @@ metadata:
   namespace: ${KUBENAMESPACE}
 spec:
   selector:
-    name: klevr
+    name: provbee
   clusterIP: None
   ports:
   - name: provbee # Actually, no port is needed.
     port: 22
     targetPort: 22
----
 EOF
-############ProvBee Pod
 info
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Pod
+cat <<EOF | kubectl apply -f - 
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   namespace: ${KUBENAMESPACE}
   name: provbee
   labels:
-    name: klevr
+    name: provbee
 spec:
-  hostname: provbee
-  subdomain: provbee-service
-  serviceAccountName: ${KUBESERVICEACCOUNT}
-  containers:
-  - name: provbee
-    image: nexclipper/provbee:${TAGPROV}
-    command: ['bash', '-c', '/entrypoint.sh']
-    resources:
-      requests:
-        memory: "128Mi"
-        cpu: "250m"
-      limits:
-        memory: "256Mi"
-        cpu: "500m"    
-    volumeMounts:
-    - name: ssh-auth
-      mountPath: /data/.provbee/
-    - name: kube-config
-      mountPath: /root/.kube/
-  volumes:
-  - name: ssh-auth
-    secret:
-      secretName: ${KUBESERVICEACCOUNT}-ssh-key
-#      defaultMode: 0644
-      items:
-      - key: pubkey
-        path: configmap_authkey
-  - name: kube-config
-    secret:
-      secretName: ${KUBESERVICEACCOUNT}-kubeconfig
-      defaultMode: 0644
-      items:
-      - key: kubeconfig
-        path: config
+  selector:
+    matchLabels:
+      name: provbee
+  template:
+    metadata:
+      labels:
+        name: provbee
+    spec:
+      serviceAccountName: ${KUBESERVICEACCOUNT}
+      containers:
+      - name: provbee
+        image: nexclipper/provbee:${TAGPROV}
+        command: ['bash', '-c', '/entrypoint.sh']
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: ssh-auth
+          mountPath: /data/.provbee/
+        - name: kube-config
+          mountPath: /root/.kube/
+      volumes:
+      - name: ssh-auth
+        secret:
+          secretName: ${KUBESERVICEACCOUNT}-ssh-key
+    #      defaultMode: 0644
+          items:
+          - key: pubkey
+            path: configmap_authkey
+      - name: kube-config
+        secret:
+          secretName: ${KUBESERVICEACCOUNT}-kubeconfig
+          defaultMode: 0644
+          items:
+          - key: kubeconfig
+            path: config
 ---
 EOF
+
+#############ProvBee-Pod & Service
+#info
+#cat <<EOF | kubectl apply -f -
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: provbee-service
+#  namespace: ${KUBENAMESPACE}
+#spec:
+#  selector:
+#    name: klevr
+#  clusterIP: None
+#  ports:
+#  - name: provbee # Actually, no port is needed.
+#    port: 22
+#    targetPort: 22
+#---
+#EOF
+#info
+#cat <<EOF | kubectl apply -f -
+#apiVersion: v1
+#kind: Pod
+#metadata:
+#  namespace: ${KUBENAMESPACE}
+#  name: provbee
+#  labels:
+#    name: klevr
+#spec:
+#  hostname: provbee
+#  subdomain: provbee-service
+#  serviceAccountName: ${KUBESERVICEACCOUNT}
+#  containers:
+#  - name: provbee
+#    image: nexclipper/provbee:${TAGPROV}
+#    command: ['bash', '-c', '/entrypoint.sh']
+#    resources:
+#      requests:
+#        memory: "128Mi"
+#        cpu: "250m"
+#      limits:
+#        memory: "256Mi"
+#        cpu: "500m"    
+#    volumeMounts:
+#    - name: ssh-auth
+#      mountPath: /data/.provbee/
+#    - name: kube-config
+#      mountPath: /root/.kube/
+#  volumes:
+#  - name: ssh-auth
+#    secret:
+#      secretName: ${KUBESERVICEACCOUNT}-ssh-key
+##      defaultMode: 0644
+#      items:
+#      - key: pubkey
+#        path: configmap_authkey
+#  - name: kube-config
+#    secret:
+#      secretName: ${KUBESERVICEACCOUNT}-kubeconfig
+#      defaultMode: 0644
+#      items:
+#      - key: kubeconfig
+#        path: config
+#---
+#EOF
+
 ##########Klevr-agent
 info
 cat <<EOF | kubectl apply -f -
@@ -429,11 +498,6 @@ done
 echo -e "\r## NexClipper system check\t" "\033[92m OK. 🍯❤️🐝                \033[0m"
 echo -e "\a\033[92m ⛵ Enjoy NexClipper! :) \033[0m"
 echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
-cat <<EOF > /usr/bin/beeshell
-#!/bin/bash
-kubectl exec -it -n ${KUBENAMESPACE} provbee -- bash
-EOF
-chmod +x /usr/bin/beeshell
 }
 namespacechk
 ######################################################################END LINE

@@ -31,8 +31,6 @@ nodesearch(){
             ;;
         help|HELP)  echo "busybee nodesearch {K8s Service}" ;;
     esac
-#kubectl patch service -n tobs-tset nc-grafana -p '{\"spec\":{\"type\":\"NodePort\"}}'
-#kubectl patch service -n tobs-tset nc-grafana --type='json' -p '[{"op":"replace","path":"/spec/type","value":"ClusterIP"},{"op":"replace","path":"/spec/ports/0/nodePort","value":null}]'
 }
 
 tobscmd(){
@@ -64,7 +62,6 @@ tobscmd(){
         tobs helm delete-data -n nc --namespace $beeC
         ;;
         passwd)
-        #pwchstatus=$(tobs -n nc --namespace $beeC grafana change-password $chpasswd 2>&1 |grep successfully | wc -l)
         tobs -n nc --namespace $beeC grafana change-password $chpasswd >/tmp/gra_pwd 2>&1
         pwchstatus=$(cat /tmp/gra_pwd |grep successfully | wc -l)
         if [ $pwchstatus -eq 1 ]; then echo "OK"
@@ -370,27 +367,19 @@ p8s_api(){
     }
     cm_apply(){
         if [[ $p8sconfigfile =~ ^Nex-prom_config\..*$ ]]; then
-            #sed -i 's/\\n//g' /tmp/$p8sconfigfile.base64
-            #base64 -d /tmp/$p8sconfigfile.base64 > /tmp/$p8sconfigfile
             filepath="/tmp/$p8sconfigfile.base64"
         elif [[ $p8sconfigfile =~ ^Nex-alt_config\..*$ ]]; then
-            #sed -i 's/\\n//g' /tmp/$p8sconfigfile.base64
-            #base64 -d /tmp/$p8sconfigfile.base64 > /tmp/$p8sconfigfile
             filepath="/tmp/$p8sconfigfile.base64"
         else
             >&2 echo "file not found"
         fi
 
         if [[ $cm_target == "prom" ]]; then
-                #echo $filepath
                 cat $filepath > /tmp/rrrrrrrrr 
-                #echo "kubectl patch configmaps -n $beeC nc-prometheus-config --patch "$(cat $filepath)""
-                kubectl patch configmaps -n $beeC nc-prometheus-config --patch "$(cat $filepath|base64 -d|jq '{"data": {"prometheus.yml": .}}')"
+                kubectl patch configmaps -n $beeC nc-prometheus-config --patch "$(cat $filepath|base64 -d|jq '{"data": {"prometheus.yml": .}}')" > $filepath.status
         elif [[ $cm_target == "alertm" ]]; then
-                #echo $filepath
                 cat $filepath > /tmp/aaaaaaaaa 
-                #echo "kubectl patch configmaps -n $beeC nc-prometheus-alertmanager --patch "$(cat $filepath)""
-                kubectl patch configmaps -n $beeC nc-prometheus-alertmanager --patch "$(cat $filepath|base64 -d|jq '{"data": {"alertmanager.yml": .}}')"
+                kubectl patch configmaps -n $beeC nc-prometheus-alertmanager --patch "$(cat $filepath|base64 -d|jq '{"data": {"alertmanager.yml": .}}')" > $filepath.status
         else
                 echo "ang~"
         fi
