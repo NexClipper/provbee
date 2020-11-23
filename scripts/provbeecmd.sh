@@ -66,8 +66,9 @@ tobscmd(){
         pwchstatus=$(cat /tmp/gra_pwd |grep successfully | wc -l)
         if [ $pwchstatus -eq 1 ]; then echo "OK"
             sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :)/g" $beecmdlog
-        else echo "FAIL"
+        else 
             sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :(/g" $beecmdlog
+            >&2 echo "Grafana password change FAIL"
         fi
         ;;
         help|*) echo "busybee tobs {install/uninstall} {NAMESPACE} {opt.FILEPATH}";;
@@ -371,7 +372,7 @@ p8s_api(){
         elif [[ $p8sconfigfile =~ ^Nex-alt_config\..*$ ]]; then
             filepath="/tmp/$p8sconfigfile.base64"
         else
-            >&2 echo "file not found"
+            >&2 echo "file not found : $p8sconfigfile"
         fi
 
         if [[ $cm_target == "prom" ]]; then
