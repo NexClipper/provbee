@@ -62,13 +62,18 @@ tobscmd(){
         tobs helm delete-data -n nc --namespace $beeC
         ;;
         passwd)
-        tobs -n nc --namespace $beeC grafana change-password $chpasswd >/tmp/gra_pwd 2>&1
-        pwchstatus=$(cat /tmp/gra_pwd |grep successfully | wc -l)
-        if [ $pwchstatus -eq 1 ]; then echo "OK"
-            sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :)/g" $beecmdlog
-        else 
-            sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :(/g" $beecmdlog
-            >&2 echo "Grafana password change FAIL"
+        tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l)
+        if [ $tobs_status -ne 0 ]; then
+          >&2 echo "Grafana service is status RED"
+          else
+          tobs -n nc --namespace $beeC grafana change-password $chpasswd >/tmp/gra_pwd 2>&1
+          pwchstatus=$(cat /tmp/gra_pwd |grep successfully | wc -l)
+          if [ $pwchstatus -eq 1 ]; then echo "OK"
+              sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :)/g" $beecmdlog
+          else 
+              sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :(/g" $beecmdlog
+              >&2 echo "Grafana password change FAIL"
+          fi
         fi
         ;;
         help|*) echo "busybee tobs {install/uninstall} {NAMESPACE} {opt.FILEPATH}";;
