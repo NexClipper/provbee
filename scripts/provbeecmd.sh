@@ -65,6 +65,7 @@ tobscmd(){
         tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l)
         if [ $tobs_status -ne 0 ]; then
           >&2 echo "Grafana service is status RED"
+          exit 1
           else
           tobs -n nc --namespace $beeC grafana change-password $chpasswd >/tmp/gra_pwd 2>&1
           pwchstatus=$(cat /tmp/gra_pwd |grep successfully | wc -l)
@@ -73,6 +74,7 @@ tobscmd(){
           else 
               sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :(/g" $beecmdlog
               >&2 echo "Grafana password change FAIL"
+              exit 1
           fi
         fi
         ;;
