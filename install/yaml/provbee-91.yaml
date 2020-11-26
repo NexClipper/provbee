@@ -36,7 +36,7 @@ spec:
       volumes:
       - name: ssh-auth
         secret:
-          secretName: $KUBESERVICEACCOUNT-ssh-key
+          secretName: ${KUBESERVICEACCOUNT}-ssh-key
           defaultMode: 0600
           items:
           - key: prikey
