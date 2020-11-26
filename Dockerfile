@@ -1,3 +1,14 @@
+FROM golang:alpine as installer
+
+RUN apk add git make yarn bash curl
+
+RUN mkdir -p $GOPATH/src/github.com/prometheus && \
+    cd $GOPATH/src/github.com/prometheus && \
+    git clone https://github.com/prometheus/prometheus.git && \
+    cd prometheus && \
+    make build && \
+    mv promtool /tmp/promtool
+
 FROM golang:alpine
 LABEL maintainer="NexCloud Peter <peter@nexclipper.io>"
 
@@ -43,6 +54,7 @@ COPY entrypoint.sh /entrypoint.sh
 COPY ./scripts/provider.sh /usr/bin/tfprovider
 COPY ./scripts/provbeecmd.sh /usr/bin/busybee
 COPY ./scripts/get_pubkey.sh /usr/local/bin/get_pubkey.sh
+COPY --from=installer /tmp/promtool /usr/bin/promtool
 
 # ssh setting
 #RUN sed -i 's/^#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config
