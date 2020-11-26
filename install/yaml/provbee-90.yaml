@@ -11,8 +11,8 @@ spec:
   - name: provbee # Actually, no port is needed.
     port: 22
     targetPort: 22
- --
- apiVersion: apps/v1
+---
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: ${KUBENAMESPACE}
