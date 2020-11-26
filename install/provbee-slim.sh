@@ -2,6 +2,24 @@
 UNAMECHK=`uname`
 KUBENAMESPACE="nex-system"
 KUBESERVICEACCOUNT="nexc"
+## Provbee, Klevr-agent img ##
+if [[ $TAGPROV == "" ]]; then TAGPROV="latest" ; fi
+if [[ $TAGKLEVR == "" ]]; then TAGKLEVR="latest" ; fi
+if [[ $K_API_KEY == "" ]] || [[ $K_PLATFORM == "" ]] || [[ $K_MANAGER_URL == "" ]] || [[ $K_ZONE_ID == "" ]]; then
+    echo "NexClipper Console Page's install script check"
+    echo "bye~~"
+    exit 1
+fi
+### sed
+SED_NS="s/\${KUBENAMESPACE}/$KUBENAMESPACE/g"
+SED_SVCAC="s/\${KUBESERVICEACCOUNT}/$KUBESERVICEACCOUNT/g"
+SED_K_API="s/\${K_API_KEY}/$K_API_KEY/g"
+SED_K_PLT="s/\${K_PLATFORM}/$K_PLATFORM/g"
+SED_K_MURL="s/\${K_MANAGER_URL}/$K_MANAGER_URL/g"
+SED_K_ZID="s/\${K_ZONE_ID}/$K_ZONE_ID/g"
+SED_TAG_K="s/\${TAGKLEVR}/$TAGKLEVR/g"
+SED_TAG_P="s/\${TAGPROV}/$TAGPROV/g"
+
 ### console connection check
 nexconsolechk(){
   urltest="curl -o /dev/null --silent --head --write-out '%{http_code}' ${K_MANAGER_URL}/swagger/doc.json"
@@ -14,9 +32,7 @@ else
 }
 nexconsolechk
 
-## Provbee, Klevr-agent img ##
-if [[ $TAGPROV == "" ]]; then TAGPROV="latest" ; fi
-if [[ $TAGKLEVR == "" ]]; then TAGKLEVR="latest" ; fi
+
 
 ### System check
 ######################################################################################
@@ -169,291 +185,38 @@ else
 fi
 
 ############################################### kubectl command RUN
+#info #namespace, serviceaccount create
 info 
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: ${KUBENAMESPACE}
-EOF
-
-info 
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: ${KUBESERVICEACCOUNT}
-  namespace: ${KUBENAMESPACE}
----
-EOF
-
+curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/provbee-00.yaml \
+|sed -e $SED_NS -e $SED_SVCAC \
+|kubectl apply -f -
 
 #info '### sample ssh secret'
 info
 kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config
+
 #info '### Secret??? create'
 info
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Secret
-metadata:
-  namespace: ${KUBENAMESPACE}
-  name: nex-secrets
-  labels:
-    app.kubernetes.io/name: nexclipper-kubernetes-agent
-stringData:
-  username: ${KUBESERVICEACCOUNT}
-  nexclipper-api-token: ${K_API_KEY}
----
-EOF
-info
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: ${KUBENAMESPACE}
-  name: ${KUBENAMESPACE}-agent-config
-  labels:
-    app.kubernetes.io/name: nexclipper-kubernetes-agent
-data:
-  instance-name: "${K_ZONE_ID}"
----
-EOF
-info
-# '### Provbee k8s authorization create'
-cat <<EOF | kubectl apply -f -
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  namespace: ${KUBENAMESPACE}
-  name: nexclipper-role
-rules:
-- apiGroups: [""]
-  resources: ["pods"] # Object 지정
-  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"] # Action 제어 
----
-EOF
-info
-cat <<EOF | kubectl apply -f -
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: ${KUBESERVICEACCOUNT}-rbac
-roleRef:
-  kind: ClusterRole
-  name: cluster-admin
-  apiGroup: rbac.authorization.k8s.io
-subjects:
-  - kind: ServiceAccount
-    name: ${KUBESERVICEACCOUNT}
-    namespace: ${KUBENAMESPACE}
----
-EOF
-info
-cat <<EOF | kubectl apply -f -
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  namespace: ${KUBENAMESPACE}
-  name: nexclipper-rb
-subjects:
-- kind: ServiceAccount
-  name: ${KUBESERVICEACCOUNT}
-  namespace: ${KUBENAMESPACE}
-roleRef:
-  kind: Role 
-  name: nexclipper-role
-  apiGroup: rbac.authorization.k8s.io
----
-EOF
+curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/provbee-01.yaml \
+|sed -e $SED_NS -e $SED_SVCAC -e $SED_K_API -e $SED_K_ZID \
+|kubectl apply -f - 
 
+#info kubeconfig gen
 kubeconfig_gen
+
 ############# Provbee-Deployment & Service
 info
-cat <<EOF | kubectl apply -f - 
-apiVersion: v1
-kind: Service
-metadata:
-  name: provbee-service
-  namespace: ${KUBENAMESPACE}
-spec:
-  selector:
-    name: provbee
-  clusterIP: None
-  ports:
-  - name: provbee # Actually, no port is needed.
-    port: 22
-    targetPort: 22
-EOF
+curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/provbee-90.yaml \
+|sed -e $SED_NS -e $SED_SVCAC -e $SED_TAG_P \
+|kubectl apply -f - 
+
+########## Klevr-agent Deamonset
 info
-cat <<EOF | kubectl apply -f - 
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  namespace: ${KUBENAMESPACE}
-  name: provbee
-  labels:
-    name: provbee
-spec:
-  selector:
-    matchLabels:
-      name: provbee
-  template:
-    metadata:
-      labels:
-        name: provbee
-    spec:
-      serviceAccountName: ${KUBESERVICEACCOUNT}
-      containers:
-      - name: provbee
-        image: nexclipper/provbee:${TAGPROV}
-        command: ['bash', '-c', '/entrypoint.sh']
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "250m"
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
-        volumeMounts:
-        - name: ssh-auth
-          mountPath: /data/.provbee/
-        - name: kube-config
-          mountPath: /root/.kube/
-      volumes:
-      - name: ssh-auth
-        secret:
-          secretName: ${KUBESERVICEACCOUNT}-ssh-key
-    #      defaultMode: 0644
-          items:
-          - key: pubkey
-            path: configmap_authkey
-      - name: kube-config
-        secret:
-          secretName: ${KUBESERVICEACCOUNT}-kubeconfig
-          defaultMode: 0644
-          items:
-          - key: kubeconfig
-            path: config
----
-EOF
+curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/provbee-91.yaml \
+|sed -e $SED_NS -e $SED_SVCAC -e $SED_TAG_K -e $SED_K_API -e $SED_K_PLT -e $SED_K_MURL -e $SED_K_ZID \
+|kubectl apply -f - 
 
-#############ProvBee-Pod & Service
-#info
-#cat <<EOF | kubectl apply -f -
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: provbee-service
-#  namespace: ${KUBENAMESPACE}
-#spec:
-#  selector:
-#    name: klevr
-#  clusterIP: None
-#  ports:
-#  - name: provbee # Actually, no port is needed.
-#    port: 22
-#    targetPort: 22
-#---
-#EOF
-#info
-#cat <<EOF | kubectl apply -f -
-#apiVersion: v1
-#kind: Pod
-#metadata:
-#  namespace: ${KUBENAMESPACE}
-#  name: provbee
-#  labels:
-#    name: klevr
-#spec:
-#  hostname: provbee
-#  subdomain: provbee-service
-#  serviceAccountName: ${KUBESERVICEACCOUNT}
-#  containers:
-#  - name: provbee
-#    image: nexclipper/provbee:${TAGPROV}
-#    command: ['bash', '-c', '/entrypoint.sh']
-#    resources:
-#      requests:
-#        memory: "128Mi"
-#        cpu: "250m"
-#      limits:
-#        memory: "256Mi"
-#        cpu: "500m"    
-#    volumeMounts:
-#    - name: ssh-auth
-#      mountPath: /data/.provbee/
-#    - name: kube-config
-#      mountPath: /root/.kube/
-#  volumes:
-#  - name: ssh-auth
-#    secret:
-#      secretName: ${KUBESERVICEACCOUNT}-ssh-key
-##      defaultMode: 0644
-#      items:
-#      - key: pubkey
-#        path: configmap_authkey
-#  - name: kube-config
-#    secret:
-#      secretName: ${KUBESERVICEACCOUNT}-kubeconfig
-#      defaultMode: 0644
-#      items:
-#      - key: kubeconfig
-#        path: config
-#---
-#EOF
-
-##########Klevr-agent
-info
-cat <<EOF | kubectl apply -f -
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: klevr-agent
-  namespace: ${KUBENAMESPACE}
-  labels:
-    name: klevr
-spec:
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: klevr-agent
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/name: klevr-agent
-    spec:
-      containers:
-      - image: nexclipper/klevr-agent:${TAGKLEVR}
-        name: klevr-agent
-        env:
-        - name: K_API_KEY
-          value: "${K_API_KEY}"
-        - name: K_PLATFORM
-          value: "${K_PLATFORM}"
-        - name: K_MANAGER_URL
-          value: "${K_MANAGER_URL}"
-        - name: K_ZONE_ID
-          value: "${K_ZONE_ID}"
-#        imagePullPolicy: Always
-        ports:
-        - containerPort: 18800
-          name: klevr-agent
-        volumeMounts:
-        - name: ssh-auth
-          mountPath: /root/.ssh/
-      volumes:
-      - name: ssh-auth
-        secret:
-          secretName: $KUBESERVICEACCOUNT-ssh-key
-          defaultMode: 0600
-          items:
-          - key: prikey
-            path: id_rsa
-          - key: conf
-            path: config
-EOF
-#FILE gen
-
+############################################### kubectl command END
 fi
 
 ##########################################
