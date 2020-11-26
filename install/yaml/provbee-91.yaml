@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: klevr-agent
+  namespace: ${KUBENAMESPACE}
+  labels:
+    name: klevr
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: klevr-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: klevr-agent
+    spec:
+      containers:
+      - image: nexclipper/klevr-agent:${TAGKLEVR}
+        name: klevr-agent
+        env:
+        - name: K_API_KEY
+          value: "${K_API_KEY}"
+        - name: K_PLATFORM
+          value: "${K_PLATFORM}"
+        - name: K_MANAGER_URL
+          value: "${K_MANAGER_URL}"
+        - name: K_ZONE_ID
+          value: "${K_ZONE_ID}"
+#        imagePullPolicy: Always
+        ports:
+        - containerPort: 18800
+          name: klevr-agent
+        volumeMounts:
+        - name: ssh-auth
+          mountPath: /root/.ssh/
+      volumes:
+      - name: ssh-auth
+        secret:
+          secretName: $KUBESERVICEACCOUNT-ssh-key
+          defaultMode: 0600
+          items:
+          - key: prikey
+            path: id_rsa
+          - key: conf
+            path: config

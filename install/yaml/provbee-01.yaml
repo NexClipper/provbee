@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: ${KUBENAMESPACE}
+  name: nex-secrets
+  labels:
+    app.kubernetes.io/name: nexclipper-kubernetes-agent
+stringData:
+  username: ${KUBESERVICEACCOUNT}
+  nexclipper-api-token: ${K_API_KEY}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: ${KUBENAMESPACE}
+  name: ${KUBENAMESPACE}-agent-config
+  labels:
+    app.kubernetes.io/name: nexclipper-kubernetes-agent
+data:
+  instance-name: "${K_ZONE_ID}"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: ${KUBENAMESPACE}
+  name: nexclipper-role
+rules:
+- apiGroups: [""]
+  resources: ["pods"] # Object 지정
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"] # Action 제어 
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ${KUBESERVICEACCOUNT}-rbac
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: ${KUBESERVICEACCOUNT}
+    namespace: ${KUBENAMESPACE}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: ${KUBENAMESPACE}
+  name: nexclipper-rb
+subjects:
+- kind: ServiceAccount
+  name: ${KUBESERVICEACCOUNT}
+  namespace: ${KUBENAMESPACE}
+roleRef:
+  kind: Role 
+  name: nexclipper-role
+  apiGroup: rbac.authorization.k8s.io
+---
