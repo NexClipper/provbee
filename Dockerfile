@@ -1,13 +1,10 @@
 FROM golang:alpine as installer
 
-RUN apk add git make yarn bash curl
+RUN apk add git
 
-RUN mkdir -p $GOPATH/src/github.com/prometheus && \
-    cd $GOPATH/src/github.com/prometheus && \
-    git clone https://github.com/prometheus/prometheus.git && \
-    cd prometheus && \
-    make build && \
-    mv promtool /tmp/promtool
+RUN go get github.com/prometheus/prometheus/cmd/promtool/... && \
+  cd $GOPATH/bin && \
+  mv promtool /tmp/promtool
 
 FROM golang:alpine
 LABEL maintainer="NexCloud Peter <peter@nexclipper.io>"
