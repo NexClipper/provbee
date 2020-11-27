@@ -42,6 +42,10 @@ klevr-agent와 연결 시 klevr를 통해 task 등을 전달 받아 job을 실�
 ## terraform officer provider add command
 ### ex:) tfprovider aws 3.2.1
 
+## promtool 
+* Promtool :[https://prometheus.io/docs/prometheus/latest/configuration/unit_testing_rules/](https://prometheus.io/docs/prometheus/latest/configuration/unit_testing_rules/)
+* Unit testing for Prometheus, Alertmanager rules
+
 ## Directories and files
 ```
 .
