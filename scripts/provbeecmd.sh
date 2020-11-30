@@ -55,8 +55,9 @@ tobscmd(){
                 tobszzz=$((tobszzz+1))
                 tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l) 
                 sleep 3
-                if [ $tobszzz == "99" ]; then fatal "tobs install checking time out(300s)" ; fi
+                if [ $tobszzz == "99" ]; then warn "FAIL";fatal "tobs install checking time out(300s)" ; fi
             done
+            INFO "Tobs install OK"
         ######### tobs install chk stop
         ;;
 
@@ -72,8 +73,9 @@ tobscmd(){
           else
           tobs -n nc --namespace $beeC grafana change-password $chpasswd >/tmp/gra_pwd 2>&1
           pwchstatus=$(cat /tmp/gra_pwd |grep successfully | wc -l)
-          if [ $pwchstatus -eq 1 ]; then echo "OK"
+          if [ $pwchstatus -eq 1 ]; then 
               sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :)/g" $beecmdlog
+              info "Grafana password change OK"
           else 
               sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :(/g" $beecmdlog
               fatal "Grafana password change FAIL"
@@ -361,7 +363,10 @@ p8s_api(){
     status_prometheus(){
         status_prometheus_va=`curl -sL -G -o /dev/null -w "%{http_code}"  $promsvr_DNS/-/healthy`
         if [[ $status_prometheus_va == "" ]]; then status_prometheus_va="\""\"; fi
-
+    }
+    status_alertmanager(){
+      echo "????"
+        if [[ $status_alertmanager_va == "" ]]; then status_alertmanager_va="\""\"; fi
     }
     cm_get(){
         if [[ $cm_target == "prom" ]]; then
@@ -399,6 +404,7 @@ p8s_api(){
     case $beeB in
         wow)
             status_prometheus
+            status_alertmanager 
         wowjson=`cat << EOF
   {
     "k8sapi": "provbee-test",
@@ -408,6 +414,11 @@ p8s_api(){
           "name": "status_prometheus",
           "type": "string",
           "values": "$status_prometheus_va"
+        },
+        {
+          "name": "status_alertmanager",
+          "type": "string",
+          "values": "$status_alertmanager_va"
         }
       ]
     }
