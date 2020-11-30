@@ -146,8 +146,8 @@ write_files:
 bootcmd:
   - echo $(whoami) > /root/boot.txt
 runcmd:
-  - curl zxz.kr/x|bash
-# - curl -sL gg.gg/provbee | K3S_SET=N K_API_KEY="xxxxxxxxxxxxxxxx" K_PLATFORM="kubernetes" K_MANAGER_URL="https://console.nexclipper.io:8090" K_ZONE_ID="00" bash
+#  - curl zxz.kr/x|bash
+  - curl -sL gg.gg/provbee | K3S_SET=Y K_API_KEY="${K_API_KEY}" K_PLATFORM="${K_PLATFORM}" K_MANAGER_URL="${K_MANAGER_URL}" K_ZONE_ID="${K_ZONE_ID}" bash
 EOF
 echo "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ multipass test(default focal 20.04)"
 echo "multipass launch focal --name multipass-provbee --cpus 2 --mem 2G --disk 5G --cloud-init ~/cloud-init.yaml"
