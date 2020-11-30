@@ -1,6 +1,6 @@
 FROM golang:alpine as installer
 
-RUN apk add git
+RUN apk add git make
 
 RUN go get github.com/prometheus/prometheus/cmd/promtool/... && \
   cd $GOPATH/bin && \
