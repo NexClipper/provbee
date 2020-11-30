@@ -6,10 +6,12 @@ RUN go get github.com/prometheus/prometheus/cmd/promtool/... && \
   cd $GOPATH/bin && \
   mv promtool /tmp/promtool
 
-
 ENV GO15VENDOREXPERIMENT=1
-RUN go get github.com/prometheus/alertmanager/cmd/amtool/... && \
-  cd $GOPATH/src/github.com/prometheus/alertmanager && \
+RUN mkdir -p $GOPATH/src/github.com/prometheus && \
+  cd $GOPATH/src/github.com/prometheus && \
+  git clone https://github.com/prometheus/alertmanager.git  && \
+  cd alertmanager  && \
+  make build BINARIES=amtool && \
   mv amtool /tmp/amtool
 
 FROM golang:alpine
