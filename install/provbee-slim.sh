@@ -10,25 +10,16 @@ if [[ $K_API_KEY == "" ]] || [[ $K_PLATFORM == "" ]] || [[ $K_MANAGER_URL == "" 
     echo "bye~~"
     exit 1
 fi
-### sed
-SED_NS="s/\${KUBENAMESPACE}/$KUBENAMESPACE/g"
-SED_SVCAC="s/\${KUBESERVICEACCOUNT}/$KUBESERVICEACCOUNT/g"
-SED_K_API="s/\${K_API_KEY}/$K_API_KEY/g"
-SED_K_PLT="s/\${K_PLATFORM}/$K_PLATFORM/g"
-SED_K_MURL="s/\${K_MANAGER_URL}/$K_MANAGER_URL/g"
-SED_K_ZID="s/\${K_ZONE_ID}/$K_ZONE_ID/g"
-SED_TAG_K="s/\${TAGKLEVR}/$TAGKLEVR/g"
-SED_TAG_P="s/\${TAGPROV}/$TAGPROV/g"
 
 ### console connection check
 nexconsolechk(){
-  urltest="curl -o /dev/null --silent --head --write-out '%{http_code}' ${K_MANAGER_URL}/swagger/doc.json"
-  if $urltest &>/dev/null ; then
-  	printf "%s\n" "NexClipper installer "
+urltest="curl -o /dev/null --silent --head --write-out '%{http_code}' ${K_MANAGER_URL}/swagger/doc.json"
+if $urltest &>/dev/null ; then
+	printf "%s\n" "Welcome to NexClipper"
 else
-  	printf "%b%s\n" "\033[91m$K_MANAGER_URL\033[0m Not connection. check your network"
-    if [[ $DELTEST == "" ]]; then exit 1; fi
-  fi
+	printf "%b%s\n" "\033[91m$K_MANAGER_URL\033[0m Not connection. check your network"
+  if [[ $DELTEST == "" ]]; then exit 1; fi
+fi
 }
 nexconsolechk
 
@@ -36,15 +27,18 @@ nexconsolechk
 
 ### System check
 ######################################################################################
-if [[ $UNAMECHK == "Darwin" ]]; then
-  if [[ $WORKDIR == "" ]]; then WORKDIR="$HOME/klevry"; fi
+if [[ $WORKDIR == "" ]]; then
+    WORKDIR="$HOME/klevry"
 else
-  if [[ $WORKDIR == "" ]]; then WORKDIR="$HOME/klevry"; fi
+    if [[ $UNAMECHK == "Darwin" ]]; then 
+        WORKDIR="$HOME/$WORKDIR"
+    else
+        WORKDIR="$WORKDIR"
+    fi
 fi
-
 if [ ! -d $WORKDIR ]; then mkdir -p $WORKDIR; fi
-KUBECONFIG_FILE="$WORKDIR/kube-config-nexc"
 
+KUBECONFIG_FILE="$WORKDIR/kube-config-nexc"
 #Host IP Check
 if [[ $HOSTIP == "" ]]; then
 	if [[ $UNAMECHK == "Darwin" ]]; then
@@ -54,27 +48,108 @@ if [[ $HOSTIP == "" ]]; then
 	fi
 fi
 ######################################################################################
-##
-info(){
-  echo -en '\033[92m[INFO]  \033[0m' "$@"
+## information
+info(){ echo -e '\033[92m[INFO]  \033[0m' "$@";}
+warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
+fatal(){ echo -e '\033[91m[ERROR] \033[0m' "$@" >&2;exit 1;}
+######################################################################################
+
+#########################################################################
+############
+# Multipass
+############
+##Linux sudo auth check
+sudopermission(){
+if SUDOCHK=$(sudo -n -v 2>&1);test -z "$SUDOCHK"; then
+    SUDO=sudo
+    if [ $(id -u) -eq 0 ]; then SUDO= ;fi
+else
+	echo "root permission required"
+	exit 1
+fi
+##OS install package mgmt check
+pkgchk
 }
-warn()
-{
-  echo -e '\033[93m[WARN] \033[0m' "$@" >&2
-}
-fatal()
-{
-  echo -e '\033[91m[ERROR] \033[0m' "$@" >&2
-  exit 1
+##OSX timeout command : brew install coreutils
+## package cmd Check
+pkgchk(){
+	LANG=en_US.UTF-8
+	yum > /tmp/check_pkgmgmt 2>&1
+	if [[ `(grep 'yum.*not\|not.*yum' /tmp/check_pkgmgmt)` == "" ]];then
+		centosnap
+	#else
+		#Pkg_mgmt="apt-get"
+		#apt update
+	fi
 }
 
+
+##OSX brew Install
+osxbrew(){
+	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+}
+
+##CentOS Snap Install
+centosnap(){
+	################### SNAP find chk
+	
+$SUDO yum install epel-release -y
+$SUDO yum install snapd -y 
+$SUDO systemctl enable --now snapd.socket
+$SUDO systemctl restart snapd
+$SUDO ln -s /var/lib/snapd/snap /snap
+#echo "PATH=/var/lib/snapd/snap/bin:/snap/bin:$PATH"
+#echo "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ run shell"
+echo "export PATH=/snap/bin:\$PATH" | $SUDO tee -a /etc/profile > /dev/null
+}
+
+##multipass Install START
+multipass_snap(){
+if [ $(snap list multipass|wc -l) -eq 0 ]; then
+	$SUDO snap install multipass
+fi
+}
+multipass_brew(){
+	if [ $(brew list --cask|grep multipass|wc -l) -eq 1 ]; then
+		warn "Warning: Cask 'multipass' is already installed."
+		info `brew cask info multipass`
+	else
+		brew cask install multipass
+		brew install bash-completion
+	fi
+#	multipass version
+}
+##multipass Install END
+
+########################################
+
+case $UNAMECHK in
+	Darwin)
+		multipass_brew
+		;;
+	Linux)
+		sudopermission
+		multipass_snap
+		;;
+	*)
+		echo "TEST"
+		;;
+esac
+
+############### TEST
+
+
+hostipcheck
+
+
+#########################################################################
 
 ############
 # BAREMATAL
 ############
 if [[ $K_PLATFORM == "baremetal" ]]; then
-	info "baremetal install" echo
-  info "curl zxz.kr/docker|bash ............ Docker install test" echo
+	info "baremetal install"
+  info "curl zxz.kr/docker|bash ............ Docker install test" 
 fi
 #########################################################################
 
@@ -85,8 +160,8 @@ k3s_checking(){
 if [[ $UNAMECHK == "Linux" ]]; then
   k3s_rootchecking
   else
-  echo ">> K3s Install - only Linux"
-  echo ">> https://rancher.com/docs/k3s/latest/en/installation/installation-requirements/#operating-systems"
+  warn ">> K3s Install - only Linux"
+  fatal ">> https://rancher.com/docs/k3s/latest/en/installation/installation-requirements/#operating-systems"
 fi  
 }
 
@@ -95,7 +170,6 @@ k3s_rootchecking(){
     k3s_install 
   else
     fatal "Run as Root user"
-    exit 1
   fi
 }
 
@@ -121,16 +195,25 @@ if [[ $K3S_SET =~ ^([yY][eE][sS]|[yY])$ ]]; then k3s_checking ; fi
 if [[ $K_PLATFORM == "kubernetes" ]]; then
     if [ $(which kubectl|wc -l) -eq 0 ]; then fatal "Kubectl run failed!, Your command server check plz."; fi
     if [ $(kubectl version --short | grep Server | wc -l) -eq 0 ]; then warn "kubernetes cluster check plz."; cat ~/.kube/config; exit 1; fi 
+################################
+### sed
+SED_NS="s/\${KUBENAMESPACE}/$KUBENAMESPACE/g"
+SED_SVCAC="s/\${KUBESERVICEACCOUNT}/$KUBESERVICEACCOUNT/g"
+SED_K_API="s/\${K_API_KEY}/$K_API_KEY/g"
+SED_K_PLT="s/\${K_PLATFORM}/$K_PLATFORM/g"
+SED_K_MURL="s#\${K_MANAGER_URL}#$K_MANAGER_URL#g"
+SED_K_ZID="s/\${K_ZONE_ID}/$K_ZONE_ID/g"
+SED_TAG_K="s/\${TAGKLEVR}/$TAGKLEVR/g"
+SED_TAG_P="s/\${TAGPROV}/$TAGPROV/g"
+
 ############## kube-config file gen.
 kubeconfig_gen() {
-
 CLUSTERNAME=$(kubectl config get-contexts $(kubectl config current-context) | awk '{print $3}' | grep -v CLUSTER)
 SVRCLUSTER=$(kubectl config view -o jsonpath='{.clusters[?(@.name == "'$CLUSTERNAME'")].cluster.server}')
 USERTOKENNAME=$(kubectl get serviceaccount $KUBESERVICEACCOUNT --namespace $KUBENAMESPACE -o jsonpath='{.secrets[*].name}')
 kubectl get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.ca\.crt}'|base64 -d > $WORKDIR/test.zzz
 TOKEN=$(kubectl get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.token}'|base64 -d)
 
-info
 kubectl config set-cluster "${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
     --server="${SVRCLUSTER}" \
@@ -138,26 +221,22 @@ kubectl config set-cluster "${CLUSTERNAME}" \
     --embed-certs=true
 rm -rf $WORKDIR/test.zzz
 
-info
 kubectl config set-credentials \
     "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
     --token="${TOKEN}"
 
-info
 kubectl config set-context \
     "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
     --cluster="${CLUSTERNAME}" \
     --user="${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --namespace="${KUBENAMESPACE}"
-info
 kubectl config use-context \
     "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}"
 
 #kube config file secert
-info
 kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-kubeconfig --from-file=kubeconfig=$KUBECONFIG_FILE
 }
 ####################################### SSH KEY Create
@@ -184,19 +263,18 @@ else
   echo "run as root user"
 fi
 
+##################### First Banner
+info "\033[92m Welcome to NexClipper! \033[0m"
 ############################################### kubectl command RUN
 #info #namespace, serviceaccount create
-info 
 curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/provbee-00.yaml \
 |sed -e $SED_NS -e $SED_SVCAC \
 |kubectl apply -f -
 
 #info '### sample ssh secret'
-info
 kubectl -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config
 
 #info '### Secret??? create'
-info
 curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/provbee-01.yaml \
 |sed -e $SED_NS -e $SED_SVCAC -e $SED_K_API -e $SED_K_ZID \
 |kubectl apply -f - 
@@ -205,13 +283,11 @@ curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yam
 kubeconfig_gen
 
 ############# Provbee-Deployment & Service
-info
 curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/provbee-90.yaml \
 |sed -e $SED_NS -e $SED_SVCAC -e $SED_TAG_P \
 |kubectl apply -f - 
 
 ########## Klevr-agent Deamonset
-info
 curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/provbee-91.yaml \
 |sed -e $SED_NS -e $SED_SVCAC -e $SED_TAG_K -e $SED_K_API -e $SED_K_PLT -e $SED_K_MURL -e $SED_K_ZID \
 |kubectl apply -f - 
@@ -299,7 +375,8 @@ delete_test(){
   #kubectl exec -it -n ${KUBENAMESPACE} provbee -- kubectl delete -f /data/klevry/kube-prometheus/
   #kubectl exec -it -n ${KUBENAMESPACE} provbee -- kubectl delete -f /data/klevry/kube-prometheus/setup
   #helm uninstall nex-pro  $(kubectl config current-context)
-  kubectl exec -it -n ${KUBENAMESPACE} provbee -- helm uninstall nex-pro
+  #kubectl exec -it -n ${KUBENAMESPACE} provbee -- helm uninstall nex-pro
+  kubectl exec -it -n ${KUBENAMESPACE} deployment/provbee -- busybee tobs uninstall nexclipper
   kubectl delete -n ${KUBENAMESPACE} svc provbee-service
   kubectl get po -n ${KUBENAMESPACE} -o jsonpath='{range $.items[?(@.metadata.ownerReferences[*].name == "klevr-agent")]}{.metadata.name}{"\n"}{end}'| xargs kubectl delete -n ${KUBENAMESPACE} po
   kubectl delete -n ${KUBENAMESPACE} po provbee

@@ -1,14 +1,18 @@
 #!/bin/bash
 busybeecmd=$@
-beecmdlog="/tmp/zzzbee"
+beecmdlog="/tmp/busybee.log"
 echo $busybeecmd >> $beecmdlog
 #beeA -> podsearch, beestatus, tobs etc
 #beeB -> grafana, hello, etc..
-
+## information
+info(){ echo -e '\033[92m[INFO]  \033[0m' "$@";}
+warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
+fatal(){ echo -e '\033[91m[ERROR] \033[0m' "$@" >&2;exit 1;}
+######################################################################################
 provbeestatus(){
     case $beeB in
         hello) echo "hi" ;;
-        help|*)  echo "busybee beestatus hello" ;;
+        help|*) info "busybee beestatus hello" ;;
     esac
 }
 
@@ -19,8 +23,7 @@ nodesearch(){
             NODEPORT=$(kubectl get svc -A -o jsonpath='{.items[?(@.metadata.name == "'$beeB'")].spec.ports[0].nodePort}')
             NODEOSIMAGE=$(kubectl get node -o jsonpath='{.items[*].status.nodeInfo.osImage}')
             if [[ $NODEPORT == "" ]]; then
-                    echo "Not found K8s Service : $beeB"
-                    exit 1
+                    fatal "Not found K8s Service : $beeB"
             else
                 if [[ $NODEOSIMAGE == "Docker Desktop" ]]; then
                     echo "localhost:$NODEPORT"
@@ -52,7 +55,7 @@ tobscmd(){
                 tobszzz=$((tobszzz+1))
                 tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l) 
                 sleep 3
-                if [ $tobszzz == "99" ]; then >&2 echo "tobs install checking time out(300s)" ; exit 1 ; fi
+                if [ $tobszzz == "99" ]; then fatal "tobs install checking time out(300s)" ; fi
             done
         ######### tobs install chk stop
         ;;
@@ -73,8 +76,7 @@ tobscmd(){
               sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :)/g" $beecmdlog
           else 
               sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :(/g" $beecmdlog
-              >&2 echo "Grafana password change FAIL"
-              exit 1
+              fatal "Grafana password change FAIL"
           fi
         fi
         ;;
@@ -369,7 +371,7 @@ p8s_api(){
                 kubectl get configmap -n $beeC nc-prometheus-alertmanager -o json |jq '.data|{"data": .}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
                 #kubectl get configmap -n $beeC nc-prometheus-alertmanager -o json |jq '.data."alertmanager.yml"'|base64 | tr '\n' ' ' | sed -e 's/ //g'
         else
-                echo "ang~"
+                warn "configmap Target check"
         fi
 
     }
@@ -379,7 +381,7 @@ p8s_api(){
         elif [[ $p8sconfigfile =~ ^Nex-alt_config\..*$ ]]; then
             filepath="/tmp/$p8sconfigfile.base64"
         else
-            >&2 echo "file not found : $p8sconfigfile"
+            warn "file not found : $p8sconfigfile"
         fi
 
         if [[ $cm_target == "prom" ]]; then
@@ -389,7 +391,7 @@ p8s_api(){
                 cat $filepath > /tmp/aaaaaaaaa 
                 kubectl patch configmaps -n $beeC nc-prometheus-alertmanager --patch "$(cat $filepath|base64 -d|jq '{"data": {"alertmanager.yml": .}}')" > $filepath.status
         else
-                echo "ang~"
+                warn "configmap Target check"
         fi
     }
 
@@ -426,7 +428,7 @@ EOF
             case $beeD in
                     get) cm_get;;
                     apply) cm_apply;;
-                    *) >&2 echo ">> p8s cm NAMESPACE get/apply prometheus/alertmanager" ;;
+                    *) warn ">> p8s cm NAMESPACE get/apply prometheus/alertmanager" ;;
             esac
         ;;
         help|*) echo "Help me~~~~";;
