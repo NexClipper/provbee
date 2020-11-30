@@ -6,6 +6,12 @@ RUN go get github.com/prometheus/prometheus/cmd/promtool/... && \
   cd $GOPATH/bin && \
   mv promtool /tmp/promtool
 
+
+ENV GO15VENDOREXPERIMENT=1
+RUN go get github.com/prometheus/alertmanager/cmd/amtool/... && \
+  cd $GOPATH/src/github.com/prometheus/alertmanager && \
+  mv amtool /tmp/amtool
+
 FROM golang:alpine
 LABEL maintainer="NexCloud Peter <peter@nexclipper.io>"
 
@@ -52,6 +58,7 @@ COPY ./scripts/provider.sh /usr/bin/tfprovider
 COPY ./scripts/provbeecmd.sh /usr/bin/busybee
 COPY ./scripts/get_pubkey.sh /usr/local/bin/get_pubkey.sh
 COPY --from=installer /tmp/promtool /usr/bin/promtool
+COPY --from=installer /tmp/amtool /usr/bin/amtool
 
 # ssh setting
 #RUN sed -i 's/^#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config
