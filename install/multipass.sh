@@ -11,6 +11,23 @@ else
 	echo ""
 fi
 
+######################################################################################
+info(){ echo -e '\033[92m[INFO]  \033[0m' "$@";}
+warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
+fatal(){ echo -e '\033[91m[ERR-] \033[0m' "$@" >&2;exit 1;}
+#######################################################################################
+with_provbee(){
+## Provbee, Klevr-agent img ##
+if [[ $TAGPROV != "" ]]; then TAGPROV="TAGPROV=\"${TAGPROV}\""; fi
+if [[ $TAGKLEVR != "" ]]; then TAGKLEVR="TAGKLEVR=\"${TAGKLEVR}\""; fi
+if [[ $K3S_SET != "" ]]; then K3S_SET="K3S_SET=\"${K3S_SET}\""; fi
+if [[ $K_API_KEY == "" ]] || [[ $K_PLATFORM == "" ]] || [[ $K_MANAGER_URL == "" ]] || [[ $K_ZONE_ID == "" ]]; then
+    warn "NexClipper Console Page's install script check"
+    fatal "bye~~"
+fi
+}
+
+#######################################################################################
 #WorkDir create
 if [ ! -d $WORKDIR ]; then mkdir -p $WORKDIR; fi
 #######################################################################################
@@ -21,8 +38,7 @@ if SUDOCHK=$(sudo -n -v 2>&1);test -z "$SUDOCHK"; then
     SUDO=sudo
     if [ $(id -u) -eq 0 ]; then SUDO= ;fi
 else
-	echo "root permission required"
-	exit 1
+	fatal "root permission required"
 fi
 ##OS install package mgmt check
 pkgchk
@@ -41,11 +57,6 @@ if [[ $HOSTIP == "" ]]; then
 	fi
 fi
 }
-######################################################################################
-info(){ echo -e '\033[92m[INFO]  \033[0m' "$@";}
-warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
-fatal(){ echo -e '\033[91m[ERROR] \033[0m' "$@" >&2;exit 1;}
-#######################################################################################
 
 ## package cmd Check
 pkgchk(){
@@ -76,7 +87,7 @@ $SUDO systemctl restart snapd
 $SUDO ln -s /var/lib/snapd/snap /snap
 #echo "PATH=/var/lib/snapd/snap/bin:/snap/bin:$PATH"
 #echo "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ run shell"
-echo "export PATH=/snap/bin:\$PATH" | $SUDO tee -a /etc/profile > /dev/null
+info "export PATH=/snap/bin:\$PATH" | $SUDO tee -a /etc/profile > /dev/null
 }
 
 ##multipass Install START
@@ -99,7 +110,9 @@ multipass_brew(){
 
 ## Auto Provisioning
 auto_provbee_install(){
-echo "Provbee Start"
+info "Provbee Start"
+with_provbee
+provbee_install="curl -sL gg.gg/provbee | $TAGPROV $TAGKLEVR $K3S_SET K_API_KEY=\"${K_API_KEY}\" K_PLATFORM=\"${K_PLATFORM}\" K_MANAGER_URL=\"${K_MANAGER_URL}\" K_ZONE_ID=\"${K_ZONE_ID}\" bash"
 multipass launch focal --name multipass-provbee --cpus 2 --mem 2G --disk 10G --cloud-init ~/cloud-init.yaml 
 }
 
@@ -120,21 +133,22 @@ case $UNAMECHK in
 esac
 
 ############### TEST
-
-
 hostipcheck
 info $HOSTIP
 
 #echo "PATH=/var/lib/snapd/snap/bin:/snap/bin:$PATH"
 #echo "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ run shell"
-echo "export PATH=/snap/bin:\$PATH"
+info "export PATH=/snap/bin:\$PATH"
 ################################33
 #DEL
 #brew cask uninstall multipass
 #brew cask zap multipass # to destroy all data, too
+###########################################################################
 
+if [[ $AUTO_PRB =~ ^([yY][eE][sS]|[yY])$ ]]; then auto_provbee_install ; fi
 ###################################
 ########################⬇
+if [[ $provbee_install == "" ]]; then provbee_install="curl zxz.kr"; fi
 #### multipass default-set file
 cat << EOF > ~/cloud-init.yaml
 #cloud-config
@@ -153,13 +167,11 @@ write_files:
 bootcmd:
   - echo $(whoami) > /root/boot.txt
 runcmd:
-#  - curl zxz.kr/x|bash
-  - curl -sL gg.gg/provbee | K3S_SET="${K3S_SET}" K_API_KEY="${K_API_KEY}" K_PLATFORM="${K_PLATFORM}" K_MANAGER_URL="${K_MANAGER_URL}" K_ZONE_ID="${K_ZONE_ID}" bash
+  - $provbee_install
 EOF
-echo "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ multipass test(default focal 20.04)"
-echo "multipass launch focal --name multipass-provbee --cpus 2 --mem 2G --disk 10G --cloud-init ~/cloud-init.yaml"
+info "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ multipass test(default focal 20.04)"
+info "multipass launch focal --name multipass-provbee --cpus 2 --mem 2G --disk 10G --cloud-init ~/cloud-init.yaml"
 
-if [[ $AUTO_PRB =~ ^([yY][eE][sS]|[yY])$ ]]; then auto_provbee_install ; fi
 ################
 #apt install -y libvirt-daemon-driver-qemu qemu-kvm qemu-system libvirt-daemon-system
 #qemu-kvm libvirt-clients bridge-utils virt-manager
