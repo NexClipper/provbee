@@ -97,6 +97,13 @@ multipass_brew(){
 }
 ##multipass Install END
 
+## Auto Provisioning
+auto_provbee_install(){
+echo "Provbee Start"
+multipass launch focal --name multipass-provbee --cpus 2 --mem 2G --disk 10G --cloud-init ~/cloud-init.yaml 
+}
+
+
 ########################################
 
 case $UNAMECHK in
@@ -147,10 +154,12 @@ bootcmd:
   - echo $(whoami) > /root/boot.txt
 runcmd:
 #  - curl zxz.kr/x|bash
-  - curl -sL gg.gg/provbee | K3S_SET=Y K_API_KEY="${K_API_KEY}" K_PLATFORM="${K_PLATFORM}" K_MANAGER_URL="${K_MANAGER_URL}" K_ZONE_ID="${K_ZONE_ID}" bash
+  - curl -sL gg.gg/provbee | K3S_SET="${K3S_SET}" K_API_KEY="${K_API_KEY}" K_PLATFORM="${K_PLATFORM}" K_MANAGER_URL="${K_MANAGER_URL}" K_ZONE_ID="${K_ZONE_ID}" bash
 EOF
 echo "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ multipass test(default focal 20.04)"
-echo "multipass launch focal --name multipass-provbee --cpus 2 --mem 2G --disk 5G --cloud-init ~/cloud-init.yaml"
+echo "multipass launch focal --name multipass-provbee --cpus 2 --mem 2G --disk 10G --cloud-init ~/cloud-init.yaml"
+
+if [[ $AUTO_PRB =~ ^([yY][eE][sS]|[yY])$ ]]; then auto_provbee_install ; fi
 ################
 #apt install -y libvirt-daemon-driver-qemu qemu-kvm qemu-system libvirt-daemon-system
 #qemu-kvm libvirt-clients bridge-utils virt-manager
