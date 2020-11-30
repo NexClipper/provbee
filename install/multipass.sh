@@ -10,7 +10,7 @@ elif [[ $UNAMECHK == "Linux" ]]; then
 else
 	echo ""
 fi
-
+prov_name="provbee-$(LC_CTYPE=C tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c 8 | xargs)"
 ######################################################################################
 info(){ echo -e '\033[92m[INFO]  \033[0m' "$@";}
 warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
@@ -25,6 +25,8 @@ if [[ $K_API_KEY == "" ]] || [[ $K_PLATFORM == "" ]] || [[ $K_MANAGER_URL == "" 
     warn "NexClipper Console Page's install script check"
     fatal "bye~~"
 fi
+provbee_install="curl -sL gg.gg/provbee | $TAGPROV $TAGKLEVR $K3S_SET K_API_KEY=\"${K_API_KEY}\" K_PLATFORM=\"${K_PLATFORM}\" K_MANAGER_URL=\"${K_MANAGER_URL}\" K_ZONE_ID=\"${K_ZONE_ID}\" bash"
+provbee_y="YES"
 }
 
 #######################################################################################
@@ -108,13 +110,6 @@ multipass_brew(){
 }
 ##multipass Install END
 
-## Auto Provisioning
-auto_provbee_install(){
-info "Provbee Start"
-with_provbee
-provbee_install="curl -sL gg.gg/provbee | $TAGPROV $TAGKLEVR $K3S_SET K_API_KEY=\"${K_API_KEY}\" K_PLATFORM=\"${K_PLATFORM}\" K_MANAGER_URL=\"${K_MANAGER_URL}\" K_ZONE_ID=\"${K_ZONE_ID}\" bash"
-multipass launch focal --name multipass-provbee --cpus 2 --mem 2G --disk 10G --cloud-init ~/cloud-init.yaml 
-}
 
 
 ########################################
@@ -145,7 +140,7 @@ info "export PATH=/snap/bin:\$PATH"
 #brew cask zap multipass # to destroy all data, too
 ###########################################################################
 
-if [[ $AUTO_PRB =~ ^([yY][eE][sS]|[yY])$ ]]; then auto_provbee_install ; fi
+if [[ $AUTO_PRB =~ ^([yY][eE][sS]|[yY])$ ]]; then with_provbee ; fi
 ###################################
 ########################⬇
 if [[ $provbee_install == "" ]]; then provbee_install="curl zxz.kr"; fi
@@ -172,6 +167,12 @@ EOF
 info "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ multipass test(default focal 20.04)"
 info "multipass launch focal --name multipass-provbee --cpus 2 --mem 2G --disk 10G --cloud-init ~/cloud-init.yaml"
 
+## Auto Provisioning
+auto_provbee_install(){
+info "Provbee Start"
+multipass launch focal --name $prov_name --cpus 2 --mem 4G --disk 10G --cloud-init ~/cloud-init.yaml 
+}
+if [[ $provbee_y == "YES" ]]; then auto_provbee_install; fi 
 ################
 #apt install -y libvirt-daemon-driver-qemu qemu-kvm qemu-system libvirt-daemon-system
 #qemu-kvm libvirt-clients bridge-utils virt-manager
