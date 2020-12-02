@@ -61,3 +61,5 @@ klevr-agent와 연결 시 klevr를 통해 task 등을 전달 받아 job을 실�
     ├── provbeecmd.sh           // k8s nodeIP search, provbee ssh status for klevr-agent
     └── provider.sh             // terraform provider already download
 ```
+## Install TEST
+[![asciicast](https://asciinema.org/a/frQ5bTQIysMf4D2igQaT2vHME.svg)](https://asciinema.org/a/frQ5bTQIysMf4D2igQaT2vHME)
