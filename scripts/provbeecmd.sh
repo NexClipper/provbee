@@ -32,7 +32,7 @@ nodesearch(){
                 fi
             fi
             ;;
-        help|HELP)  echo "busybee nodesearch {K8s Service}" ;;
+        help|HELP)  info "busybee nodesearch {K8s Service}" ;;
     esac
 }
 
@@ -57,7 +57,7 @@ tobscmd(){
                 sleep 3
                 if [ $tobszzz == "99" ]; then warn "FAIL";fatal "tobs install checking time out(300s)" ; fi
             done
-            INFO "Tobs install OK"
+            info "Tobs install OK"
         ######### tobs install chk stop
         ;;
 
@@ -68,9 +68,9 @@ tobscmd(){
         passwd)
         tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l)
         if [ $tobs_status -ne 0 ]; then
-          >&2 echo "Grafana service is status RED"
-          exit 1
+          fatal "Grafana service is status RED"
           else
+          echo "grafana-$(tobs -n nc --namespace $beeC grafana get-password)" >> $beecmdlog 
           tobs -n nc --namespace $beeC grafana change-password $chpasswd >/tmp/gra_pwd 2>&1
           pwchstatus=$(cat /tmp/gra_pwd |grep successfully | wc -l)
           if [ $pwchstatus -eq 1 ]; then 
@@ -82,7 +82,7 @@ tobscmd(){
           fi
         fi
         ;;
-        help|*) echo "busybee tobs {install/uninstall} {NAMESPACE} {opt.FILEPATH}";;
+        help|*) info "busybee tobs {install/uninstall} {NAMESPACE} {opt.FILEPATH}";;
     esac
 }
 
@@ -352,7 +352,7 @@ EOF
         echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/ //g' 
         #echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
            ;;
-        help|*) echo "Help me~~~~";;
+        help|*) info "Help me~~~~";;
     esac
 }
 
@@ -365,7 +365,7 @@ p8s_api(){
         if [[ $status_prometheus_va == "" ]]; then status_prometheus_va="\""\"; fi
     }
     status_alertmanager(){
-      echo "????"
+      warn "????"
         if [[ $status_alertmanager_va == "" ]]; then status_alertmanager_va="\""\"; fi
     }
     cm_get(){
@@ -442,7 +442,7 @@ EOF
                     *) warn ">> p8s cm NAMESPACE get/apply prometheus/alertmanager" ;;
             esac
         ;;
-        help|*) echo "Help me~~~~";;
+        help|*) info "Help me~~~~";;
     esac
 }
 
@@ -466,7 +466,7 @@ while read beeA beeB beeC beeD beeLAST ; do
         p8s)    p8s_api;;
 
         ############## help
-        help|*) echo "beestatus/nodesearch/tobs ...";;
+        help|*) info "beestatus/nodesearch/tobs ...";;
     esac
 done < <(echo $busybeecmd)
 

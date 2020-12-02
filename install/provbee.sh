@@ -83,60 +83,60 @@ pkgchk(){
 	fi
 }
 
-
-##OSX brew Install
-osxbrew(){
-	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-}
-
-##CentOS Snap Install
-centosnap(){
-	################### SNAP find chk
-	
-$SUDO yum install epel-release -y
-$SUDO yum install snapd -y 
-$SUDO systemctl enable --now snapd.socket
-$SUDO systemctl restart snapd
-$SUDO ln -s /var/lib/snapd/snap /snap
-#echo "PATH=/var/lib/snapd/snap/bin:/snap/bin:$PATH"
-#echo "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ run shell"
-echo "export PATH=/snap/bin:\$PATH" | $SUDO tee -a /etc/profile > /dev/null
-}
-
-##multipass Install START
-multipass_snap(){
-if [ $(snap list multipass|wc -l) -eq 0 ]; then
-	$SUDO snap install multipass
-fi
-}
-multipass_brew(){
-	if [ $(brew list --cask|grep multipass|wc -l) -eq 1 ]; then
-		warn "Warning: Cask 'multipass' is already installed."
-		info `brew cask info multipass`
-	else
-		brew cask install multipass
-		brew install bash-completion
-	fi
-#	multipass version
-}
-##multipass Install END
-
-########################################
-
-case $UNAMECHK in
-	Darwin)
-		multipass_brew
-		;;
-	Linux)
-		sudopermission
-		multipass_snap
-		;;
-	*)
-		echo "TEST"
-		;;
-esac
-
-############### TEST
+#zzz(){
+###OSX brew Install
+#osxbrew(){
+#	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+#}
+#
+###CentOS Snap Install
+#centosnap(){
+#	################### SNAP find chk
+#	
+#$SUDO yum install epel-release -y
+#$SUDO yum install snapd -y 
+#$SUDO systemctl enable --now snapd.socket
+#$SUDO systemctl restart snapd
+#$SUDO ln -s /var/lib/snapd/snap /snap
+##echo "PATH=/var/lib/snapd/snap/bin:/snap/bin:$PATH"
+##echo "⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ run shell"
+#echo "export PATH=/snap/bin:\$PATH" | $SUDO tee -a /etc/profile > /dev/null
+#}
+#
+###multipass Install START
+#multipass_snap(){
+#if [ $(snap list multipass|wc -l) -eq 0 ]; then
+#	$SUDO snap install multipass
+#fi
+#}
+#multipass_brew(){
+#	if [ $(brew list --cask|grep multipass|wc -l) -eq 1 ]; then
+#		warn "Warning: Cask 'multipass' is already installed."
+#		info `brew cask info multipass`
+#	else
+#		brew cask install multipass
+#		brew install bash-completion
+#	fi
+##	multipass version
+#}
+###multipass Install END
+#
+#########################################
+#
+#case $UNAMECHK in
+#	Darwin)
+#		multipass_brew
+#		;;
+#	Linux)
+#		sudopermission
+#		multipass_snap
+#		;;
+#	*)
+#		echo "TEST"
+#		;;
+#esac
+#}
+################ TEST
 
 
 hostipcheck
