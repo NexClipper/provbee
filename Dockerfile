@@ -1,18 +1,18 @@
-FROM golang:alpine as installer
-
-RUN apk add git make curl
-
-RUN go get github.com/prometheus/prometheus/cmd/promtool/... && \
-  cd $GOPATH/bin && \
-  mv promtool /tmp/promtool
-
-ENV GO15VENDOREXPERIMENT=1
-RUN mkdir -p $GOPATH/src/github.com/prometheus && \
-  cd $GOPATH/src/github.com/prometheus && \
-  git clone https://github.com/prometheus/alertmanager.git  && \
-  cd alertmanager  && \
-  make build BINARIES=amtool && \
-  mv amtool /tmp/amtool
+#FROM golang:alpine as installer
+#
+#RUN apk add git make curl
+#
+#RUN go get github.com/prometheus/prometheus/cmd/promtool/... && \
+#  cd $GOPATH/bin && \
+#  mv promtool /tmp/promtool
+#
+#ENV GO15VENDOREXPERIMENT=1
+#RUN mkdir -p $GOPATH/src/github.com/prometheus && \
+#  cd $GOPATH/src/github.com/prometheus && \
+#  git clone https://github.com/prometheus/alertmanager.git  && \
+#  cd alertmanager  && \
+#  make build BINARIES=amtool && \
+#  mv amtool /tmp/amtool
 
 FROM golang:alpine
 LABEL maintainer="NexCloud Peter <peter@nexclipper.io>"
@@ -59,19 +59,19 @@ COPY entrypoint.sh /entrypoint.sh
 COPY ./scripts/provider.sh /usr/bin/tfprovider
 COPY ./scripts/provbeecmd.sh /usr/bin/busybee
 COPY ./scripts/get_pubkey.sh /usr/local/bin/get_pubkey.sh
-COPY --from=installer /tmp/promtool /usr/bin/promtool
-COPY --from=installer /tmp/amtool /usr/bin/amtool
+#COPY --from=installer /tmp/promtool /usr/bin/promtool
+#COPY --from=installer /tmp/amtool /usr/bin/amtool
 
 # ssh setting
 #RUN sed -i 's/^#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config
 #RUN sed -i 's/^#PermitRootLogin yes/PermitRootLogin yes/' /etc/ssh/sshd_config
 RUN echo "root:dkdhajfldkvmek!" | chpasswd
-RUN sed -i 's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
-RUN sed -i 's/^#PermitUserEnvironment no/PermitUserEnvironment no/' /etc/ssh/sshd_config
-RUN sed -i 's/^#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
 RUN echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
 RUN echo "AuthorizedKeysCommand /usr/local/bin/get_pubkey.sh" >> /etc/ssh/sshd_config
 RUN echo "AuthorizedKeysCommandUser nobody" >> /etc/ssh/sshd_config
+RUN sed -i 's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
+RUN sed -i 's/^#PermitUserEnvironment no/PermitUserEnvironment no/' /etc/ssh/sshd_config
+RUN sed -i 's/^#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
 RUN sed -i 's/cgroup_add_service$/echo "NexClipper" #cgroup_add_service#/g' /lib/rc/sh/openrc-run.sh
 RUN rc-update add sshd
 RUN mkdir /run/openrc && touch /run/openrc/softlevel

@@ -264,7 +264,7 @@ else
 fi
 
 ##################### First Banner
-info "\033[92m Welcome to NexClipper! \033[0m"
+info "Welcome to NexClipper!"
 ############################################### kubectl command RUN
 #info #namespace, serviceaccount create
 curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/provbee-00.yaml \

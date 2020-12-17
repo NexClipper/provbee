@@ -10,197 +10,202 @@ warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
 fatal(){ echo -e '\033[91m[ERROR] \033[0m' "$@" >&2;exit 1;}
 ######################################################################################
 provbeestatus(){
-    case $beeB in
-        hello) echo "hi" ;;
-        help|*) info "busybee beestatus hello" ;;
-    esac
+  case $beeB in
+    hello) echo "hi" ;;
+    help|*) info "busybee beestatus hello" ;;
+  esac
 }
 
 nodesearch(){
-    case $beeB in
-        *)
-            #NODEPORT=$(kubectl get svc -n $NAMESPACE -o jsonpath='{.items[?(@.metadata.name == "'$beecmd'")].spec.ports[0].nodePort}')
-            NODEPORT=$(kubectl get svc -A -o jsonpath='{.items[?(@.metadata.name == "'$beeB'")].spec.ports[0].nodePort}')
-            NODEOSIMAGE=$(kubectl get node -o jsonpath='{.items[*].status.nodeInfo.osImage}')
-            if [[ $NODEPORT == "" ]]; then
-                    fatal "Not found K8s Service : $beeB"
-            else
-                if [[ $NODEOSIMAGE == "Docker Desktop" ]]; then
-                    echo "localhost:$NODEPORT"
-                else
-                    kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"':$NODEPORT'\n"}{end}'
-                fi
-            fi
-            ;;
-        help|HELP)  info "busybee nodesearch {K8s Service}" ;;
-    esac
+  case $beeB in
+    *)
+      #NODEPORT=$(kubectl get svc -n $NAMESPACE -o jsonpath='{.items[?(@.metadata.name == "'$beecmd'")].spec.ports[0].nodePort}')
+      NODEPORT=$(kubectl get svc -A -o jsonpath='{.items[?(@.metadata.name == "'$beeB'")].spec.ports[0].nodePort}')
+      NODEOSIMAGE=$(kubectl get node -o jsonpath='{.items[*].status.nodeInfo.osImage}')
+      if [[ $NODEPORT == "" ]]; then
+              fatal "Not found K8s Service : $beeB"
+      else
+          if [[ $NODEOSIMAGE == "Docker Desktop" ]]; then
+              echo "localhost:$NODEPORT"
+          else
+              kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"':$NODEPORT'\n"}{end}'
+          fi
+      fi
+    ;;
+    help|HELP)  info "busybee nodesearch {K8s Service}" ;;
+  esac
 }
 
 tobscmd(){
-    #tobs $beecmd -n nc --namespace $beenamespace -f provbeetmp
-    if [[ $beeC == "" ]]; then beeC="nexclipper"; fi
-    if [[ $beeB == "passwd" ]]; then chpasswd="$beeD"; fi
-    if [[ $beeD =~ ^NexClipper\..*$ ]]; then
-        sed -i 's/\\n//g' /tmp/$beeD.base64
-        base64 -d /tmp/$beeD.base64 > /tmp/$beeD
-        filepath="-f /tmp/$beeD"
-    fi
-    case $beeB in
-        install) 
-            tobs install -n nc --namespace $beeC $filepath
-        ############ tobs install chk start
-            tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l)
-                sleep 3
-            while [ $tobs_status != "0" ]; do
-                tobszzz=$((tobszzz+1))
-                tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l) 
-                sleep 3
-                if [ $tobszzz == "99" ]; then warn "FAIL";fatal "tobs install checking time out(300s)" ; fi
-            done
-            info "Tobs install OK"
-        ######### tobs install chk stop
-        ;;
+  #tobs $beecmd -n nc --namespace $beenamespace -f provbeetmp
+  if [[ $beeC == "" ]]; then beeC="nexclipper"; fi
+  if [[ $beeB == "passwd" ]]; then chpasswd="$beeD"; fi
+  if [[ $beeD =~ ^NexClipper\..*$ ]]; then
+    sed -i 's/\\n//g' /tmp/$beeD.base64
+    base64 -d /tmp/$beeD.base64 > /tmp/$beeD
+    filepath="-f /tmp/$beeD"
+  fi
+  case $beeB in
+    install) 
+      echo "INST_RUN" > /tmp/tobsinst
+      tobs install -n nc --namespace $beeC $filepath
+    ############ tobs install chk start
+      tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l)
+        sleep 3
+      while [ $tobs_status != "0" ]; do
+        tobszzz=$((tobszzz+1))
+        tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l) 
+        sleep 3
+        if [ $tobszzz == "99" ]; then warn "FAIL";fatal "tobs install checking time out(300s)" ; fi
+      done
+      info "Tobs install OK"
+      echo "TobsOK" > /tmp/tobsinst
+    ;;
+    install_chk)
+        cat /tmp/tobsinst
+        ;; 
+    ######### tobs install chk stop
 
-        uninstall)
-        tobs uninstall -n nc --namespace $beeC $filepath
-        tobs helm delete-data -n nc --namespace $beeC
-        ;;
-        passwd)
-        tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l)
-        if [ $tobs_status -ne 0 ]; then
-          fatal "Grafana service is status RED"
-          else
-          echo "grafana-$(tobs -n nc --namespace $beeC grafana get-password)" >> $beecmdlog 
-          tobs -n nc --namespace $beeC grafana change-password $chpasswd >/tmp/gra_pwd 2>&1
-          pwchstatus=$(cat /tmp/gra_pwd |grep successfully | wc -l)
-          if [ $pwchstatus -eq 1 ]; then 
-              sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :)/g" $beecmdlog
-              info "Grafana password change OK"
-          else 
-              sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :(/g" $beecmdlog
-              fatal "Grafana password change FAIL"
-          fi
-        fi
-        ;;
-        help|*) info "busybee tobs {install/uninstall} {NAMESPACE} {opt.FILEPATH}";;
-    esac
+    uninstall)
+    tobs uninstall -n nc --namespace $beeC $filepath
+    tobs helm delete-data -n nc --namespace $beeC
+    ;;
+    passwd)
+    tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l)
+    if [ $tobs_status -ne 0 ]; then
+      fatal "Grafana service is status RED"
+      else
+      echo "grafana-$(tobs -n nc --namespace $beeC grafana get-password)" >> $beecmdlog 
+      tobs -n nc --namespace $beeC grafana change-password $chpasswd >/tmp/gra_pwd 2>&1
+      pwchstatus=$(cat /tmp/gra_pwd |grep successfully | wc -l)
+      if [ $pwchstatus -eq 1 ]; then 
+          sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :)/g" $beecmdlog
+          info "Grafana password change OK"
+      else 
+          sed -i "s/passwd $beeC $chpasswd.*/passwd $beeC :(/g" $beecmdlog
+          fatal "Grafana password change FAIL"
+      fi
+    fi
+    ;;
+    help|*) info "busybee tobs {install/uninstall} {NAMESPACE} {opt.FILEPATH}";;
+  esac
 }
 
 k8s_api(){
-    curlcmd="curl -sL -G --data-urlencode"
-    promsvr_DNS="http://nc-prometheus-server.$beeC.svc.cluster.local"
-    cluster_age(){
-        cluster_age_va=`$curlcmd 'query=sum(time() - kube_service_created{namespace="default",service="kubernetes"})' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $cluster_age_va == "" ]]; then cluster_age_va="\""\"; fi
-    }
-    cluster_status(){
-        cluster_status_va=`$curlcmd 'query=kube_node_status_condition{status="true",condition="Ready"}' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $cluster_status_va == "" ]]; then cluster_status_va="\""\"; fi
-    }
-    cluster_memory_use(){
-        cluster_memory_use_va=`$curlcmd 'query=sum(container_memory_working_set_bytes{id="/"})/sum(machine_memory_bytes)*100' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $cluster_memory_use_va == "" ]]; then cluster_memory_use_va="\""\"; fi
+  curlcmd="curl -sL -G --data-urlencode"
+  promsvr_DNS="http://nc-prometheus-server.$beeC.svc.cluster.local"
+  cluster_age(){
+      cluster_age_va=`$curlcmd 'query=sum(time() - kube_service_created{namespace="default",service="kubernetes"})' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $cluster_age_va == "" ]]; then cluster_age_va="\""\"; fi
+  }
+  cluster_status(){
+      cluster_status_va=`$curlcmd 'query=kube_node_status_condition{status="true",condition="Ready"}' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $cluster_status_va == "" ]]; then cluster_status_va="\""\"; fi
+  }
+  cluster_memory_use(){
+      cluster_memory_use_va=`$curlcmd 'query=sum(container_memory_working_set_bytes{id="/"})/sum(machine_memory_bytes)*100' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $cluster_memory_use_va == "" ]]; then cluster_memory_use_va="\""\"; fi
 
-    }
-    cluster_cpu_use(){
-        cluster_cpu_use_va=`$curlcmd 'query=sum(rate(container_cpu_usage_seconds_total{id="/"}[2m]))/sum(machine_cpu_cores)*100' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $cluster_cpu_use_va == "" ]]; then cluster_cpu_use_va="\""\"; fi
+  }
+  cluster_cpu_use(){
+      cluster_cpu_use_va=`$curlcmd 'query=sum(rate(container_cpu_usage_seconds_total{id="/"}[2m]))/sum(machine_cpu_cores)*100' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $cluster_cpu_use_va == "" ]]; then cluster_cpu_use_va="\""\"; fi
 
-    }
-    cluster_store_use(){
-        cluster_store_use_va=`$curlcmd 'query=sum (container_fs_usage_bytes{id="/"}) / sum (container_fs_limit_bytes{id="/"}) * 100' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $cluster_store_use_va == "" ]]; then cluster_store_use_va="\""\"; fi
+  }
+  cluster_store_use(){
+      cluster_store_use_va=`$curlcmd 'query=sum (container_fs_usage_bytes{id="/"}) / sum (container_fs_limit_bytes{id="/"}) * 100' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $cluster_store_use_va == "" ]]; then cluster_store_use_va="\""\"; fi
 
-    }
-    cluster_pod_use(){
-        cluster_pod_use_va=`$curlcmd 'query=sum(kube_pod_info) / sum(kube_node_status_allocatable_pods) * 100' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $cluster_pod_use_va == "" ]]; then cluster_pod_use_va="\""\"; fi
+  }
+  cluster_pod_use(){
+      cluster_pod_use_va=`$curlcmd 'query=sum(kube_pod_info) / sum(kube_node_status_allocatable_pods) * 100' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $cluster_pod_use_va == "" ]]; then cluster_pod_use_va="\""\"; fi
 
-    }
-    total_node(){
-        total_node_va=`$curlcmd 'query=sum(kube_node_info)' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $total_node_va == "" ]]; then total_node_va="\""\"; fi
+  }
+  total_node(){
+      total_node_va=`$curlcmd 'query=sum(kube_node_info)' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $total_node_va == "" ]]; then total_node_va="\""\"; fi
 
-    }
-    total_unavail_node(){
-        total_unavail_node_va=`$curlcmd 'query=sum(kube_node_spec_unschedulable)' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $total_unavail_node_va == "" ]]; then total_unavail_node_va="\""\"; fi
+  }
+  total_unavail_node(){
+      total_unavail_node_va=`$curlcmd 'query=sum(kube_node_spec_unschedulable)' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $total_unavail_node_va == "" ]]; then total_unavail_node_va="\""\"; fi
 
-    }
-    total_namespace(){
-        total_namespace_va=`$curlcmd 'query=count(kube_namespace_created)' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $total_namespace_va == "" ]]; then total_namespace_va="\""\"; fi
+  }
+  total_namespace(){
+      total_namespace_va=`$curlcmd 'query=count(kube_namespace_created)' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $total_namespace_va == "" ]]; then total_namespace_va="\""\"; fi
 
-    }
-    total_pods(){
-        total_pods_va=`$curlcmd 'query=count(kube_pod_info)' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $total_pods_va == "" ]]; then total_pods_va="\""\"; fi
+  }
+  total_pods(){
+      total_pods_va=`$curlcmd 'query=count(kube_pod_info)' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $total_pods_va == "" ]]; then total_pods_va="\""\"; fi
 
-    }
-    count_restart_pod(){
-        count_restart_pod_va=`$curlcmd 'query=count(sum by (pod)(delta(kube_pod_container_status_restarts_total[30m]) > 0))' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $count_restart_pod_va == "" ]]; then count_restart_pod_va="\""\"; fi
+  }
+  count_restart_pod(){
+      count_restart_pod_va=`$curlcmd 'query=count(sum by (pod)(delta(kube_pod_container_status_restarts_total[30m]) > 0))' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $count_restart_pod_va == "" ]]; then count_restart_pod_va="\""\"; fi
 
-    }
-    count_failed_pod(){
-        count_failed_pod_va=`$curlcmd 'query=sum(kube_pod_status_phase{phase="Failed"})' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $count_failed_pod_va == "" ]]; then count_failed_pod_va="\""\"; fi
+  }
+  count_failed_pod(){
+      count_failed_pod_va=`$curlcmd 'query=sum(kube_pod_status_phase{phase="Failed"})' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $count_failed_pod_va == "" ]]; then count_failed_pod_va="\""\"; fi
 
-    }
-    count_pending_pod(){
-        count_pending_pod_va=`$curlcmd 'query=sum(kube_pod_status_phase{phase="Pending"})' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $count_pending_pod_va == "" ]]; then count_pending_pod_va="\""\"; fi
+  }
+  count_pending_pod(){
+      count_pending_pod_va=`$curlcmd 'query=sum(kube_pod_status_phase{phase="Pending"})' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $count_pending_pod_va == "" ]]; then count_pending_pod_va="\""\"; fi
 
-    }
-    total_pvcs(){
-        total_pvcs_va=`$curlcmd 'query=count(kube_persistentvolumeclaim_info)' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $total_pvcs_va == "" ]]; then total_pvcs_va="\""\"; fi
+  }
+  total_pvcs(){
+      total_pvcs_va=`$curlcmd 'query=count(kube_persistentvolumeclaim_info)' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $total_pvcs_va == "" ]]; then total_pvcs_va="\""\"; fi
 
-    }
-    status_prometheus(){
-        status_prometheus_va=`curl -sL -G -o /dev/null -w "%{http_code}"  $promsvr_DNS/-/healthy`
-        if [[ $status_prometheus_va == "" ]]; then status_prometheus_va="\""\"; fi
+  }
+  status_prometheus(){
+      status_prometheus_va=`curl -sL -G -o /dev/null -w "%{http_code}"  $promsvr_DNS/-/healthy`
+      if [[ $status_prometheus_va == "" ]]; then status_prometheus_va="\""\"; fi
 
-    }
-    status_alertmanager(){
-        status_alertmanager_va=`curl -sL -G -o /dev/null -w "%{http_code}" "nc-prometheus-alertmanager.$beeC.svc.cluster.local/-/healthy"`
-        if [[ $status_alertmanager_va == "" ]]; then status_alertmanager_va="\""\"; fi
+  }
+  status_alertmanager(){
+      status_alertmanager_va=`curl -sL -G -o /dev/null -w "%{http_code}" "nc-prometheus-alertmanager.$beeC.svc.cluster.local/-/healthy"`
+      if [[ $status_alertmanager_va == "" ]]; then status_alertmanager_va="\""\"; fi
 
-    }
-    status_cluster_api(){
-        status_cluster_api_va=`$curlcmd 'query=up{job=~".*apiserver.*"}' $promsvr_DNS/api/v1/query \
-        | jq '.data.result[].value[1]'`
-        if [[ $status_cluster_api_va == "" ]]; then status_cluster_api_va="\""\"; fi
-    }
-    rate_cluster_api(){
-        rate_cluster_api_va=`$curlcmd 'query=sum by (code) (rate(apiserver_request_total[5m]))' $promsvr_DNS/api/v1/query \
-        | jq '.data'`
-        #| jq '.data.result[]'`
-        #| jq '.data.result[]' |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g'
-        if [[ $rate_cluster_api_va == "" ]]; then rate_cluster_api_va="\""\"; fi
-    }
-    total_alerts(){
-        total_alerts_va=`curl -sL -G $promsvr_DNS/api/v1/alerts \
-        | jq '.data'`
-        #| jq '.data.alerts[]| {"status": .status}'`
-        #| jq '.data.alerts[]| {"status": .status}' |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g'
-        if [[ $total_alerts_va == "" ]]; then total_alerts_va="\""\"; fi
+  }
+  status_cluster_api(){
+      status_cluster_api_va=`$curlcmd 'query=up{job=~".*apiserver.*"}' $promsvr_DNS/api/v1/query \
+      | jq '.data.result[].value[1]'`
+      if [[ $status_cluster_api_va == "" ]]; then status_cluster_api_va="\""\"; fi
+  }
+  rate_cluster_api(){
+      rate_cluster_api_va=`$curlcmd 'query=sum by (code) (rate(apiserver_request_total[5m]))' $promsvr_DNS/api/v1/query \
+      | jq '.data'`
+      #| jq '.data.result[]'`
+      #| jq '.data.result[]' |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g'
+      if [[ $rate_cluster_api_va == "" ]]; then rate_cluster_api_va="\""\"; fi
+  }
+  total_alerts(){
+      total_alerts_va=`curl -sL -G $promsvr_DNS/api/v1/alerts \
+      | jq '.data'`
+      #| jq '.data.alerts[]| {"status": .status}'`
+      #| jq '.data.alerts[]| {"status": .status}' |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g'
+      if [[ $total_alerts_va == "" ]]; then total_alerts_va="\""\"; fi
 
-    }
+  }
 
     ################ Case
     case $beeB in
@@ -360,12 +365,13 @@ EOF
 p8s_api(){
     curlcmd="curl -sL -G --data-urlencode"
     promsvr_DNS="http://nc-prometheus-server.$beeC.svc.cluster.local"
+    alertsvr_DNS="http://nc-prometheus-alertmanager.$beeC.svc.cluster.local"
     status_prometheus(){
         status_prometheus_va=`curl -sL -G -o /dev/null -w "%{http_code}"  $promsvr_DNS/-/healthy`
         if [[ $status_prometheus_va == "" ]]; then status_prometheus_va="\""\"; fi
     }
     status_alertmanager(){
-      warn "????"
+        status_alertmanager_va=`curl -sL -G -o /dev/null -w "%{http_code}"  $alertsvr_DNS/-/healthy`
         if [[ $status_alertmanager_va == "" ]]; then status_alertmanager_va="\""\"; fi
     }
     cm_get(){
@@ -380,24 +386,69 @@ p8s_api(){
         fi
 
     }
-    cm_apply(){
-        if [[ $p8sconfigfile =~ ^Nex-prom_config\..*$ ]]; then
-            filepath="/tmp/$p8sconfigfile.base64"
-        elif [[ $p8sconfigfile =~ ^Nex-alt_config\..*$ ]]; then
-            filepath="/tmp/$p8sconfigfile.base64"
+    cm_test(){
+        ## config file check
+        if [ -f /tmp/$p8sconfigfile.base64 ]; then
+          filepath="/tmp/$p8sconfigfile"
+          cat $filepath.base64 | base64 -d | jq -r > $filepath.yaml
         else
-            warn "file not found : $p8sconfigfile"
+          fatal "file not found : $p8sconfigfile.base64"
+        fi
+        ## config file test
+        if [[ $cm_target == "prom" ]]; then
+          nc_prometheus_server=$(kubectl get pod -n $beeC | grep nc-prometheus-server|awk '{print $1}')
+          kubectl cp -n $beeC $filepath.yaml $nc_prometheus_server:$filepath.yaml -c prometheus-server
+          kubectl exec -i -n $beeC $nc_prometheus_server -c prometheus-server -- /bin/promtool check config $filepath.yaml > $filepath.status 2>&1
+          if [ $(cat $filepath.status|grep FAILED|wc -l) == 0 ]; then
+            #cm_test_prometheus_va="tool TEST OK"
+            printf "OK"|base64 | tr '\n' ' ' | sed -e 's/ //g'
+          else
+            #promtool_fail=$(cat $filepath.status|awk '/FAILED/{print $1,$2,$3,$4}'|head -n1)
+            #promtool_fail_line=$(cat $filepath.status|awk '/line/{print $2}'|sed 's/://g')
+            #cm_test_prometheus_va="$promtool_fail : line $promtool_fail_line"
+            #echo "$promtool_fail : line" $promtool_fail_line
+            cat $filepath.status|base64 | tr '\n' ' ' | sed -e 's/ //g'
+          fi
+        elif [[ $cm_target == "alertm" ]]; then
+          nc_prometheus_alertmanager=$(kubectl get pod -n $beeC | grep nc-prometheus-alertmanager|awk '{print $1}')
+          kubectl cp -n $beeC $filepath.yaml $nc_prometheus_alertmanager:$filepath.yaml -c prometheus-alertmanager 
+          kubectl exec -i -n $beeC $nc_prometheus_alertmanager -c prometheus-alertmanager -- /bin/amtool check-config $filepath.yaml > $filepath.status 2>&1
+          if [ $(cat $filepath.status|grep FAILED|wc -l) == 0 ]; then
+            #cm_test_alertmanager_va="tool TEST OK"
+            printf "OK"|base64 | tr '\n' ' ' | sed -e 's/ //g'
+          else
+            cat $filepath.status|base64 | tr '\n' ' ' | sed -e 's/ //g'
+          fi 
+        else
+          warn "configmap Target check"
+        fi
+        rm -rf $filepath.base64 $filepath.yaml 
+    }
+    cm_apply(){
+        ## config file check
+        if [[ $p8sconfigfile =~ ^Nex-prom_config\..*$ ]]; then
+            filepath="/tmp/$p8sconfigfile"
+        elif [[ $p8sconfigfile =~ ^Nex-alt_config\..*$ ]]; then
+            filepath="/tmp/$p8sconfigfile"
+        else
+            fatal "file not found : $p8sconfigfile.base64"
         fi
 
+        ## config file apply
         if [[ $cm_target == "prom" ]]; then
-                cat $filepath > /tmp/rrrrrrrrr 
-                kubectl patch configmaps -n $beeC nc-prometheus-config --patch "$(cat $filepath|base64 -d|jq '{"data": {"prometheus.yml": .}}')" > $filepath.status
+                cat $filepath.base64 > /tmp/rrrrrrrrr 
+                kubectl patch configmaps -n $beeC nc-prometheus-config --patch "$(cat $filepath.base64|base64 -d|jq '{"data": {"prometheus.yml": .}}')" > $filepath.status
+                cm_apply_prometheus_va=`curl -sL -G -o /dev/null -w "%{http_code}" -X POST $promsvr_DNS/-/reload`
+                if [[ $cm_apply_prometheus_va == "" ]]; then cm_apply_prometheus_va="\""\"; fi
         elif [[ $cm_target == "alertm" ]]; then
-                cat $filepath > /tmp/aaaaaaaaa 
-                kubectl patch configmaps -n $beeC nc-prometheus-alertmanager --patch "$(cat $filepath|base64 -d|jq '{"data": {"alertmanager.yml": .}}')" > $filepath.status
+                cat $filepath.base64 > /tmp/aaaaaaaaa 
+                kubectl patch configmaps -n $beeC nc-prometheus-alertmanager --patch "$(cat $filepath.base64|base64 -d|jq '{"data": {"alertmanager.yml": .}}')" > $filepath.status
+                cm_apply_alertmanager_va=`curl -sL -G -o /dev/null -w "%{http_code}" -X POST $alertsvr_DNS/-/reload`
+                if [[ $cm_apply_alertmanager_va == "" ]]; then cm_apply_alertmanager_va="\""\"; fi
         else
                 warn "configmap Target check"
         fi
+        rm -rf $filepath.base64
     }
 
     ################ Case
@@ -425,6 +476,7 @@ p8s_api(){
   }
 EOF
 `            
+        #json encode base64 return
         echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/ //g' 
         #echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
         ;;
@@ -438,6 +490,7 @@ EOF
             done < <(echo $beeLAST)
             case $beeD in
                     get) cm_get;;
+                    test) cm_test;;
                     apply) cm_apply;;
                     *) warn ">> p8s cm NAMESPACE get/apply prometheus/alertmanager" ;;
             esac
