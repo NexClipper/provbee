@@ -56,7 +56,7 @@ tobscmd(){
         tobszzz=$((tobszzz+1))
         tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l) 
         sleep 3
-        if [ $tobszzz == "99" ]; then warn "FAIL";fatal "tobs install checking time out(300s)" ; fi
+        if [ $tobszzz == "99" ]; then warn "FAIL" > /tmp/tobsinst ; fatal "tobs install checking time out(300s)" ; fi
       done
       info "Tobs install OK"
       echo "TobsOK" > /tmp/tobsinst
@@ -74,8 +74,10 @@ tobscmd(){
       tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l)
       if [ $tobs_status -ne 0 ]; then
         fatal "Grafana service is status RED"
-        else
-        echo "grafana-$(tobs -n nc --namespace $beeC grafana get-password)" >> $beecmdlog 
+      else
+      ## first GF passwd
+        if [ -f /tmp/gfpasswd ]; then chpasswd=$(cat /tmp/gfpasswd); rm -rf /tmp/gfpasswd; fi
+      ## GF passwd change
         tobs -n nc --namespace $beeC grafana change-password $chpasswd >/tmp/gra_pwd 2>&1
         pwchstatus=$(cat /tmp/gra_pwd |grep successfully | wc -l)
         if [ $pwchstatus -eq 1 ]; then 
@@ -86,6 +88,9 @@ tobscmd(){
           fatal "Grafana password change FAIL"
         fi
       fi
+    ;;
+    instpw)
+      echo $beeD > /tmp/gfpasswd
     ;;
     help|*) info "busybee tobs {install/uninstall} {NAMESPACE} {opt.FILEPATH}";;
   esac
