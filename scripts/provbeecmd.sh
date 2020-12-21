@@ -61,11 +61,12 @@ tobscmd(){
       info "Tobs install OK"
       echo "TobsOK" > /tmp/tobsinst
     ;;
+    instpw)
+      echo $beeD > /tmp/gfpasswd
+    ;;
     install_chk)
       cat /tmp/tobsinst
     ;; 
-    ######### tobs install chk stop
-
     uninstall)
       tobs uninstall -n nc --namespace $beeC $filepath
       tobs helm delete-data -n nc --namespace $beeC
@@ -88,9 +89,6 @@ tobscmd(){
           fatal "Grafana password change FAIL"
         fi
       fi
-    ;;
-    instpw)
-      echo $beeD > /tmp/gfpasswd
     ;;
     help|*) info "busybee tobs {install/uninstall} {NAMESPACE} {opt.FILEPATH}";;
   esac
@@ -445,7 +443,7 @@ EOF
           alert|alertmanager) 
             nc_svr_pod_name="nc-prometheus-alertmanager"
             nc_svr_pod_in_name="prometheus-alertmanager" 
-            nc_configmap_name="nc-prometheus-config"
+            nc_configmap_name="nc-prometheus-alertmanager"
             cm_filename="alertmanager.yml"
             cm_target="alertm"
             testtool_cmd="/bin/amtool check-config"

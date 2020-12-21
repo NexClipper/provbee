@@ -15,7 +15,7 @@ fi
 nexconsolechk(){
 urltest="curl -o /dev/null --silent --head --write-out '%{http_code}' ${K_MANAGER_URL}/swagger/doc.json"
 if $urltest &>/dev/null ; then
-	printf "%s\n" "Welcome to NexClipper"
+	printf "%s\n" "NexClipper serivce first checking"
 else
 	printf "%b%s\n" "\033[91m$K_MANAGER_URL\033[0m Not connection. check your network"
   if [[ $DELTEST == "" ]]; then exit 1; fi
