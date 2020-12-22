@@ -351,12 +351,13 @@ EOF
 
 
 p8s_api(){
-  p8setc_status(){  
-   status_prometheus_va=`curl -sL -G -o /dev/null -w "%{http_code}"  $promsvr_DNS/-/healthy`
-   if [[ $status_prometheus_va == "" ]]; then status_prometheus_va="\""\"; fi
-   status_alertmanager_va=`curl -sL -G -o /dev/null -w "%{http_code}"  $alertsvr_DNS/-/healthy`
-   if [[ $status_alertmanager_va == "" ]]; then status_alertmanager_va="\""\"; fi
-  }
+#  p8setc_status(){  
+#   status_prometheus_va=`curl -sL -G -o /dev/null -w "%{http_code}"  $promsvr_DNS/-/healthy`
+#   if [[ $status_prometheus_va == "" ]]; then status_prometheus_va="\""\"; fi
+#   status_alertmanager_va=`curl -sL -G -o /dev/null -w "%{http_code}"  $alertsvr_DNS/-/healthy`
+#   if [[ $status_alertmanager_va == "" ]]; then status_alertmanager_va="\""\"; fi
+#  }
+
 #############config map get, test, apply
   cm_get(){
     kubectl get configmap -n $beeC $nc_configmap_name -o json |jq '.data|{"data": .}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
@@ -403,32 +404,32 @@ p8s_api(){
 
   ################ Case
   case $beeB in
-    wow)
-    p8setc_status
-    wowjson=`cat << EOF
-  {
-    "k8sapi": "provbee-test",
-    "data": {
-      "lookup": [
-        {
-          "name": "status_prometheus",
-          "type": "string",
-          "values": "$status_prometheus_va"
-        },
-        {
-          "name": "status_alertmanager",
-          "type": "string",
-          "values": "$status_alertmanager_va"
-        }
-      ]
-    }
-  }
-EOF
-`            
-    #json encode base64 return
-    echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/ //g' 
-    #echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
-    ;;
+#    wow)
+#    p8setc_status
+#    wowjson=`cat << EOF
+#  {
+#    "k8sapi": "provbee-test",
+#    "data": {
+#      "lookup": [
+#        {
+#          "name": "status_prometheus",
+#          "type": "string",
+#          "values": "$status_prometheus_va"
+#        },
+#        {
+#          "name": "status_alertmanager",
+#          "type": "string",
+#          "values": "$status_alertmanager_va"
+#        }
+#      ]
+#    }
+#  }
+#EOF
+#`            
+#    #json encode base64 return
+#    echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/ //g' 
+#    #echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
+#    ;;
     cm)
       while read LASTA LASTB LASTC; do
         case $LASTA in
