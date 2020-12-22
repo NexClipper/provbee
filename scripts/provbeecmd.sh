@@ -1,7 +1,7 @@
 #!/bin/bash
 busybeecmd=$@
 beecmdlog="/tmp/busybee.log"
-echo $busybeecmd >> $beecmdlog
+echo $(date "+%Y%m%d_%H%M%S") "|" $busybeecmd >> $beecmdlog
 #beeA -> podsearch, beestatus, tobs etc
 #beeB -> grafana, hello, etc..
 ## information
