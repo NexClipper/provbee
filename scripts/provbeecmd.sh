@@ -101,7 +101,8 @@ k8s_api(){
     if [[ $cluster_age_va == "" ]]; then cluster_age_va="\""\"; fi
   }
   cluster_status(){
-    cluster_status_va=`$curlcmd 'query=kube_node_status_condition{status="true",condition="Ready"}' $promsvr_DNS/api/v1/query \
+    #cluster_status_va=`$curlcmd 'query=kube_node_status_condition{status="true",condition="Ready"}' $promsvr_DNS/api/v1/query \
+    cluster_status_va=`$curlcmd 'query=sum(kube_node_status_condition{condition="Ready",status!="true"})' $promsvr_DNS/api/v1/query \
     | jq '.data.result[].value[1]'`
     if [[ $cluster_status_va == "" ]]; then cluster_status_va="\""\"; fi
   }
