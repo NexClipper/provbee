@@ -28,7 +28,7 @@ nodesearch(){
         if [[ $NODEOSIMAGE == "Docker Desktop" ]]; then
           echo "localhost:$NODEPORT"
         else
-          kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"':$NODEPORT'\n"}{end}'
+          kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"':$NODEPORT'\n"}{end}'|head -n1
         fi
       fi
     ;;
