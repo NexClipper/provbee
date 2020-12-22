@@ -390,7 +390,7 @@ p8s_api(){
     if [ -f /tmp/$p8sconfigfile.base64 ]; then
       filepath="/tmp/$p8sconfigfile"
       ## config file save
-      kubectl patch configmaps -n $beeC $nc_configmap_nameg --patch "$(cat $filepath.base64|base64 -d|jq '{"data": {"'"$cm_filename"'": .}}')" > $filepath.status
+      kubectl patch configmaps -n $beeC $nc_configmap_name --patch "$(cat $filepath.base64|base64 -d|jq '{"data": {"'"$cm_filename"'": .}}')" > $filepath.status
       ## config file apply
       curl -sL -G -o /dev/null -w "%{http_code}" -X POST $dns_target/-/reload
     else
