@@ -107,12 +107,14 @@ k8s_api(){
     if [[ $cluster_status_va == "" ]]; then cluster_status_va="\""\"; fi
   }
   cluster_memory_use(){
-    cluster_memory_use_va=`$curlcmd 'query=sum(container_memory_working_set_bytes{id="/"})/sum(machine_memory_bytes)*100' $promsvr_DNS/api/v1/query \
+    #cluster_memory_use_va=`$curlcmd 'query=sum(container_memory_working_set_bytes{id="/"})/sum(machine_memory_bytes)*100' $promsvr_DNS/api/v1/query \
+    cluster_memory_use_va=`$curlcmd 'query=sum(container_memory_usage_bytes{pod!="POD",namespace!=""})/sum(kube_node_status_capacity{resource="memory"})*100' $promsvr_DNS/api/v1/query \
     | jq '.data.result[].value[1]'`
     if [[ $cluster_memory_use_va == "" ]]; then cluster_memory_use_va="\""\"; fi
   }
   cluster_cpu_use(){
-    cluster_cpu_use_va=`$curlcmd 'query=sum(rate(container_cpu_usage_seconds_total{id="/"}[2m]))/sum(machine_cpu_cores)*100' $promsvr_DNS/api/v1/query \
+    #cluster_cpu_use_va=`$curlcmd 'query=sum(rate(container_cpu_usage_seconds_total{id="/"}[2m]))/sum(machine_cpu_cores)*100' $promsvr_DNS/api/v1/query \
+    cluster_cpu_use_va=`$curlcmd 'query=sum(rate(container_cpu_usage_seconds_total{id="/"}[2m]))/count(node_cpu_seconds_total{mode="idle"})*100' $promsvr_DNS/api/v1/query \
     | jq '.data.result[].value[1]'`
     if [[ $cluster_cpu_use_va == "" ]]; then cluster_cpu_use_va="\""\"; fi
   }
