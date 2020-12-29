@@ -1,23 +1,7 @@
-#FROM golang:alpine as installer
-#
-#RUN apk add git make curl
-#
-#RUN go get github.com/prometheus/prometheus/cmd/promtool/... && \
-#  cd $GOPATH/bin && \
-#  mv promtool /tmp/promtool
-#
-#ENV GO15VENDOREXPERIMENT=1
-#RUN mkdir -p $GOPATH/src/github.com/prometheus && \
-#  cd $GOPATH/src/github.com/prometheus && \
-#  git clone https://github.com/prometheus/alertmanager.git  && \
-#  cd alertmanager  && \
-#  make build BINARIES=amtool && \
-#  mv amtool /tmp/amtool
-
 FROM golang:alpine
 LABEL maintainer="NexCloud Peter <peter@nexclipper.io>"
 
-RUN apk add --update git bash unzip gcc curl musl-dev make openssh-server openssh-client openssh-keygen openrc jq
+RUN apk add --update --no-cache git bash unzip gcc curl musl-dev make openssh-server openssh-client openssh-keygen openrc jq
 ENV TF_DEV=true
 ENV TF_RELEASE=1
 
@@ -26,9 +10,6 @@ ENV TF_RELEASE=1
 ENV WKDIR=/data
 ENV PATH /usr/local/bin:$PATH
 RUN mkdir -p $WKDIR/klevry /tmp/zzz ~/.terraform.d/plugins/ $WKDIR/terraform_state ~/.kube/ 
-
-## USER create
-#RUN useradd zzz & echo "zzz:zzz" | chpasswd
 
 ### Default Terraform & KubeCTL latest version download ###
 ## Terraform Download ##
@@ -54,6 +35,7 @@ RUN curl -LO https://github.com/`curl -sL https://github.com/timescale/tobs/rele
     chmod +x tobs* && \
     mv tobs* /usr/bin/tobs 
 
+############## Config
 COPY .ssh /root/.ssh
 COPY entrypoint.sh /entrypoint.sh
 COPY ./scripts/provider.sh /usr/bin/tfprovider
@@ -64,18 +46,17 @@ COPY ./scripts/get_pubkey.sh /usr/local/bin/get_pubkey.sh
 
 # ssh setting
 #RUN sed -i 's/^#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config
-#RUN sed -i 's/^#PermitRootLogin yes/PermitRootLogin yes/' /etc/ssh/sshd_config
 RUN echo "root:dkdhajfldkvmek!" | chpasswd
-RUN echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
-RUN echo "AuthorizedKeysCommand /usr/local/bin/get_pubkey.sh" >> /etc/ssh/sshd_config
-RUN echo "AuthorizedKeysCommandUser nobody" >> /etc/ssh/sshd_config
-RUN sed -i 's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
-RUN sed -i 's/^#PermitUserEnvironment no/PermitUserEnvironment no/' /etc/ssh/sshd_config
-RUN sed -i 's/^#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+RUN mv /etc/ssh/sshd_config /etc/ssh/sshd_config.ori; \
+sed -e "s|[#]*AuthorizedKeysCommand none|AuthorizedKeysCommand /usr/local/bin/get_pubkey.sh|g" \
+    -e "s|[#]*AuthorizedKeysCommandUser nobody|AuthorizedKeysCommandUser nobody|g" \
+    -e "s|[#]*PermitRootLogin prohibit-password|PermitRootLogin yes|g" \
+    -e "s|[#]*UsePAM yes|UsePAM no|g" \
+    -e "s|[#]*PermitUserEnvironment no|PermitUserEnvironment no|g" \
+    -e "s|[#]*PubkeyAuthentication yes|PubkeyAuthentication yes|g" \
+    /etc/ssh/sshd_config.ori > /etc/ssh/sshd_config;
 RUN sed -i 's/cgroup_add_service$/echo "NexClipper" #cgroup_add_service#/g' /lib/rc/sh/openrc-run.sh
-RUN rc-update add sshd
-RUN mkdir /run/openrc && touch /run/openrc/softlevel
-RUN rc-status
+RUN rc-update add sshd; mkdir /run/openrc && touch /run/openrc/softlevel; rc-status
 #RUN cat /etc/profile >> /root/.profile
 
 WORKDIR	$WKDIR
