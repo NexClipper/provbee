@@ -108,7 +108,8 @@ k8s_api(){
   }
   cluster_memory_use(){
     #cluster_memory_use_va=`$curlcmd 'query=sum(container_memory_working_set_bytes{id="/"})/sum(machine_memory_bytes)*100' $promsvr_DNS/api/v1/query \
-    cluster_memory_use_va=`$curlcmd 'query=sum(container_memory_usage_bytes{pod!="POD",namespace!=""})/sum(kube_node_status_capacity{resource="memory"})*100' $promsvr_DNS/api/v1/query \
+    #cluster_memory_use_va=`$curlcmd 'query=sum(container_memory_usage_bytes{pod!="POD",namespace!=""})/sum(kube_node_status_capacity{resource="memory"})*100' $promsvr_DNS/api/v1/query \
+    cluster_memory_use_va=`$curlcmd 'query=(1-(sum(node_memory_MemAvailable_bytes)/sum(node_memory_MemTotal_bytes)))*100' $promsvr_DNS/api/v1/query \
     | jq '.data.result[].value[1]'`
     if [[ $cluster_memory_use_va == "" ]]; then cluster_memory_use_va="\""\"; fi
   }
