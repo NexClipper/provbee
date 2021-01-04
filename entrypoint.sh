@@ -1,5 +1,5 @@
 #!/bin/bash
-
+echo $(date "+%Y%m%d_%H%M%S") "|" "== Provbee start ==" >> /tmp/busybee.log
 #Terraform Download
 if [[ $TERRAVERSION != "" ]]; then
 	TERRAVERSIONCHK=$(curl -s https://releases.hashicorp.com/terraform/|grep -Ev "rc|beta|alpha|oci" |grep "/terraform/"|grep $TERRAVERSION |awk -F"\"" '{print $2}')
@@ -54,4 +54,6 @@ fi
 /etc/init.d/sshd start
 
 ##waiting test
-tail -F anything
+#tail -F anything 
+#exec "$@"
+tail -F /tmp/busybee.log
