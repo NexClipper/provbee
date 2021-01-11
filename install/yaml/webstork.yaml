@@ -32,7 +32,7 @@ spec:
       containers:
       - name: webstork
         image: nexclipper/webstork:latest
-        command: ['bash', '-c', '/bin/sh']
+        command: ['/bin/sh']
 #        resources:
 #          requests:
 #            memory: "128Mi"
