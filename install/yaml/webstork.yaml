@@ -32,7 +32,7 @@ spec:
       containers:
       - name: webstork
         image: nexclipper/webstork:latest
-        command: ['sh', '-c', 'echo 'zzz && sleep 6000']
+        command: ['sh', '-c', 'echo zzz && sleep 6000']
 #        resources:
 #          requests:
 #            memory: "128Mi"
