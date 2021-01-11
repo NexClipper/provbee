@@ -8,7 +8,7 @@ spec:
     name: webstork
   clusterIP: None
   ports:
-  - name: provbee # Actually, no port is needed.
+  - name: webstork # Actually, no port is needed.
     port: 8282
     targetPort: 80
 ---
