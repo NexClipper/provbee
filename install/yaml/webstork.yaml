@@ -31,7 +31,7 @@ spec:
       serviceAccountName: ${KUBESERVICEACCOUNT}
       containers:
       - name: webstork
-        image: nexclipper/webstork:${TAGPROV}
+        image: nexclipper/webstork:latest
         command: ['bash', '-c', '/bin/sh']
 #        resources:
 #          requests:
