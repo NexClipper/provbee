@@ -178,7 +178,8 @@ k8s_api(){
     if [[ $status_alertmanager_va == "" ]]; then status_alertmanager_va="\""\"; fi
   }
   status_cluster_api(){
-    status_cluster_api_va=`$curlcmd 'query=up{job=~".*apiserver.*"}' $promsvr_DNS/api/v1/query \
+    # status_cluster_api_va=`$curlcmd 'query=up{job=~".*apiserver.*"}' $promsvr_DNS/api/v1/query \
+    status_cluster_api_va=`$curlcmd 'query=sum(up{job=~".*apiserver.*"})/count(up{job=~".*apiserver.*"}) > bool 0' $promsvr_DNS/api/v1/query \
     | jq '.data.result[].value[1]'`
     if [[ $status_cluster_api_va == "" ]]; then status_cluster_api_va="\""\"; fi
   }
