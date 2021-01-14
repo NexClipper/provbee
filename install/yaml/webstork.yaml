@@ -1,17 +1,17 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: webstork-service
-  namespace: ${KUBENAMESPACE}
-spec:
-  selector:
-    name: webstork
-  clusterIP: None
-  ports:
-  - name: webstork # Actually, no port is needed.
-    port: 8282
-    targetPort: 80
----
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: webstork-service
+#  namespace: ${KUBENAMESPACE}
+#spec:
+#  selector:
+#    name: webstork
+#  clusterIP: None
+#  ports:
+#  - name: webstork # Actually, no port is needed.
+#    port: 8282
+#    targetPort: 80
+#---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
