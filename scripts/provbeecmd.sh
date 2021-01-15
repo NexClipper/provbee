@@ -1,6 +1,8 @@
 #!/bin/bash
 busybeecmd=$@
 beecmdlog="/tmp/busybee.log"
+KUBENAMESPACE="nex-system"
+KUBESERVICEACCOUNT="nexc"
 echo $(date "+%Y%m%d_%H%M%S") "|" $busybeecmd >> $beecmdlog
 #beeA -> podsearch, beestatus, tobs etc
 #beeB -> grafana, hello, etc..
@@ -8,6 +10,12 @@ echo $(date "+%Y%m%d_%H%M%S") "|" $busybeecmd >> $beecmdlog
 info(){ echo -e '\033[92m[INFO]  \033[0m' "$@";}
 warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
 fatal(){ echo -e '\033[91m[ERROR] \033[0m' "$@" >&2;exit 1;}
+######################################################################################
+withnexclipper(){
+  nexns=$(kubectl get ns $KUBENAMESPACE |egrep -v NAME|wc -l)
+  if [ $nexns -eq 0 ]; then fatal "$KUBENAMESPACE namespace check"; fi
+}
+withnexclipper
 ######################################################################################
 provbeestatus(){
   case $beeB in
@@ -65,6 +73,7 @@ tobscmd(){
       echo $beeD > /tmp/gfpasswd
     ;;
     install_chk)
+      tobs_status=$(kubectl get pods -n $beeC 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l) 
       cat /tmp/tobsinst
     ;; 
     uninstall)
@@ -178,9 +187,9 @@ k8s_api(){
     if [[ $status_alertmanager_va == "" ]]; then status_alertmanager_va="\""\"; fi
   }
   status_cluster_api(){
-    # status_cluster_api_va=`$curlcmd 'query=up{job=~".*apiserver.*"}' $promsvr_DNS/api/v1/query \
     status_cluster_api_va=`$curlcmd 'query=sum(up{job=~".*apiserver.*"})/count(up{job=~".*apiserver.*"}) > bool 0' $promsvr_DNS/api/v1/query \
     | jq '.data.result[].value[1]'`
+    #status_cluster_api_va=`$curlcmd 'query=up{job=~".*apiserver.*"}' $promsvr_DNS/api/v1/query \
     if [[ $status_cluster_api_va == "" ]]; then status_cluster_api_va="\""\"; fi
   }
   rate_cluster_api(){
@@ -469,6 +478,41 @@ p8s_api(){
   esac
 }
 
+webstork_cmd(){
+webstork_yaml_url="https://raw.githubusercontent.com/NexClipper/webstork/main/services"
+# alertmanager.yaml grafana.yaml prometheus.yaml pushgateway.yaml promlens.yaml
+#busybee  webstork  $GETCMD $PROVNS $GETTYPE  $GETAPP ###### yaml FILE
+#busybee  $beeA     $beeB   $beeC   $beeD     $beeLAST(LASTA) $beeLAST(LASTB)
+  if [[ $beeB =~ ^([aA][pP][pP][lL][yY]|[dD][eE][lL][eE][tT][eE])$ ]]; then
+    webstork_cmd=$(echo $beeB|tr '[:upper:]' '[:lower:]')
+  else
+    fatal ">> WebStork cmd check (apply/delete) "
+  fi
+  if [[ $beeC == "" ]]; then fatal "P8s namespace"; fi #namespace=$beeC
+  if [[ $beeD =~ ^(NodePort|LoadBalancer)$ ]]; then 
+    webstork_expose_type=$beeD
+  else
+    fatal ">> WebStork expose Type check (NodePort/LoadBalancer)"
+  fi
+  if [[ $beeLAST != "" ]]; then
+    while read LASTA LASTB LASTC; do
+      case $LASTA in
+        alertmanager) webstork_app=$LASTA ;;
+        grafana) webstork_app=$LASTA ;;
+        prometheus) webstork_app=$LASTA ;;
+        pushgateway) webstork_app=$LASTA ;;
+        promlens) webstork_app=$LASTA ;;
+        *) fatal ">> WebStork App name check" ;; 
+      esac
+      #if [[ $LASTB != "" ]]; then webstork_app_yaml=$LASTB; fi
+    done < <(echo $beeLAST)
+  else
+    fatal ">> WebStork App name check"
+  fi
+curl -sL $webstork_yaml_url/$webstork_app.yaml|sed -e "s#\${EXPOSETYPE}#$webstork_expose_type#g" \
+| kubectl $webstork_cmd -f -
+}
+
 ################################################################ value
 while read beeA beeB beeC beeD beeLAST ; do
   curlcmd="curl -sL -G --data-urlencode"
@@ -490,7 +534,10 @@ while read beeA beeB beeC beeD beeLAST ; do
     ######### p8s API
     p8s) p8s_api ;;
 
+    ######### WebStork command
+    webstork) webstork_cmd ;;
+
     ############## help
-    help|*) info "beestatus/nodesearch/tobs ...";;
+    help|*) info "for NexClipper System....";;
   esac
 done < <(echo $busybeecmd)

@@ -292,8 +292,13 @@ curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yam
 |sed -e $SED_NS -e $SED_SVCAC -e $SED_TAG_K -e $SED_K_API -e $SED_K_PLT -e $SED_K_MURL -e $SED_K_ZID \
 |kubectl apply -f - 
 
-############################################### kubectl command END
-fi
+########## Webstork
+#curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/webstork.yaml \
+#|sed -e $SED_NS -e $SED_SVCAC \
+#|kubectl apply -f - 
+
+#######################################
+fi ######## kubectl command END
 
 ##########################################
 ######banner
