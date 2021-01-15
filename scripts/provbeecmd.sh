@@ -511,6 +511,9 @@ webstork_yaml_url="https://raw.githubusercontent.com/NexClipper/webstork/main/se
   fi
 curl -sL $webstork_yaml_url/$webstork_app.yaml|sed -e "s#\${EXPOSETYPE}#$webstork_expose_type#g" \
 | kubectl $webstork_cmd -f -
+#AAA="XXXXXXPAAA"
+#BBB="BBBBBBBBDDPBBB"
+#echo "[ { \"VVV\":\"$BBB\", \"ccc\":\"$AAA\"} ]"
 }
 
 ################################################################ value
