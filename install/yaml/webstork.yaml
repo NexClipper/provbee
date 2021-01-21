@@ -32,8 +32,8 @@ spec:
       containers:
       - name: webstork
         image: nexclipper/webstork:latest
-#        command: ['sh', '-c', '/entrypoint.sh']
-        command: ['/usr/bin/tail', '-f', '/tmp/webstork_portforward.log']
+        command: ['sh', '-c', '/entrypoint.sh']
+#        command: ['/usr/bin/tail', '-f', '/tmp/webstork_portforward.log']
 #        resources:
 #          requests:
 #            memory: "128Mi"
