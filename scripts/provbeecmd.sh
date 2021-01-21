@@ -1,4 +1,5 @@
 #!/bin/bash
+
 busybeecmd=$@
 beecmdlog="/tmp/busybee.log"
 KUBENAMESPACE="nex-system"
