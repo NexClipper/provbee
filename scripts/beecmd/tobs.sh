@@ -31,6 +31,16 @@ tobscmd(){
       done
       info "Tobs install OK"
       echo "TobsOK" > /tmp/tobsinst
+      if [[ $(cat /tmp/tobsinst) == "TobsOK" ]]; then
+        provbeens=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+        provbeesa="nexc"
+        curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/webstork.yaml \
+        | sed -e "s#\${KUBENAMESPACE}#$provbeens#g" \
+        | sed -e "s#\${KUBESERVICEACCOUNT}#$provbeesa#g" \
+        | kubectl create -f - 2>&1
+      else
+        fatal "Webstork start FAIL"
+      fi
     ;;
     instpw)
       echo $beeD > /tmp/gfpasswd

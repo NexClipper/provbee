@@ -52,7 +52,7 @@ nodesearch(){
 
 
 ################################################################ value
-while read beeA beeB beeC beeD beeLAST ; do
+while read beeA beeB beeCMD ; do
   curlcmd="curl -sL -G --data-urlencode"
   promsvr_DNS="http://nc-prometheus-server.$beeC.svc.cluster.local"
   alertsvr_DNS="http://nc-prometheus-alertmanager.$beeC.svc.cluster.local"
@@ -68,7 +68,7 @@ while read beeA beeB beeC beeD beeLAST ; do
 
     ######### k8s API
     k8s) k8s_api ;;
-
+    source $beecmdpath/k8s_api.sh $@
     ######### p8s API
     p8s) p8s_api ;;
 
