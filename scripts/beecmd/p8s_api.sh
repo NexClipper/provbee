@@ -1,11 +1,6 @@
 #!/bin/bash
 
 
-
-
-
-
-
 #############################################
 p8s_api(){
 #  p8setc_status(){  
@@ -17,7 +12,7 @@ p8s_api(){
 
 #############config map get, test, apply
   cm_get(){
-    kubectl get configmap -n $beeC $nc_configmap_name -o json |jq '.data|{"data": .}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
+    kubectl get configmap -n ${beeCMD[1]} $nc_configmap_name -o json |jq '.data|{"data": .}'|base64 | tr '\n' ' ' | sed -e 's/ //g'
   }
 
   cm_test(){
@@ -26,10 +21,10 @@ p8s_api(){
       filepath="/tmp/$p8sconfigfile"
       cat $filepath.base64 | base64 -d | jq -r > $filepath.yaml
       ## yaml test
-      nc_server=$(kubectl get pod -n $beeC | grep $nc_svr_pod_name|awk '{print $1}')
+      nc_server=$(kubectl get pod -n ${beeCMD[1]} | grep $nc_svr_pod_name|awk '{print $1}')
       if [[ $nc_server == "" ]]; then fatal "Not found pod : $nc_svr_pod_name"; fi
-      kubectl cp -n $beeC $filepath.yaml $nc_server:$filepath.yaml -c $nc_svr_pod_in_name
-      kubectl exec -i -n $beeC $nc_server -c $nc_svr_pod_in_name -- $testtool_cmd $filepath.yaml > $filepath.status 2>&1
+      kubectl cp -n ${beeCMD[1]} $filepath.yaml $nc_server:$filepath.yaml -c $nc_svr_pod_in_name
+      kubectl exec -i -n ${beeCMD[1]} $nc_server -c $nc_svr_pod_in_name -- $testtool_cmd $filepath.yaml > $filepath.status 2>&1
     else
       fatal "File not found : $p8sconfigfile.base64"
     fi
@@ -49,7 +44,7 @@ p8s_api(){
     if [ -f /tmp/$p8sconfigfile.base64 ]; then
       filepath="/tmp/$p8sconfigfile"
       ## config file save
-      kubectl patch configmaps -n $beeC $nc_configmap_name --patch "$(cat $filepath.base64|base64 -d|jq '{"data": {"'"$cm_filename"'": .}}')" > $filepath.status
+      kubectl patch configmaps -n ${beeCMD[1]} $nc_configmap_name --patch "$(cat $filepath.base64|base64 -d|jq '{"data": {"'"$cm_filename"'": .}}')" > $filepath.status
       ## config file apply
       curl -sL -G -o /dev/null -w "%{http_code}" -X POST $dns_target/-/reload
     else
@@ -60,10 +55,9 @@ p8s_api(){
   }
 
   ################ Case
-  case $beeB in
+  case ${beeCMD[0]} in
     cm)
-      while read LASTA LASTB LASTC; do
-        case $LASTA in
+        case ${beeCMD[3]} in
           prom|prometheus) 
             nc_svr_pod_name="nc-prometheus-server"
             nc_svr_pod_in_name="prometheus-server"
@@ -83,9 +77,8 @@ p8s_api(){
             dns_target=$alertsvr_DNS
           ;;
         esac
-      if [[ $LASTB != "" ]]; then p8sconfigfile=$LASTB; fi
-      done < <(echo $beeLAST)
-        case $beeD in
+      if [[ ${beeCMD[4]} != "" ]]; then p8sconfigfile=${beeCMD[4]}; fi
+        case ${beeCMD[2} in
           get) cm_get;;
           test) cm_test;;
           apply) cm_apply;;
