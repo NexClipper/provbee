@@ -535,7 +535,8 @@ webstork_kubectl_status=$(echo $webstork_kubectl_run|awk '{print $NF}')
 if [[ $webstork_kubectl_status =~ ^(created|deleted) ]]; then
  webstork_kubectl_status=$webstork_kubectl_status
 else
- webstork_kubectl_status="webstork $webstork_app $webstork_cmd FAIL"
+ webstork_kubectl_run=$(echo $webstork_kubectl_run|sed -e "s/\"//g")
+ webstork_kubectl_status="$webstork_app $webstork_cmd FAIL : ${webstork_kubectl_run%%:*}"
 fi 
 ###########################################################
 webstork_meta_name="ws-$webstork_app"
