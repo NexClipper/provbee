@@ -33,18 +33,18 @@ spec:
       - name: provbee
         image: nexclipper/provbee:${TAGPROV}
         command: ['bash', '-c', '/entrypoint.sh']
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "250m"
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
+#        resources:
+#          requests:
+#            memory: "128Mi"
+#            cpu: "250m"
+#          limits:
+#            memory: "256Mi"
+#            cpu: "500m"
         volumeMounts:
         - name: ssh-auth
           mountPath: /data/.provbee/
-        - name: kube-config
-          mountPath: /root/.kube/
+#        - name: kube-config
+#          mountPath: /root/.kube/
       volumes:
       - name: ssh-auth
         secret:
@@ -53,11 +53,11 @@ spec:
           items:
           - key: pubkey
             path: configmap_authkey
-      - name: kube-config
-        secret:
-          secretName: ${KUBESERVICEACCOUNT}-kubeconfig
-          defaultMode: 0644
-          items:
-          - key: kubeconfig
-            path: config
+#      - name: kube-config
+#        secret:
+#          secretName: ${KUBESERVICEACCOUNT}-kubeconfig
+#          defaultMode: 0644
+#          items:
+#          - key: kubeconfig
+#            path: config
             
