@@ -57,34 +57,35 @@ p8s_api(){
   ################ Case
   case ${beeCMD[0]} in
     cm)
-        case ${beeCMD[3]} in
-          prom|prometheus) 
-            nc_svr_pod_name="nc-prometheus-server"
-            nc_svr_pod_in_name="prometheus-server"
-            nc_configmap_name="nc-prometheus-config"
-            cm_filename="prometheus.yml"
-            cm_target="prom"
-            testtool_cmd="/bin/promtool check config"
-            dns_target=$promsvr_DNS
-          ;;
-          alert|alertmanager) 
-            nc_svr_pod_name="nc-prometheus-alertmanager"
-            nc_svr_pod_in_name="prometheus-alertmanager" 
-            nc_configmap_name="nc-prometheus-alertmanager"
-            cm_filename="alertmanager.yml"
-            cm_target="alertm"
-            testtool_cmd="/bin/amtool check-config"
-            dns_target=$alertsvr_DNS
-          ;;
-        esac
+      case ${beeCMD[3]} in
+        prom|prometheus) 
+          nc_svr_pod_name="nc-prometheus-server"
+          nc_svr_pod_in_name="prometheus-server"
+          nc_configmap_name="nc-prometheus-config"
+          cm_filename="prometheus.yml"
+          cm_target="prom"
+          testtool_cmd="/bin/promtool check config"
+          dns_target=$promsvr_DNS
+        ;;
+        alert|alertmanager) 
+          nc_svr_pod_name="nc-prometheus-alertmanager"
+          nc_svr_pod_in_name="prometheus-alertmanager" 
+          nc_configmap_name="nc-prometheus-alertmanager"
+          cm_filename="alertmanager.yml"
+          cm_target="alertm"
+          testtool_cmd="/bin/amtool check-config"
+          dns_target=$alertsvr_DNS
+        ;;
+      esac
       if [[ ${beeCMD[4]} != "" ]]; then p8sconfigfile=${beeCMD[4]}; fi
-        case ${beeCMD[2} in
-          get) cm_get;;
-          test) cm_test;;
-          apply) cm_apply;;
-          *) warn ">> p8s cm NAMESPACE get/apply prometheus/alertmanager" ;;
-        esac
+      case ${beeCMD[2]} in
+        get) cm_get;;
+        test) cm_test;;
+        apply) cm_apply;;
+        *) warn ">> p8s cm NAMESPACE get/apply prometheus/alertmanager" ;;
+      esac
     ;;
     help|*) info "Help me~~~~";;
   esac
 }
+p8s_api

@@ -67,8 +67,14 @@ while read beeA beeCMD ; do
     p8s) source $beecmdpath/p8s_api.sh ${beeCMD[@]} ;;
 
     ######### WebStork command
-    # webstork  create   nexclipper  NodePort  promlens
     webstork) source $beecmdpath/webstork.sh ${beeCMD[@]} ;;
+    
+    ## update busybee
+    update) 
+    curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/scripts/provbeecmd.sh -o /tmp/busybee
+    cp -Rfp /tmp/busybee /usr/bin/busybee
+    rm -rf /tmp/busybee 
+    ;;
 
     ############## help
     help|*) info "for NexClipper System....";;
