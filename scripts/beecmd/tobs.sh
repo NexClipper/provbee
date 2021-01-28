@@ -32,8 +32,6 @@ tobscmd(){
         | sed -e "s#\${KUBENAMESPACE}#$provbeens#g" \
         | sed -e "s#\${KUBESERVICEACCOUNT}#$provbeesa#g" \
         | kubectl create -f - 2>&1
-      ## first GF passwd
-        if [ -f /tmp/gfpasswd ]; then chpasswd=$(cat /tmp/gfpasswd); rm -rf /tmp/gfpasswd; fi
       else
         fatal "Webstork start FAIL"
       fi
