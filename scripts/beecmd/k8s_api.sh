@@ -21,7 +21,7 @@ status_cluster_api_query='query=sum(up{job=~".*apiserver.*"})/count(up{job=~".*a
 rate_cluster_api_query='query=sum by (code) (rate(apiserver_request_total[5m]))'
 #total_alerts_query=
 stats_capacity_query='query=kubelet_volume_stats_capacity_bytes{namespace="nexclipper"}'
-stats_available_query='query=kubelet_volume_stats_available_bytes{namespace="nexclipper"}'
+stats_used_query='query=kubelet_volume_stats_capacity_bytes{namespace="nexclipper"} - kubelet_volume_stats_available_bytes{namespace="nexclipper"}'
 stats_usage_query='query=(kubelet_volume_stats_capacity_bytes{namespace="nexclipper"} - kubelet_volume_stats_available_bytes{namespace="nexclipper"})/kubelet_volume_stats_capacity_bytes{namespace="nexclipper"}*100'
 
 
@@ -134,10 +134,10 @@ k8s_api(){
     | jq '.data'`
     if [[ $stats_capacity_va == "" ]]; then stats_capacity_va="\""\"; fi
   }
-  stats_available(){
-    stats_available_va=`$curlcmd "${stats_available_query}" $promsvr_DNS/api/v1/query \
+  stats_used(){
+    stats_used_va=`$curlcmd "${stats_used_query}" $promsvr_DNS/api/v1/query \
     | jq '.data'`
-    if [[ $stats_available_va == "" ]]; then rstats_available_va="\""\"; fi
+    if [[ $stats_used_va == "" ]]; then stats_used_va="\""\"; fi
   }
   stats_usage(){
     stats_usage_va=`$curlcmd "${stats_usage_query}" $promsvr_DNS/api/v1/query \
@@ -187,7 +187,7 @@ k8s_api(){
             rate_cluster_api
             total_alerts
             stats_capacity
-            stats_available
+            stats_used
             stats_usage
         wowjson=`cat << EOF
   {
@@ -295,9 +295,9 @@ k8s_api(){
           "values": $stats_usage_va
         },
         {
-          "name": "stats_available",
+          "name": "stats_used",
           "type": "string",
-          "values": $stats_available_va
+          "values": $stats_used_va
         },
         {
           "name": "stats_capacity",
