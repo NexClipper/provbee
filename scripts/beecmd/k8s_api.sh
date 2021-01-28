@@ -123,25 +123,28 @@ k8s_api(){
     if [[ $rate_cluster_api_va == "" ]]; then rate_cluster_api_va="\""\"; fi
   }
   total_alerts(){
-      total_alerts_va=`curl -sL -G $promsvr_DNS/api/v1/alerts \
-      | jq '.data'`
-      #| jq '.data.alerts[]| {"status": .status}'`
-      #| jq '.data.alerts[]| {"status": .status}' |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g'
-      if [[ $total_alerts_va == "" ]]; then total_alerts_va="\""\"; fi
+    total_alerts_va=`curl -sL -G $promsvr_DNS/api/v1/alerts \
+    | jq '.data'`
+    #| jq '.data.alerts[]| {"status": .status}'`
+    #| jq '.data.alerts[]| {"status": .status}' |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g'
+    if [[ $total_alerts_va == "" ]]; then total_alerts_va="\""\"; fi
   }
   stats_capacity(){
     stats_capacity_va=`$curlcmd "${stats_capacity_query}" $promsvr_DNS/api/v1/query \
-    | jq '.data'`
+    | jq '.data.result[]|{"persistentvolumeclaim": .metric.persistentvolumeclaim,"values": .value[1]}'`
+    #| jq '.data'`
     if [[ $stats_capacity_va == "" ]]; then stats_capacity_va="\""\"; fi
   }
   stats_used(){
     stats_used_va=`$curlcmd "${stats_used_query}" $promsvr_DNS/api/v1/query \
-    | jq '.data'`
+    | jq '.data.result[]|{"persistentvolumeclaim": .metric.persistentvolumeclaim,"values": .value[1]}'`
+    #| jq '.data'`
     if [[ $stats_used_va == "" ]]; then stats_used_va="\""\"; fi
   }
   stats_usage(){
     stats_usage_va=`$curlcmd "${stats_usage_query}" $promsvr_DNS/api/v1/query \
-    | jq '.data'`
+    | jq '.data.result[]|{"persistentvolumeclaim": .metric.persistentvolumeclaim,"values": .value[1]}'`
+    #| jq '.data'``
     if [[ $stats_usage_va == "" ]]; then stats_usage_va="\""\"; fi
   }
 
