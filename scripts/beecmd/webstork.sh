@@ -57,8 +57,14 @@ if [[ $webstork_expose_type == "NodePort" ]]; then
   webstork_ip_info=$(kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"\n"}{end}'|head -n1)
   nodeport_info=$(kubectl get svc -A -o jsonpath='{range .items[?(@.metadata.name == "'$webstork_meta_name'")].spec.ports[*]}{.name}{"\t"}{.nodePort}{"\n"}{end}')
 elif [[ $webstork_expose_type == "LoadBalancer" ]]; then
-  sleep 5
-  webstork_ip_info=$(kubectl get svc -n nex-system -o jsonpath='{range $.items[*].status.loadBalancer.ingress[?(@.*)]}{.ip}{.hostname}{"\n"}{end}'|head -n1)
+  #webstork_ip_info=$(kubectl get svc -n nex-system -o jsonpath='{range $.items[*].status.loadBalancer.ingress[?(@.*)]}{.ip}{.hostname}{"\n"}{end}'|head -n1)
+  webstork_ip_info=$(kubectl get svc/$webstork_meta_name -n nex-system -o jsonpath='{.status.loadBalancer.ingress[].ip}')
+  while [ "$webstork_ip_info" == "" ]; do
+    ipchkzzz=$((ipchkzzz+1))
+    webstork_ip_info=$(kubectl get svc/$webstork_meta_name -n nex-system -o jsonpath='{.status.loadBalancer.ingress[].ip}')
+    sleep 3
+    if [ $ipchkzzz == "20" ]; then webstork_ip_info="Pending 60sec over"; fi
+  done
   nodeport_info=$(kubectl get svc -A -o jsonpath='{range .items[?(@.metadata.name == "'$webstork_meta_name'")].spec.ports[*]}{.name}{"\t"}{.targetPort}{"\n"}{end}')
 else
   webstork_ip_info="null"
