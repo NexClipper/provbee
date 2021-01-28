@@ -33,6 +33,7 @@ case $webstork_cmd in
   edit) 
   webstork_kubectl_run=$(curl -sL $webstork_yaml_url/$webstork_app.yaml|sed -e "s#\${EXPOSETYPE}#$webstork_expose_type#g" | kubectl delete -f - 2>&1)
   webstork_kubectl_run=$(curl -sL $webstork_yaml_url/$webstork_app.yaml|sed -e "s#\${EXPOSETYPE}#$webstork_expose_type#g" | kubectl create -f - 2>&1)
+  webstork_kubectl_run="edited"
   ;;
   delete)
   webstork_kubectl_run=$(curl -sL $webstork_yaml_url/$webstork_app.yaml|sed -e "s#\${EXPOSETYPE}#$webstork_expose_type#g" | kubectl delete -f - 2>&1)
@@ -43,7 +44,7 @@ case $webstork_cmd in
 esac
 
 webstork_kubectl_status=$(echo $webstork_kubectl_run|awk '{print $NF}')
-if [[ $webstork_kubectl_status =~ ^(created|deleted) ]]; then
+if [[ $webstork_kubectl_status =~ ^(created|deleted|edited) ]]; then
  webstork_kubectl_status=$webstork_kubectl_status
 else
  webstork_kubectl_run=$(echo $webstork_kubectl_run|sed -e "s/\"//g")
@@ -54,12 +55,14 @@ fi
 webstork_meta_name="ws-$webstork_app"
 if [[ $webstork_expose_type == "NodePort" ]]; then
   webstork_ip_info=$(kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"\n"}{end}'|head -n1)
+  nodeport_info=$(kubectl get svc -A -o jsonpath='{range .items[?(@.metadata.name == "'$webstork_meta_name'")].spec.ports[*]}{.name}{"\t"}{.nodePort}{"\n"}{end}')
 elif [[ $webstork_expose_type == "LoadBalancer" ]]; then
+  sleep 5
   webstork_ip_info=$(kubectl get svc -n nex-system -o jsonpath='{range $.items[*].status.loadBalancer.ingress[?(@.*)]}{.ip}{.hostname}{"\n"}{end}'|head -n1)
+  nodeport_info=$(kubectl get svc -A -o jsonpath='{range .items[?(@.metadata.name == "'$webstork_meta_name'")].spec.ports[*]}{.name}{"\t"}{.targetPort}{"\n"}{end}')
 else
   webstork_ip_info="null"
 fi
-nodeport_info=$(kubectl get svc -A -o jsonpath='{range .items[?(@.metadata.name == "'$webstork_meta_name'")].spec.ports[*]}{.name}{"\t"}{.'${webstork_expose_type,}'}{"\n"}{end}')
 nodeport_count=$(echo "$nodeport_info"|wc -l)
 local count=0
 while [ $count -lt $nodeport_count ];
@@ -67,13 +70,13 @@ do
         count=$((count+1))
         webstork_app_name=$(echo "$nodeport_info"|sed -n ${count}p|awk '{print $1}')
         webstork_app_port=$(echo "$nodeport_info"|sed -n ${count}p|awk '{print $2}')
-        webstork_app_name=${webstork_app_name:=null};webstork_app_port=${webstork_app_port:=null}
+        #webstork_app_name=${webstork_app_name:=null};webstork_app_port=${webstork_app_port:=null}
         if [ $count -eq 1 ]; then
-                local svc_json="{\"NAME\": \"${webstork_app_name}\", \"PORT\": \"${webstork_app_port}\"}"
+                local svc_json="{\"NAME\": \"${webstork_app_name:=null}\", \"PORT\": \"${webstork_app_port:=null}\"}"
         else
-                local svc_json=",{\"NAME\": \"${webstork_app_name}\", \"PORT\": \"${webstork_app_port}\"}"
+                local svc_json=",{\"NAME\": \"${webstork_app_name:=null}\", \"PORT\": \"${webstork_app_port:=null}\"}"
         fi
-        if [[ $webstork_app_name == "promscale" ]]; then promsacle_port=$webstork_app_port;fi
+        if [[ $webstork_app_name == "promscale" ]]; then promsacle_port=${webstork_app_port};fi
         collect_json="${collect_json}${svc_json}"
 done
 #echo "[ { \"WEBSTORK_APP\":\"$webstork_meta_name\",\"WEBSTORK_STATUS\":\"$webstork_kubectl_status\",\"WEBSTORK_EXPOSE\":\"$webstork_expose_type\",\"WEBSTORK_IP\":\"$webstork_ip_info\",\"WEBSTORK_SVC\":["$collect_json"]} ]"|jq
