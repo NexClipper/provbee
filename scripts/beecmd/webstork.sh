@@ -7,12 +7,6 @@ webstork_yaml_url="https://raw.githubusercontent.com/NexClipper/webstork/main/se
 # alertmanager.yaml grafana.yaml prometheus.yaml pushgateway.yaml promlens.yaml
 #busybee  webstork  create   nexclipper  NodePort  promlens
 #busybee  $beeA     $beeB   $beeC       $beeD     $beeLAST(LASTA) $beeLAST(LASTB)
-## command check
-if [[ ${beeCMD[0],,} =~ ^(create|edit|delete)$ ]]; then
-  webstork_cmd=${beeCMD[0],,}
-else
-  fatal ">> WebStork cmd check (create/edit/delete) "
-fi
 ## namespace check
 if [[ ${beeCMD[1]} == "" ]]; then fatal "P8s install namespace check"; fi #namespace=$beeC
 ## exposeType check
@@ -22,27 +16,32 @@ else
   fatal ">> WebStork expose Type check (NodePort/LoadBalancer/ClusterIP)"
 fi
 ## app name check
-if [[ ${beeCMD[3]} != "" ]]; then
-    case ${beeCMD[3]} in
-      alertmanager) webstork_app=${beeCMD[3]} ;;
-      grafana) webstork_app=${beeCMD[3]} ;;
-      prometheus) webstork_app=${beeCMD[3]} ;;
-      pushgateway) webstork_app=${beeCMD[3]} ;;
-      promlens) webstork_app=${beeCMD[3]} ;;
-      *) fatal ">> WebStork App name check" ;; 
-    esac
-else
-  fatal ">> WebStork App name check"
-fi
+case ${beeCMD[3]} in
+  alertmanager) webstork_app=${beeCMD[3]} ;;
+  grafana) webstork_app=${beeCMD[3]} ;;
+  prometheus) webstork_app=${beeCMD[3]} ;;
+  pushgateway) webstork_app=${beeCMD[3]} ;;
+  promlens) webstork_app=${beeCMD[3]} ;;
+  *) fatal ">> WebStork App name check" ;; 
+esac
 ## kubectl command run
-if [[ $webstork_cmd == "create" ]]; then
-  webstork_kubectl_run=$(curl -sL $webstork_yaml_url/$webstork_app.yaml|sed -e "s#\${EXPOSETYPE}#$webstork_expose_type#g" | kubectl create -f - 2>&1)
-elif [[ $webstork_cmd == "edit" ]]; then 
+webstork_cmd=${beeCMD[0],,}
+case $webstork_cmd in
+  create) 
+  webstork_kubectl_run=$(curl -sL $webstork_yaml_url/$webstork_app.yaml|sed -e "s#\${EXPOSETYPE}#$webstork_expose_type#g" | kubectl create -f - 2>&1) 
+  ;;
+  edit) 
   webstork_kubectl_run=$(curl -sL $webstork_yaml_url/$webstork_app.yaml|sed -e "s#\${EXPOSETYPE}#$webstork_expose_type#g" | kubectl delete -f - 2>&1)
   webstork_kubectl_run=$(curl -sL $webstork_yaml_url/$webstork_app.yaml|sed -e "s#\${EXPOSETYPE}#$webstork_expose_type#g" | kubectl create -f - 2>&1)
-elif [[ $webstork_cmd == "delete" ]]; then
+  ;;
+  delete)
   webstork_kubectl_run=$(curl -sL $webstork_yaml_url/$webstork_app.yaml|sed -e "s#\${EXPOSETYPE}#$webstork_expose_type#g" | kubectl delete -f - 2>&1)
-fi
+  ;;
+  *)
+  fatal ">> WebStork cmd check (create/edit/delete) "
+  ;;
+esac
+
 webstork_kubectl_status=$(echo $webstork_kubectl_run|awk '{print $NF}')
 if [[ $webstork_kubectl_status =~ ^(created|deleted) ]]; then
  webstork_kubectl_status=$webstork_kubectl_status
