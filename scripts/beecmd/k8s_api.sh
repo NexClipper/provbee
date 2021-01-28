@@ -131,20 +131,20 @@ k8s_api(){
   }
   stats_capacity(){
     stats_capacity_va=`$curlcmd "${stats_capacity_query}" $promsvr_DNS/api/v1/query \
-    | jq '.data.result[]|{"persistentvolumeclaim": .metric.persistentvolumeclaim,"values": .value[1]}'`
-    #| jq '.data'`
+    | jq '.data'`
+    #| jq '.data.result[]|{"persistentvolumeclaim": .metric.persistentvolumeclaim,"values": .value[1]}'`
     if [[ $stats_capacity_va == "" ]]; then stats_capacity_va="\""\"; fi
   }
   stats_used(){
     stats_used_va=`$curlcmd "${stats_used_query}" $promsvr_DNS/api/v1/query \
-    | jq '.data.result[]|{"persistentvolumeclaim": .metric.persistentvolumeclaim,"values": .value[1]}'`
-    #| jq '.data'`
+    | jq '.data'`
+    #| jq '.data.result[]|{"persistentvolumeclaim": .metric.persistentvolumeclaim,"values": .value[1]}'`
     if [[ $stats_used_va == "" ]]; then stats_used_va="\""\"; fi
   }
   stats_usage(){
     stats_usage_va=`$curlcmd "${stats_usage_query}" $promsvr_DNS/api/v1/query \
-    | jq '.data.result[]|{"persistentvolumeclaim": .metric.persistentvolumeclaim,"values": .value[1]}'`
-    #| jq '.data'``
+    | jq '.data'``
+    #| jq '.data.result[]|{"persistentvolumeclaim": .metric.persistentvolumeclaim,"values": .value[1]}'`
     if [[ $stats_usage_va == "" ]]; then stats_usage_va="\""\"; fi
   }
 
