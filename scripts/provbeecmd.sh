@@ -1,5 +1,4 @@
 #!/bin/bash
-
 busybeecmd=$@
 beecmdlog="/tmp/busybee.log"
 KUBENAMESPACE="nex-system"
@@ -69,6 +68,16 @@ tobscmd(){
       done
       info "Tobs install OK"
       echo "TobsOK" > /tmp/tobsinst
+      if [[ $(cat /tmp/tobsinst) == "TobsOK" ]]; then
+            provbeens=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+            provbeesa="nexc"
+            curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/webstork.yaml \
+            | sed -e "s#\${KUBENAMESPACE}#$provbeens#g" \
+            | sed -e "s#\${KUBESERVICEACCOUNT}#$provbeesa#g" \
+            | kubectl create -f - 2>&1
+      else
+        fatal "Webstork start FAIL"
+      fi
     ;;
     instpw)
       echo $beeD > /tmp/gfpasswd
@@ -526,7 +535,8 @@ webstork_kubectl_status=$(echo $webstork_kubectl_run|awk '{print $NF}')
 if [[ $webstork_kubectl_status =~ ^(created|deleted) ]]; then
  webstork_kubectl_status=$webstork_kubectl_status
 else
- webstork_kubectl_status="webstork $webstork_app $webstork_cmd FAIL"
+ webstork_kubectl_run=$(echo $webstork_kubectl_run|sed -e "s/\"//g")
+ webstork_kubectl_status="$webstork_app $webstork_cmd FAIL : ${webstork_kubectl_run%%:*}"
 fi 
 ###########################################################
 webstork_meta_name="ws-$webstork_app"
@@ -553,7 +563,7 @@ do
         fi
         collect_json="${collect_json}${svc_json}"
 done
-echo "[ { \"WEBSTORK_APP\":\"$webstork_meta_name\",\"WEBSTORK_STATUS\":\"$webstork_kubectl_status\",\"WEBSTORK_EXPOSE\":\"$webstork_expose_type\",\"WEBSTORK_IP\":\"$webstork_ip_info\",\"WEBSTORK_SVC\":["$collect_json"]} ]"|jq
+echo "{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"webstork\",\"beetype\":\"string\",\"data\":[{\"WEBSTORK_APP\":\"$webstork_meta_name\",\"WEBSTORK_STATUS\":\"$webstork_kubectl_status\",\"WEBSTORK_EXPOSE\":\"$webstork_expose_type\",\"WEBSTORK_IP\":\"$webstork_ip_info\",\"WEBSTORK_SVC\":["$collect_json"]}]}]}"
 }
 
 ################################################################ value
