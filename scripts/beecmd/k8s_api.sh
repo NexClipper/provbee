@@ -20,7 +20,9 @@ total_pvcs_query='query=count(kube_persistentvolumeclaim_info)'
 status_cluster_api_query='query=sum(up{job=~".*apiserver.*"})/count(up{job=~".*apiserver.*"}) > bool 0'
 rate_cluster_api_query='query=sum by (code) (rate(apiserver_request_total[5m]))'
 #total_alerts_query=
-
+stats_capacity_query='query=kubelet_volume_stats_capacity_bytes{namespace="nexclipper"}'
+stats_available_query='query=kubelet_volume_stats_available_bytes{namespace="nexclipper"}'
+stats_usage_query='query=(kubelet_volume_stats_capacity_bytes{namespace="nexclipper"} - kubelet_volume_stats_available_bytes{namespace="nexclipper"})/kubelet_volume_stats_capacity_bytes{namespace="nexclipper"}*100'
 
 
 
@@ -126,7 +128,21 @@ k8s_api(){
       #| jq '.data.alerts[]| {"status": .status}'`
       #| jq '.data.alerts[]| {"status": .status}' |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g'
       if [[ $total_alerts_va == "" ]]; then total_alerts_va="\""\"; fi
-
+  }
+  stats_capacity(){
+    stats_capacity_va=`$curlcmd "${stats_capacity_query}" $promsvr_DNS/api/v1/query \
+    | jq '.data'`
+    if [[ $stats_capacity_va == "" ]]; then stats_capacity_va="\""\"; fi
+  }
+  stats_available(){
+    stats_available_va=`$curlcmd "${stats_available_query}" $promsvr_DNS/api/v1/query \
+    | jq '.data'`
+    if [[ $stats_available_va == "" ]]; then rstats_available_va="\""\"; fi
+  }
+  stats_usage(){
+    stats_usage_va=`$curlcmd "${stats_usage_query}" $promsvr_DNS/api/v1/query \
+    | jq '.data'`
+    if [[ $stats_usage_va == "" ]]; then stats_usage_va="\""\"; fi
   }
 
     ################ Case
@@ -170,7 +186,9 @@ k8s_api(){
             status_cluster_api
             rate_cluster_api
             total_alerts
-
+            stats_capacity
+            stats_available
+            stats_usage
         wowjson=`cat << EOF
   {
     "k8sapi": "provbee-test",
@@ -270,6 +288,21 @@ k8s_api(){
           "name": "total_alerts",
           "type": "string",
           "values": $total_alerts_va
+        },
+        {
+          "name": "stats_usage",
+          "type": "string",
+          "values": $stats_usage_va
+        },
+        {
+          "name": "stats_available",
+          "type": "string",
+          "values": $stats_available_va
+        },
+        {
+          "name": "stats_capacity",
+          "type": "string",
+          "values": $stats_capacity_va
         }
       ]
     }
