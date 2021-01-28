@@ -41,23 +41,8 @@ spec:
 #          limits:
 #            memory: "256Mi"
 #            cpu: "500m"
-        volumeMounts:
-        - name: ssh-auth
-          mountPath: /data/.webstork/
-        - name: kube-config
-          mountPath: /root/.kube/
-      volumes:
-      - name: ssh-auth
-        secret:
-          secretName: ${KUBESERVICEACCOUNT}-ssh-key
-    #      defaultMode: 0644
-          items:
-          - key: pubkey
-            path: configmap_authkey
-      - name: kube-config
-        secret:
-          secretName: ${KUBESERVICEACCOUNT}-kubeconfig
-          defaultMode: 0644
-          items:
-          - key: kubeconfig
-            path: config
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 
+          initialDelaySeconds: 5
