@@ -82,11 +82,11 @@ do
         else
                 local svc_json=",{\"NAME\": \"${webstork_app_name:=null}\", \"PORT\": \"${webstork_app_port:=null}\"}"
         fi
-        if [[ $webstork_app_name == "promscale" ]]; then promsacle_port=${webstork_app_port};fi
+        if [[ $webstork_app_name == "promscale" ]]; then promscale_port=${webstork_app_port};fi
         collect_json="${collect_json}${svc_json}"
 done
 #echo "[ { \"WEBSTORK_APP\":\"$webstork_meta_name\",\"WEBSTORK_STATUS\":\"$webstork_kubectl_status\",\"WEBSTORK_EXPOSE\":\"$webstork_expose_type\",\"WEBSTORK_IP\":\"$webstork_ip_info\",\"WEBSTORK_SVC\":["$collect_json"]} ]"|jq
-if [[ $promsacle_port != "" ]]; then promlens_scale; fi
+if [[ $promscale_port != "" ]]; then promlens_scale; fi
 }
 promlens_scale(){
   promlens_scale_replace=$(kubectl get deployment -n nexclipper nc-promlens -o json \
