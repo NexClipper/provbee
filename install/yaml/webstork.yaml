@@ -46,3 +46,45 @@ spec:
             path: /
             port: 8080
           initialDelaySeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metricops
+  namespace: nex-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metricops
+  template:
+    metadata:
+      labels:
+        app: metricops
+    spec:
+      serviceAccountName: nexc
+      containers:
+      - image: nexclipper/metric-operator:0.2.0
+        imagePullPolicy: IfNotPresent 
+        name: metricops
+        ports:
+        - containerPort: 6379
+        volumeMounts:
+        - name: data
+          mountPath: /redis-master-data             
+      volumes:
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metricops
+  namespace: nex-system
+spec:
+  ports:
+  - name: "6379"
+    port: 6379
+    targetPort: 6379
+  selector:
+    app: metricops
