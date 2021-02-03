@@ -46,9 +46,11 @@ esac
 webstork_kubectl_status=$(echo $webstork_kubectl_run|awk '{print $NF}')
 if [[ $webstork_kubectl_status =~ ^(created|deleted|edited) ]]; then
  webstork_kubectl_status=$webstork_kubectl_status
+ STATUS_JSON="OK"
 else
  webstork_kubectl_run=$(echo $webstork_kubectl_run|sed -e "s/\"//g")
  webstork_kubectl_status="$webstork_app $webstork_cmd FAIL : ${webstork_kubectl_run%%:*}"
+ STATUS_JSON="ERROR"
 fi 
 ###########################################################
 ## JSON CREATE ##
@@ -63,7 +65,7 @@ elif [[ $webstork_expose_type == "LoadBalancer" ]]; then
     ipchkzzz=$((ipchkzzz+1))
     webstork_ip_info=$(kubectl get svc/$webstork_meta_name -n nex-system -o jsonpath='{.status.loadBalancer.ingress[].ip}')
     sleep 3
-    if [ $ipchkzzz == "20" ]; then webstork_ip_info="Pending 60sec over"; fi
+    if [ $ipchkzzz == "20" ]; then STATUS_JSON="FAIL";webstork_ip_info="Pending 60sec over"; fi
   done
   nodeport_info=$(kubectl get svc -A -o jsonpath='{range .items[?(@.metadata.name == "'$webstork_meta_name'")].spec.ports[*]}{.name}{"\t"}{.targetPort}{"\n"}{end}')
 else
@@ -95,6 +97,6 @@ promlens_scale(){
 webstork_cmd
 ################################ JSON print
 TOTAL_JSON="{\"WEBSTORK_APP\":\"$webstork_meta_name\",\"WEBSTORK_STATUS\":\"$webstork_kubectl_status\",\"WEBSTORK_EXPOSE\":\"$webstork_expose_type\",\"WEBSTORK_IP\":\"$webstork_ip_info\",\"WEBSTORK_SVC\":["$collect_json"]}"
-BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"beetype\":\"string\",\"data\":[$TOTAL_JSON]}]}"
+BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"string\",\"data\":[${TOTAL_JSON}]}]}"
 echo $BEE_JSON
 ########
