@@ -71,3 +71,15 @@ tobscmd(){
   esac
 }
 tobscmd
+################Print JSON
+beejson(){
+if [[ $TYPE_JSON == "json" ]]; then
+  BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[${TOTAL_JSON}]}]}"
+elif [[ $TYPE_JSON == "base64" ]] || [[ $TYPE_JSON == "string" ]]; then
+  BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[\""${TOTAL_JSON}"\"]}]}"
+else
+  BEE_JSON="N"
+fi
+echo $BEE_JSON
+}
+#beejson

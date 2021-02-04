@@ -3,22 +3,12 @@
 
 #############################################
 p8s_api(){
-# PROVNS = nexclipper, provbeetmp = PROMCONFALY-YAML 
-# ${beeCMD[4]} = $provbeetmp 
-# ${beeCMD[3]} = recording_rules / alerting_rules / prometheus / alertmanager 
-# ${beeCMD[2]} = get / test / apply
-# ${beeCMD[1]} = nexclipper
-# busybee p8s 0 1 2 3 4
-# ############## cmd 0  1        2   3           4
-# TEST : busybee p8s cm $PROVNS test $P8SCONF $provbeetmp
-# GET : busybee p8s cm $PROVNS get $P8SCONF
-# APPLY : busybee p8s cm $PROVNS apply $P8SCONF $provbeetmp 
-# TOTAL : busybee p8s cm $PROVNS $GETCMD $GETCONFNAME $provbeetmp 
 
 #############config map get, test, apply
   cm_get(){
     TOTAL_JSON=$(kubectl get configmap -n ${beeCMD[1]} $nc_configmap_name -o json |jq '.data|{"data": .}'|base64 | tr '\n' ' ' | sed -e 's/ //g')
       if [[ $TOTAL_JSON == "ewogICJkYXRhIjogbnVsbAp9Cg==" ]]; then STATUS_JSON="ERROR";fi
+    TYPE_JSON="base64"
   }
 
   cm_test(){
@@ -38,14 +28,15 @@ p8s_api(){
    
     if [ $(cat $filepath.status|grep FAILED|wc -l) == 0 ]; then
 #      printf "OK"|base64 | tr '\n' ' ' | sed -e 's/ //g'
-        TOTAL_JSON=$(echo "OK"|base64| tr '\n' ' ' | sed -e 's/ //g')
+        TOTAL_JSON="OK"
     else
 #      cat $filepath.status|base64 | tr '\n' ' ' | sed -e 's/ //g'
         TOTAL_JSON=$(cat $filepath.status|base64 | tr '\n' ' ' | sed -e 's/ //g')
+        TYPE_JSON="base64"
         STATUS_JSON="ERROR"
     fi
     ## yaml, base64 delete
-    #rm -rf $filepath.base64 $filepath.yaml 
+    rm -rf $filepath.base64 $filepath.yaml 
   }
 
   cm_apply(){
@@ -57,12 +48,13 @@ p8s_api(){
       #kubectl patch configmaps -n ${beeCMD[1]} $nc_configmap_name --patch "$(cat $filepath.base64|base64 -d|jq '{"data": {"'"$cm_filename"'": .}}')" > $filepath.status
       ## config file apply
       #curl -sL -G -o /dev/null -w "%{http_code}" -X POST $dns_target/-/reload
-      TOTAL_JSON=$(curl -sL -G -o /dev/null -w "%{http_code}" -X POST $dns_target/-/reload|base64| tr '\n' ' ' | sed -e 's/ //g')
+      TOTAL_JSON=$(curl -sL -G -o /dev/null -w "%{http_code}" -X POST $dns_target/-/reload)
+      if [ $TOTAL_JSON == "200" ]; then TOTAL_JSON="OK";fi
     else
       fatal "file not found : $p8sconfigfile.base64"
     fi
 
-    #rm -rf $filepath.base64
+    rm -rf $filepath.base64
   }
 
   ################ Case
@@ -99,17 +91,23 @@ p8s_api(){
         get) cm_get;;
         test) cm_test;;
         apply) cm_apply;;
-        *) fatal ">> p8s cm NAMESPACE get/apply prometheus/alertmanager" ;;
+        *) fatal "k8s prometheus configmap only" ;;
       esac
     ;;
-    help|*) info "Help me~~~~";;
+    *) fatal "k8s prometheus configmap only";;
   esac
 }
-# ${beeCMD[4]} = $provbeetmp 
-# ${beeCMD[3]} = recording_rules / alerting_rules / prometheus / alertmanager 
-# ${beeCMD[2]} = get / test / apply
-# ${beeCMD[1]} = nexclipper
-# busybee p8s cm 1 2 3 4
 p8s_api
-BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"base64\",\"data\":[\""${TOTAL_JSON}"\"]}]}"
+
+################Print JSON
+beejson(){
+if [[ $TYPE_JSON == "json" ]]; then
+  BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[${TOTAL_JSON}]}]}"
+elif [[ $TYPE_JSON == "base64" ]] || [[ $TYPE_JSON == "string" ]]; then
+  BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[\""${TOTAL_JSON}"\"]}]}"
+else
+  BEE_JSON="N"
+fi
 echo $BEE_JSON
+}
+beejson
