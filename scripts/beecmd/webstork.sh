@@ -1,5 +1,6 @@
 #!/bin/bash
 
+nexclipperns="nex-system"
 #############################################
 webstork_cmd(){
 unset webstork_kubectl_run
@@ -16,14 +17,15 @@ else
   fatal ">> WebStork expose Type check (NodePort/LoadBalancer/ClusterIP)"
 fi
 ## app name check
-case ${beeCMD[3]} in
-  alertmanager) webstork_app=${beeCMD[3]} ;;
-  grafana) webstork_app=${beeCMD[3]} ;;
-  prometheus) webstork_app=${beeCMD[3]} ;;
-  pushgateway) webstork_app=${beeCMD[3]} ;;
-  promlens) webstork_app=${beeCMD[3]} ;;
-  *) fatal ">> WebStork App name check" ;; 
-esac
+webstork_app=${beeCMD[3]}
+#case ${beeCMD[3]} in
+#  alertmanager) webstork_app=${beeCMD[3]} ;;
+#  grafana) webstork_app=${beeCMD[3]} ;;
+#  prometheus) webstork_app=${beeCMD[3]} ;;
+#  pushgateway) webstork_app=${beeCMD[3]} ;;
+#  promlens) webstork_app=${beeCMD[3]} ;;
+#  *) fatal ">> WebStork App name check" ;; 
+#esac
 ## kubectl command run
 webstork_cmd=${beeCMD[0],,}
 case $webstork_cmd in
@@ -46,28 +48,26 @@ esac
 webstork_kubectl_status=$(echo $webstork_kubectl_run|awk '{print $NF}')
 if [[ $webstork_kubectl_status =~ ^(created|deleted|edited) ]]; then
  webstork_kubectl_status=$webstork_kubectl_status
- STATUS_JSON="OK"
 else
  webstork_kubectl_run=$(echo $webstork_kubectl_run|sed -e "s/\"//g")
  webstork_kubectl_status="$webstork_app $webstork_cmd FAIL : ${webstork_kubectl_run%%:*}"
- STATUS_JSON="ERROR"
+ STATUS_JSON="FAIL"
 fi 
 ###########################################################
 ## JSON CREATE ##
 webstork_meta_name="ws-$webstork_app"
 if [[ $webstork_expose_type == "NodePort" ]]; then
   webstork_ip_info=$(kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"\n"}{end}'|head -n1)
-  nodeport_info=$(kubectl get svc -A -o jsonpath='{range .items[?(@.metadata.name == "'$webstork_meta_name'")].spec.ports[*]}{.name}{"\t"}{.nodePort}{"\n"}{end}')
+  nodeport_info=$(kubectl get svc/$webstork_meta_name -n $nexclipperns -o jsonpath='{range .spec.ports[*]}{.name}{"\t"}{.nodePort}{"\n"}{end}')
 elif [[ $webstork_expose_type == "LoadBalancer" ]]; then
-  #webstork_ip_info=$(kubectl get svc -n nex-system -o jsonpath='{range $.items[*].status.loadBalancer.ingress[?(@.*)]}{.ip}{.hostname}{"\n"}{end}'|head -n1)
-  webstork_ip_info=$(kubectl get svc/$webstork_meta_name -n nex-system -o jsonpath='{.status.loadBalancer.ingress[].ip}')
   while [ "$webstork_ip_info" == "" ]; do
     ipchkzzz=$((ipchkzzz+1))
-    webstork_ip_info=$(kubectl get svc/$webstork_meta_name -n nex-system -o jsonpath='{.status.loadBalancer.ingress[].ip}')
+    webstork_ip_info=$(kubectl get svc/$webstork_meta_name -n $nexclipperns -o jsonpath='{.status.loadBalancer.ingress[]}'|jq -r 'if .ip !=null then (.ip) else (.hostname) end')
+    STATUS_JSON="OK"
     sleep 3
     if [ $ipchkzzz == "20" ]; then STATUS_JSON="FAIL";webstork_ip_info="Pending 60sec over"; fi
   done
-  nodeport_info=$(kubectl get svc -A -o jsonpath='{range .items[?(@.metadata.name == "'$webstork_meta_name'")].spec.ports[*]}{.name}{"\t"}{.targetPort}{"\n"}{end}')
+  nodeport_info=$(kubectl get svc/$webstork_meta_name -n $nexclipperns -o jsonpath='{range .spec.ports[*]}{.name}{"\t"}{.targetPort}{"\n"}{end}')
 else
   webstork_ip_info="null"
 fi
@@ -87,11 +87,10 @@ do
         if [[ $webstork_app_name == "promscale" ]]; then promscale_port=${webstork_app_port};fi
         collect_json="${collect_json}${svc_json}"
 done
-#echo "[ { \"WEBSTORK_APP\":\"$webstork_meta_name\",\"WEBSTORK_STATUS\":\"$webstork_kubectl_status\",\"WEBSTORK_EXPOSE\":\"$webstork_expose_type\",\"WEBSTORK_IP\":\"$webstork_ip_info\",\"WEBSTORK_SVC\":["$collect_json"]} ]"|jq
 if [[ $promscale_port != "" ]]; then promlens_scale; fi
 }
 promlens_scale(){
-  promlens_scale_replace=$(kubectl get deployment -n nexclipper nc-promlens -o json \
+  promlens_scale_replace=$(kubectl get deployment -n ${beeCMD[1]} nc-promlens -o json \
   | jq '.spec.template.spec.containers[0].command[2] = "'"http://${webstork_ip_info}:${promsacle_port}"'"' | kubectl replace -f -  2>&1)
 }
 webstork_cmd
@@ -105,7 +104,7 @@ if [[ $TYPE_JSON == "json" ]]; then
 elif [[ $TYPE_JSON == "base64" ]] || [[ $TYPE_JSON == "string" ]]; then
   BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[\""${TOTAL_JSON}"\"]}]}"
 else
-  BEE_JSON="N"
+  BEE_JSON="Bee!"
 fi
 echo $BEE_JSON
 }

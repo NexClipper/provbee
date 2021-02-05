@@ -8,7 +8,7 @@ p8s_api(){
   cm_get(){
     TOTAL_JSON=$(kubectl get configmap -n ${beeCMD[1]} $nc_configmap_name -o json |jq '.data|{"data": .}'|base64 | tr '\n' ' ' | sed -e 's/ //g')
       if [[ $TOTAL_JSON == "ewogICJkYXRhIjogbnVsbAp9Cg==" ]]; then STATUS_JSON="ERROR";fi
-    TYPE_JSON="base64"
+    STATUS_JSON="OK";TYPE_JSON="base64"
   }
 
   cm_test(){
@@ -28,7 +28,8 @@ p8s_api(){
    
     if [ $(cat $filepath.status|grep FAILED|wc -l) == 0 ]; then
 #      printf "OK"|base64 | tr '\n' ' ' | sed -e 's/ //g'
-        TOTAL_JSON="OK"
+        TOTAL_JSON="{\"p8s_config_cmd\":\"${beeCMD[2]}\",\"p8s_config_name\":\"${beeCMD[3]}\"}"
+        STATUS_JSON="OK";TYPE_JSON="json"
     else
 #      cat $filepath.status|base64 | tr '\n' ' ' | sed -e 's/ //g'
         TOTAL_JSON=$(cat $filepath.status|base64 | tr '\n' ' ' | sed -e 's/ //g')
@@ -49,7 +50,7 @@ p8s_api(){
       ## config file apply
       #curl -sL -G -o /dev/null -w "%{http_code}" -X POST $dns_target/-/reload
       TOTAL_JSON=$(curl -sL -G -o /dev/null -w "%{http_code}" -X POST $dns_target/-/reload)
-      if [ $TOTAL_JSON == "200" ]; then TOTAL_JSON="OK";fi
+      if [ $TOTAL_JSON == "200" ]; then STATUS_JSON="OK";TOTAL_JSON="OK";fi
     else
       fatal "file not found : $p8sconfigfile.base64"
     fi
@@ -106,7 +107,7 @@ if [[ $TYPE_JSON == "json" ]]; then
 elif [[ $TYPE_JSON == "base64" ]] || [[ $TYPE_JSON == "string" ]]; then
   BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[\""${TOTAL_JSON}"\"]}]}"
 else
-  BEE_JSON="N"
+  BEE_JSON="Bee!"
 fi
 echo $BEE_JSON
 }

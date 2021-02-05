@@ -78,7 +78,7 @@ if [[ $TYPE_JSON == "json" ]]; then
 elif [[ $TYPE_JSON == "base64" ]] || [[ $TYPE_JSON == "string" ]]; then
   BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[\""${TOTAL_JSON}"\"]}]}"
 else
-  BEE_JSON="N"
+  BEE_JSON="Bee!"
 fi
 echo $BEE_JSON
 }
