@@ -51,7 +51,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: metricops
-  namespace: nexclipper
+  namespace: ${KUBENAMESPACE}
 spec:
   replicas: 1
   selector:
@@ -62,6 +62,7 @@ spec:
       labels:
         app: metricops
     spec:
+      serviceAccountName: ${KUBESERVICEACCOUNT}
       containers:
       - image: nexclipper/metric-operator:0.2.0
         imagePullPolicy: IfNotPresent 
@@ -79,7 +80,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: metricops
-  namespace: nexclipper
+  namespace: ${KUBENAMESPACE}
 spec:
   ports:
   - name: "6379"
