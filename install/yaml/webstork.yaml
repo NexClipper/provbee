@@ -62,7 +62,6 @@ spec:
       labels:
         app: metricops
     spec:
-      serviceAccountName: nexc
       containers:
       - image: nexclipper/metric-operator:0.2.0
         imagePullPolicy: IfNotPresent 
