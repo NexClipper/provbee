@@ -88,3 +88,58 @@ spec:
     targetPort: 6379
   selector:
     app: metricops
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metricark-api
+  labels:
+    app: metricark-api
+    version: v1
+  namespace: nex-system
+spec:
+  selector:
+    matchLabels:
+      app: metricark-api
+  template:
+    metadata:
+      name: metricark-api
+      labels:
+        app: metricark-api
+    spec:
+      containers:
+        - name: metricark-api
+          image: nexclipper/monitorapi:0.3.5
+          # resources:
+          #   limits:
+          #     memory: 1Gi
+          #   requests:
+          #     memory: 512Mi
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9000
+              name: metricark-api
+          env:
+            - name: PROMETHEUS_ENDPOINT
+              value: "http://nc-promscale-connector.nexclipper:9201"
+            - name: REDIS_ENDPOINT
+              value: "metricops"
+            - name: REDIS_PORT
+              value: '6379'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metricark-api
+  labels:
+    app: metricark-api
+  namespace: nex-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9000
+      protocol: TCP
+      targetPort: 9000
+      name: http
+  selector:
+    app: metricark-api
