@@ -15,7 +15,8 @@ p8s_api(){
     ## config file check
     if [ -f /tmp/$p8sconfigfile.base64 ]; then
       filepath="/tmp/$p8sconfigfile"
-      cat $filepath.base64 | base64 -d | jq -r > $filepath.yaml
+      #cat $filepath.base64 | base64 -d | jq -r > $filepath.yaml
+      cat $filepath.base64 | base64 -d | jq -r '.data."'"$cm_filename"'"' > $filepath.yaml
       ## yaml test
       nc_server=$(kubectl get pod -n ${beeCMD[1]} | grep $nc_svr_pod_name|awk '{print $1}')
       if [[ $nc_server == "" ]]; then fatal "Not found pod : $nc_svr_pod_name"; fi
@@ -66,7 +67,7 @@ p8s_api(){
           nc_svr_pod_name="nc-prometheus-server"
           nc_svr_pod_in_name="prometheus-server"
           nc_configmap_name="nc-prometheus-config"
-#          cm_filename="prometheus.yml"
+          cm_filename="prometheus.yml"
 #          cm_target="prom"
           testtool_cmd="/bin/promtool check config"
           dns_target=$promsvr_DNS
@@ -75,12 +76,13 @@ p8s_api(){
           nc_svr_pod_name="nc-prometheus-alertmanager"
           nc_svr_pod_in_name="prometheus-alertmanager" 
           nc_configmap_name="nc-prometheus-alertmanager"
-#          cm_filename="alertmanager.yml"
+          cm_filename="alertmanager.yml"
 #          cm_target="alertm"
           testtool_cmd="/bin/amtool check-config"
           dns_target=$alertsvr_DNS
         ;;
         recording_rules|alerting_rules)
+          if [[ ${beeCMD[3]} == "recording_rules" ]]; then cm_filename="recording_rules.yml"; else cm_filename="alerting_rules.yml"; fi 
           nc_configmap_name="nc-prometheus-config"
           nc_svr_pod_name="nc-prometheus-server"
           nc_svr_pod_in_name="prometheus-server"      

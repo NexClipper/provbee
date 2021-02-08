@@ -18,6 +18,7 @@ else
 fi
 ## app name check
 webstork_app=${beeCMD[3]}
+webstork_meta_name="ws-$webstork_app"
 #case ${beeCMD[3]} in
 #  alertmanager) webstork_app=${beeCMD[3]} ;;
 #  grafana) webstork_app=${beeCMD[3]} ;;
@@ -44,10 +45,17 @@ case $webstork_cmd in
   fatal ">> WebStork cmd check (create/edit/delete) "
   ;;
 esac
-
 webstork_kubectl_status=$(echo $webstork_kubectl_run|awk '{print $NF}')
 if [[ $webstork_kubectl_status =~ ^(created|deleted|edited) ]]; then
  webstork_kubectl_status=$webstork_kubectl_status
+ if [[ $webstork_kubectl_status == "deleted"]]; then 
+  TYPE_JSON="json"
+  STATUS_JSON="OK"
+  TOTAL_JSON="{\"WEBSTORK_APP\":\"$webstork_meta_name\",\"WEBSTORK_STATUS\":\"$webstork_kubectl_status\"}"|jq
+  BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[${TOTAL_JSON}]}]}"
+  echo $BEE_JSON
+  exit 0
+ fi
 else
  webstork_kubectl_run=$(echo $webstork_kubectl_run|sed -e "s/\"//g")
  webstork_kubectl_status="$webstork_app $webstork_cmd FAIL : ${webstork_kubectl_run%%:*}"
@@ -55,7 +63,6 @@ else
 fi 
 ###########################################################
 ## JSON CREATE ##
-webstork_meta_name="ws-$webstork_app"
 if [[ $webstork_expose_type == "NodePort" ]]; then
   webstork_ip_info=$(kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"\n"}{end}'|head -n1)
   nodeport_info=$(kubectl get svc/$webstork_meta_name -n $nexclipperns -o jsonpath='{range .spec.ports[*]}{.name}{"\t"}{.nodePort}{"\n"}{end}')
@@ -63,7 +70,6 @@ elif [[ $webstork_expose_type == "LoadBalancer" ]]; then
   while [ "$webstork_ip_info" == "" ]; do
     ipchkzzz=$((ipchkzzz+1))
     webstork_ip_info=$(kubectl get svc/$webstork_meta_name -n $nexclipperns -o jsonpath='{.status.loadBalancer.ingress[]}'|jq -r 'if .ip !=null then (.ip) else (.hostname) end')
-    STATUS_JSON="OK"
     sleep 3
     if [ $ipchkzzz == "20" ]; then STATUS_JSON="FAIL";webstork_ip_info="Pending 60sec over"; fi
   done
@@ -91,7 +97,7 @@ if [[ $promscale_port != "" ]]; then promlens_scale; fi
 }
 promlens_scale(){
   promlens_scale_replace=$(kubectl get deployment -n ${beeCMD[1]} nc-promlens -o json \
-  | jq '.spec.template.spec.containers[0].command[2] = "'"http://${webstork_ip_info}:${promsacle_port}"'"' | kubectl replace -f -  2>&1)
+  | jq '.spec.template.spec.containers[0].command[2] = "'"http://${webstork_ip_info}:${promscale_port}"'"' | kubectl replace -f -  2>&1)
 }
 webstork_cmd
 ################################ JSON print
