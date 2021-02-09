@@ -82,7 +82,8 @@ p8s_api(){
           dns_target=$alertsvr_DNS
         ;;
         recording_rules|alerting_rules)
-          if [[ ${beeCMD[3]} == "recording_rules" ]]; then cm_filename="recording_rules.yml"; else cm_filename="alerting_rules.yml"; fi 
+#          if [[ ${beeCMD[3]} == "recording_rules" ]]; then cm_filename="recording_rules.yml"; else cm_filename="alerting_rules.yml"; fi 
+          cm_filename="${beeCMD[3]}.yml"
           nc_configmap_name="nc-prometheus-config"
           nc_svr_pod_name="nc-prometheus-server"
           nc_svr_pod_in_name="prometheus-server"      
