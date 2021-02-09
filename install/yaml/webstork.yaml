@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: ${KUBENAMESPACE}
+  namespace: nex-system
   name: webstork
   labels:
     name: webstork
@@ -28,7 +28,7 @@ spec:
       labels:
         name: webstork
     spec:
-      serviceAccountName: ${KUBESERVICEACCOUNT}
+      serviceAccountName: nexc
       containers:
       - name: webstork
         image: nexclipper/webstork:latest
@@ -46,6 +46,13 @@ spec:
             path: /
             port: 8080
           initialDelaySeconds: 5
+      initContainers:
+      - name: init-myservice
+        image: nexclipper/webstork:latest
+        command: ["/bin/sh","-c"]
+        args:
+        - |-
+          until [[ $(kubectl get pods -n nex-system -o jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Ready")].status}{"\t"}{.status.containerStatuses[*].name}{"\n"}{end}' | grep -v webstork | grep -v True | wc -l) = '0' ]]; do sleep 3; done
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -109,7 +116,7 @@ spec:
     spec:
       containers:
         - name: metricark-api
-          image: nexclipper/monitorapi:0.3.5
+          image: nexclipper/metricark-api:main
           # resources:
           #   limits:
           #     memory: 1Gi
@@ -143,3 +150,34 @@ spec:
       name: http
   selector:
     app: metricark-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metricark
+  labels:
+    app: metricark
+    version: v1
+  namespace: nex-system
+spec:
+  selector:
+    matchLabels:
+      app: metricark
+  template:
+    metadata:
+      name: metricark
+      labels:
+        app: metricark
+    spec:
+      containers:
+        - name: metricark
+          image: nexclipper/metricark:main
+          # resources:
+          #   limits:
+          #     memory: 1Gi
+          #   requests:
+          #     memory: 512Mi
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: metricark
