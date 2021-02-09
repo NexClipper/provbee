@@ -25,7 +25,7 @@ stats_used_query='query=kubelet_volume_stats_capacity_bytes{namespace="nexclippe
 stats_usage_query='query=(kubelet_volume_stats_capacity_bytes{namespace="nexclipper"} - kubelet_volume_stats_available_bytes{namespace="nexclipper"})/kubelet_volume_stats_capacity_bytes{namespace="nexclipper"}*100'
 
 
-
+#egrep -v '^[[:space:]]*(#.*)?$'
 
 
 #############################################
@@ -312,10 +312,23 @@ k8s_api(){
   }
 EOF
 `            
-      echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/ //g' 
+      TOTAL_JSON=$(echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/ //g') 
+      TYPE_JSON="base64"
       #echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/\/ //g' -e 's/ //g' 
       ;;
-      help|*) info "Help me~~~~";;
+      help|*) fatal "Help me~~~~";;
     esac
 }
 k8s_api
+################Print JSON
+beejson(){
+if [[ $TYPE_JSON == "json" ]]; then
+  BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[${TOTAL_JSON}]}]}"
+elif [[ $TYPE_JSON == "base64" ]] || [[ $TYPE_JSON == "string" ]]; then
+  BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[\""${TOTAL_JSON}"\"]}]}"
+else
+  BEE_JSON="Bee!"
+fi
+echo $BEE_JSON
+}
+beejson

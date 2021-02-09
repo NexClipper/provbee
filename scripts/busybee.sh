@@ -4,6 +4,9 @@ busybeecmd=$@
 beecmdlog="/tmp/busybee.log"
 KUBENAMESPACE="nex-system"
 KUBESERVICEACCOUNT="nexc"
+TYPE_JSON="string"
+STATUS_JSON="OK"
+STATUS_JSON="Bee~"
 ## busybee cmd log
 echo $(date "+%Y%m%d_%H%M%S") "|" $busybeecmd >> $beecmdlog
 ## information
