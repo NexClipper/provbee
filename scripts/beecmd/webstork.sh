@@ -51,9 +51,9 @@ if [[ $webstork_kubectl_status =~ ^(created|deleted|edited) ]]; then
  if [[ $webstork_kubectl_status == "deleted" ]]; then 
   TYPE_JSON="json"
   STATUS_JSON="OK"
-  TOTAL_JSON="{\"WEBSTORK_APP\":\"$webstork_meta_name\",\"WEBSTORK_STATUS\":\"$webstork_kubectl_status\"}"|jq
+  TOTAL_JSON="{\"WEBSTORK_APP\":\"$webstork_meta_name\",\"WEBSTORK_STATUS\":\"$webstork_kubectl_status\"}"
   BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[${TOTAL_JSON}]}]}"
-  echo $BEE_JSON
+  echo $BEE_JSON|jq
   exit 0
  fi
 else
