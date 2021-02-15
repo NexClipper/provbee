@@ -51,9 +51,9 @@ if [[ $webstork_kubectl_status =~ ^(created|deleted|edited) ]]; then
  if [[ $webstork_kubectl_status == "deleted" ]]; then 
   TYPE_JSON="json"
   STATUS_JSON="OK"
-  TOTAL_JSON="{\"WEBSTORK_APP\":\"$webstork_meta_name\",\"WEBSTORK_STATUS\":\"$webstork_kubectl_status\"}"
+  TOTAL_JSON="{\"WEBSTORK_APP\":\"$webstork_meta_name\",\"WEBSTORK_STATUS\":\"$webstork_kubectl_status\",\"WEBSTORK_EXPOSE\":\"$webstork_expose_type\"}"
   BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[${TOTAL_JSON}]}]}"
-  echo $BEE_JSON|jq
+  echo $BEE_JSON
   exit 0
  fi
 else
@@ -62,6 +62,9 @@ else
  STATUS_JSON="FAIL"
 fi 
 ###########################################################
+#          kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"':$NODEPORT'\n"}{end}'|head -n1
+#      NODEOSIMAGE=$(kubectl get node -o jsonpath='{.items[*].status.nodeInfo.osImage}')
+#        if [[ $NODEOSIMAGE == "Docker Desktop" ]]; then
 ## JSON CREATE ##
 if [[ $webstork_expose_type == "NodePort" ]]; then
   webstork_ip_info=$(kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"\n"}{end}'|head -n1)
