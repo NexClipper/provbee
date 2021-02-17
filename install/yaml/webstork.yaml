@@ -32,6 +32,7 @@ spec:
       containers:
       - name: webstork
         image: public.ecr.aws/nexclipper/webstork:latest
+        imagePullPolicy: IfNotPresent
         command: ['sh', '-c', '/entrypoint.sh']
 #        command: ['/usr/bin/tail', '-f', '/tmp/webstork_portforward.log']
 #        resources:
@@ -42,8 +43,13 @@ spec:
 #            memory: "256Mi"
 #            cpu: "500m"
         livenessProbe:
-          tcpSocket:
-            port: 8080
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - >-
+                tail /tmp/webstork_portforward.log  |
+                awk '/error/ { print | "done" }'
           initialDelaySeconds: 5
           periodSeconds: 3
           failureThreshold: 1
@@ -123,7 +129,7 @@ spec:
           #     memory: 1Gi
           #   requests:
           #     memory: 512Mi
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9000
               name: metricark-api
@@ -178,7 +184,7 @@ spec:
           #     memory: 1Gi
           #   requests:
           #     memory: 512Mi
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
               name: metricark
