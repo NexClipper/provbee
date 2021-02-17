@@ -5,9 +5,6 @@ nexclipperns="nex-system"
 webstork_cmd(){
 unset webstork_kubectl_run
 webstork_yaml_url="https://raw.githubusercontent.com/NexClipper/webstork/main/services"
-# alertmanager.yaml grafana.yaml prometheus.yaml pushgateway.yaml promlens.yaml
-#busybee  webstork  create   nexclipper  NodePort  promlens
-#busybee  $beeA     $beeB   $beeC       $beeD     $beeLAST(LASTA) $beeLAST(LASTB)
 ## namespace check
 if [[ ${beeCMD[1]} == "" ]]; then fatal "P8s install namespace check"; fi #namespace=$beeC
 ## exposeType check
@@ -62,10 +59,8 @@ else
  STATUS_JSON="FAIL"
 fi 
 ###########################################################
-#          kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"':$NODEPORT'\n"}{end}'|head -n1
-#      NODEOSIMAGE=$(kubectl get node -o jsonpath='{.items[*].status.nodeInfo.osImage}')
-#        if [[ $NODEOSIMAGE == "Docker Desktop" ]]; then
 ## JSON CREATE ##
+## ip,port check
 if [[ $webstork_expose_type == "NodePort" ]]; then
   webstork_ip_info=$(kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"\n"}{end}'|head -n1)
   nodeport_info=$(kubectl get svc/$webstork_meta_name -n $nexclipperns -o jsonpath='{range .spec.ports[*]}{.name}{"\t"}{.nodePort}{"\n"}{end}')
@@ -74,12 +69,16 @@ elif [[ $webstork_expose_type == "LoadBalancer" ]]; then
     ipchkzzz=$((ipchkzzz+1))
     webstork_ip_info=$(kubectl get svc/$webstork_meta_name -n $nexclipperns -o jsonpath='{.status.loadBalancer.ingress[]}'|jq -r 'if .ip !=null then (.ip) else (.hostname) end')
     sleep 3
-    if [ $ipchkzzz == "20" ]; then STATUS_JSON="FAIL";webstork_ip_info="Pending 60sec over"; fi
-  done
+    if [ $ipchkzzz == "20" ]; then STATUS_JSON="FAIL";webstork_ip_info="Pending"; fi
+  done  
   nodeport_info=$(kubectl get svc/$webstork_meta_name -n $nexclipperns -o jsonpath='{range .spec.ports[*]}{.name}{"\t"}{.targetPort}{"\n"}{end}')
 else
   webstork_ip_info="null"
 fi
+## K8S Cluster OS check
+NODEOSIMAGE=$(kubectl get node -o jsonpath='{.items[*].status.nodeInfo.osImage}')
+if [[ $NODEOSIMAGE == "Docker Desktop" ]]; then webstork_ip_info="localhost" ;fi
+## K8S nodeport count
 nodeport_count=$(echo "$nodeport_info"|wc -l)
 local count=0
 while [ $count -lt $nodeport_count ];
