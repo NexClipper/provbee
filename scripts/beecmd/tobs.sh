@@ -13,7 +13,9 @@ tobscmd(){
   case ${beeCMD[0]} in
     install) 
       echo "INST_RUN" > /tmp/tobsinst
-      tobs install -n nc --namespace ${beeCMD[1]} $filepath
+      helm repo add nexclipper https://nexclipper.github.io/helm-charts/
+      helm repo update
+      tobs install -n nc -c nexclipper/tobs --namespace ${beeCMD[1]} $filepath
     ############ tobs install chk start
       tobs_status=$(kubectl get pods -n ${beeCMD[1]} 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l)
         sleep 3
