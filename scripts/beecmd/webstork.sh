@@ -42,10 +42,10 @@ case $webstork_cmd in
   fatal ">> WebStork cmd check (create/edit/delete) "
   ;;
 esac
-webstork_kubectl_status=$(echo $webstork_kubectl_run|awk '{print $NF}')
-if [[ $webstork_kubectl_status =~ ^(created|deleted|edited) ]]; then
- webstork_kubectl_status=$webstork_kubectl_status
- if [[ $webstork_kubectl_status == "deleted" ]]; then 
+#webstork_kubectl_status=$(echo $webstork_kubectl_run|awk '{print $NF}')
+if [[ ${webstork_kubectl_run##*\ } =~ ^(created|deleted|edited) ]]; then
+ webstork_kubectl_status=${webstork_kubectl_run##*\ }
+ if [[ ${webstork_kubectl_run##*\ } == "deleted" ]]; then 
   TYPE_JSON="json"
   STATUS_JSON="OK"
   TOTAL_JSON="{\"WEBSTORK_APP\":\"$webstork_meta_name\",\"WEBSTORK_STATUS\":\"$webstork_kubectl_status\",\"WEBSTORK_EXPOSE\":\"$webstork_expose_type\"}"

@@ -56,7 +56,7 @@ p8s_api(){
       fatal "file not found : $p8sconfigfile.base64"
     fi
 
-    rm -rf $filepath.base64
+    rm -rf $filepath.base64 $filepath.yaml
   }
 
   ################ Case

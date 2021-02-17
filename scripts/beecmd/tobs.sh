@@ -12,46 +12,61 @@ tobscmd(){
   fi
   case ${beeCMD[0]} in
     install) 
-      echo "INST_RUN" > /tmp/tobsinst
       helm repo add nexclipper https://nexclipper.github.io/helm-charts/
       helm repo update
       tobs install -n nc -c nexclipper/tobs --namespace ${beeCMD[1]} $filepath
     ############ tobs install chk start
-      tobs_status=$(kubectl get pods -n ${beeCMD[1]} 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l)
+      tobs_status=$(kubectl get pods -n ${beeCMD[1]} 2>/dev/null |egrep ^nc-|egrep -v 'unnivng.|ompleted'|wc -l)
         sleep 3
       while [ $tobs_status != "0" ]; do
         tobszzz=$((tobszzz+1))
-        tobs_status=$(kubectl get pods -n ${beeCMD[1]} 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l) 
+        tobs_status=$(kubectl get pods -n ${beeCMD[1]} 2>/dev/null |egrep ^nc-|egrep -v 'unnivng.|ompleted'|wc -l) 
         sleep 3
-        if [ $tobszzz == "99" ]; then warn "FAIL" > /tmp/tobsinst ; fatal "tobs install checking time out(300s)" ; fi
+        if [ $tobszzz == "99" ]; then STATUS_JSON="FAIL"; tobsinst_status="tobs check Time out";beejson; exit 0;fi
       done
-      info "Tobs install OK"
-      echo "TobsOK" > /tmp/tobsinst
-      if [[ $(cat /tmp/tobsinst) == "TobsOK" ]]; then
-        provbeens=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
-        provbeesa="nexc"
-        curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/webstork.yaml \
-        | sed -e "s#\${KUBENAMESPACE}#$provbeens#g" \
-        | sed -e "s#\${KUBESERVICEACCOUNT}#$provbeesa#g" \
-        | kubectl create -f - 2>&1
+    ###
+    ## Webstork Install
+      provbeens=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+      provbeesa="nexc"
+      webstork_inst=$(curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/webstork.yaml \
+      | sed -e "s#\${KUBENAMESPACE}#$provbeens#g" \
+      | sed -e "s#\${KUBESERVICEACCOUNT}#$provbeesa#g" \
+      | kubectl create -f - 2>&1)
+      #webstork_inst_status=$(echo $webstork_inst|awk '{print $NF}')
+      webstork_status=",\"WEBSTORK_INSTALL\": \"${webstork_inst##*\ }\""
+    ## JSON
+      tobsinst_status="TobsOK";beejson
+    ;;
+    check)
+      tobs_nschk=$(kubectl get po -n ${beeCMD[1]} 2>&1)
+      if [[ $(echo ${tobs_nschk%%found*}) == "No resources" ]]; then
+        STATUS_JSON="FAIL"; tobsinst_status="$tobs_nschk";beejson;exit 0
+      fi 
+      tobs_chk=$(kubectl get po -n ${beeCMD[1]} 2>/dev/null |egrep ^nc-|egrep -v 'unning.|ompleted'|awk '{print $1"-"$3}')
+      if [[ $tobs_chk == "" ]]; then
+        tobsinst_status="TobsOK"
+        webstork_chk=$(kubectl get pod -n ${KUBENAMESPACE} 2>/dev/null | egrep ^webstork-|awk '{print $3}')
+        if [[ $webstork_chk == "Running" ]]; then 
+          webstork_status=",\"WEBSTORK_INSTALL\": \"${webstork_chk}\""
+        else
+          STATUS_JSON="FAIL"; webstork_status=",\"WEBSTORK_INSTALL\": \"${webstork_chk}\"" 
+        fi
       else
-        fatal "Webstork start FAIL"
-      fi
-    ;;
-    instpw)
-      echo ${beeCMD[2]} > /tmp/gfpasswd
-    ;;
-    install_chk)
-      tobs_status=$(kubectl get pods -n ${beeCMD[1]} 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l) 
-      cat /tmp/tobsinst
-    ;; 
+        STATUS_JSON="FAIL"; tobsinst_status="$tobs_chk"
+      fi  
+      beejson
+      ;;
     uninstall)
       tobs uninstall -n nc --namespace ${beeCMD[1]} $filepath
       tobs helm delete-data -n nc --namespace ${beeCMD[1]}
+      tobsinst_status="Tobs Deleted"
+      webstork_inst=$(kubectl delete deployment/webstork -n ${KUBENAMESPACE} 2>&1)
+      webstork_status=",\"WEBSTORK_INSTALL\": \"${webstork_inst##*\ }\""  
+      beejson
     ;;
     passwd)
       chpasswd="${beeCMD[2]}"
-      tobs_status=$(kubectl get pods -n ${beeCMD[1]} 2>/dev/null |grep -v NAME|grep nc-grafana|grep -E -v 'unning.|ompleted'|wc -l)
+      tobs_status=$(kubectl get pods -n ${beeCMD[1]} 2>/dev/null |egrep ^nc-|egrep -v 'unnivng.|ompleted'|wc -l)
       if [ $tobs_status -ne 0 ]; then
         fatal "Grafana service is status RED"
       else
@@ -73,8 +88,14 @@ tobscmd(){
   esac
 }
 tobscmd
-################Print JSON
+
 beejson(){
+################################ JSON print
+TYPE_JSON="json"
+#P8S_INSTALL
+
+TOTAL_JSON="{\"P8S_INSTALL\":\"$tobsinst_status\"${webstork_status}}"
+################Print JSON
 if [[ $TYPE_JSON == "json" ]]; then
   BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[${TOTAL_JSON}]}]}"
 elif [[ $TYPE_JSON == "base64" ]] || [[ $TYPE_JSON == "string" ]]; then
