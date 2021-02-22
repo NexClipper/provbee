@@ -37,10 +37,9 @@ tobscmd(){
       #webstork_inst_status=$(echo $webstork_inst|awk '{print $NF}')
       webstork_status=",\"WEBSTORK_INSTALL\": \"${webstork_inst##*\ }\""
     ## JSON
-      tobsinst_status="TobsOK";beejson
-      
-      #temp. old message
-      #echo "TobsOK"
+      tobsinst_status="TobsOK"
+      TOTAL_JSON="{\"P8S_INSTALL\":\"$tobsinst_status\"${webstork_status}}"
+      beejson
     ;;
     check)
       tobs_nschk=$(kubectl get po -n ${beeCMD[1]} 2>&1)
@@ -59,6 +58,7 @@ tobscmd(){
       else
         STATUS_JSON="ERROR"; tobsinst_status="$tobs_chk"
       fi  
+      TOTAL_JSON="{\"P8S_INSTALL\":\"$tobsinst_status\"${webstork_status}}"
       beejson
       ;;
     uninstall)
@@ -69,27 +69,26 @@ tobscmd(){
       webstork_inst=$(kubectl delete deployment/webstork -n ${KUBENAMESPACE} 2>&1|egrep -v "NotFound")
       if [[ $webstork_inst == "" ]]; then webstork_inst="Not_Installed"; fi
       webstork_status=",\"WEBSTORK_INSTALL\": \"${webstork_inst##*\ }\""  
+      TOTAL_JSON="{\"P8S_INSTALL\":\"$tobsinst_status\"${webstork_status}}"
       beejson
     ;;
     passwd)
       chpasswd="${beeCMD[2]}"
+      ## Grafana status chk.
+      if [[ $(kubectl get ns ${beeCMD[1]} 2>&1|grep "NotFound") != ""  ]]; then fatal "Tobs not installed(namespace : ${beeCMD[1]} )"; fi
       tobs_status=$(kubectl get pods -n ${beeCMD[1]} 2>/dev/null |egrep ^nc-|egrep -v 'unning.|ompleted'|wc -l)
-      if [ $tobs_status -ne 0 ]; then
-        fatal "Grafana service is status RED"
-      else
-      ## first GF passwd
-        if [ -f /tmp/gfpasswd ]; then chpasswd=$(cat /tmp/gfpasswd); rm -rf /tmp/gfpasswd; fi
+      if [ $tobs_status -ne 0 ]; then fatal "Grafana service is status RED"; fi
       ## GF passwd change
-        tobs -n nc --namespace ${beeCMD[1]} grafana change-password $chpasswd >/tmp/gra_pwd 2>&1
-        pwchstatus=$(cat /tmp/gra_pwd |grep successfully | wc -l)
-        if [ $pwchstatus -eq 1 ]; then 
-          sed -i "s/passwd ${beeCMD[1]} $chpasswd.*/passwd ${beeCMD[1]} :)/g" $beecmdlog
-          info "Grafana password change OK"
-        else 
-          sed -i "s/passwd ${beeCMD[1]} $chpasswd.*/passwd ${beeCMD[1]} :(/g" $beecmdlog
-          fatal "Grafana password change FAIL"
-        fi
+      pwchstatus=$(tobs -n nc --namespace ${beeCMD[1]} grafana change-password $chpasswd 2>&1 | sed -e 's#"#@#g')
+      if [[ $(echo $pwchstatus|grep successfully) != "" ]]; then
+        sed -i "s/passwd ${beeCMD[1]} $chpasswd.*/passwd ${beeCMD[1]} :)/g" $beecmdlog
+        grafana_pwd_status="successfully"
+      else
+        sed -i "s/passwd ${beeCMD[1]} $chpasswd.*/passwd ${beeCMD[1]} :(/g" $beecmdlog
+        STATUS_JSON="FAIL"; grafana_pwd_status="$pwchstatus"
       fi
+      TOTAL_JSON="{\"GF_STATUS\":\""${grafana_pwd_status}"\"}"
+      beejson
     ;;
     help|*) info "busybee tobs {install/uninstall} {NAMESPACE} {opt.FILEPATH}";;
   esac
@@ -100,7 +99,6 @@ beejson(){
 TYPE_JSON="json"
 #P8S_INSTALL
 
-TOTAL_JSON="{\"P8S_INSTALL\":\"$tobsinst_status\"${webstork_status}}"
 ################Print JSON
 if [[ $TYPE_JSON == "json" ]]; then
   BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[${TOTAL_JSON}]}]}"
