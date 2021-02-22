@@ -58,8 +58,10 @@ kubeconfig(){
 kubectl get secrets $KUBESERVICEACCOUNT-kubeconfig -o jsonpath='{.data.kubeconfig}' > $KUBECONFIGFILE.base64 2>/tmp/err_kubeconfig.log
 if [ -s ${KUBECONFIGFILE}.base64 ]; then
 	cat ${KUBECONFIGFILE}.base64 | base64 -d > ${KUBECONFIGFILE}
-  	rm -rf ${KUBECONFIGFILE}.base64 
+  	chmod go-r ${KUBECONFIGFILE}
+	rm -rf ${KUBECONFIGFILE}.base64 
 	info "$KUBECONFIGFILE created" 
+	
 else
     fatal "$(cat /tmp/err_kubeconfig.log)"
 fi

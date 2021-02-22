@@ -31,7 +31,8 @@ spec:
       serviceAccountName: nexc
       containers:
       - name: webstork
-        image: nexclipper/webstork:latest
+        image: public.ecr.aws/nexclipper/webstork:latest
+        imagePullPolicy: IfNotPresent
         command: ['sh', '-c', '/entrypoint.sh']
 #        command: ['/usr/bin/tail', '-f', '/tmp/webstork_portforward.log']
 #        resources:
@@ -42,13 +43,19 @@ spec:
 #            memory: "256Mi"
 #            cpu: "500m"
         livenessProbe:
-          httpGet:
-            path: /
-            port: 8080
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - >-
+                tail /tmp/webstork_portforward.log  |
+                awk '/error/ { print | "done" }'
           initialDelaySeconds: 5
+          periodSeconds: 3
+          failureThreshold: 1
       initContainers:
       - name: init-myservice
-        image: nexclipper/webstork:latest
+        image: public.ecr.aws/nexclipper/webstork:latest
         command: ["/bin/sh","-c"]
         args:
         - |-
@@ -71,7 +78,7 @@ spec:
     spec:
       serviceAccountName: ${KUBESERVICEACCOUNT}
       containers:
-      - image: nexclipper/metric-operator:0.2.0
+      - image: public.ecr.aws/nexclipper/metric-operator:0.2.0
         imagePullPolicy: IfNotPresent 
         name: metricops
         ports:
@@ -116,13 +123,13 @@ spec:
     spec:
       containers:
         - name: metricark-api
-          image: nexclipper/metricark-api:main
+          image: public.ecr.aws/nexclipper/metricark-api:main
           # resources:
           #   limits:
           #     memory: 1Gi
           #   requests:
           #     memory: 512Mi
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9000
               name: metricark-api
@@ -171,13 +178,13 @@ spec:
     spec:
       containers:
         - name: metricark
-          image: nexclipper/metricark:main
+          image: public.ecr.aws/nexclipper/metricark:main
           # resources:
           #   limits:
           #     memory: 1Gi
           #   requests:
           #     memory: 512Mi
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
               name: metricark
