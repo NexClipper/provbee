@@ -70,6 +70,9 @@ while read beeA beeCMD ; do
 
     ######### WebStork command
     webstork) source $beecmdpath/webstork.sh ${beeCMD[@]} ;;
+
+    ######### Global view API
+    gstatus) source $beecmdpath/gstatus.sh ${beeCMD[@]} ;;
     
     ## update busybee
     update) 
