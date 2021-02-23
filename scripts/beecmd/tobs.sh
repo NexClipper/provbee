@@ -3,22 +3,11 @@ tobslog="/tmp/tobs_busybee.log"
 
 #############################################
 tobscmd(){
-  #tobs $beecmd -n nc --namespace $beenamespace -f provbeetmp
-  #if [[ $beeC == "" ]]; then beeC="nexclipper"; fi
-  if [[ ${beeCMD[2]} =~ ^NexClipper\..*$ ]]; then
-    sed -i 's/\\n//g' /tmp/${beeCMD[2]}.base64
-    base64 -d /tmp/${beeCMD[2]}.base64 > /tmp/${beeCMD[2]}
-    filepath="-f /tmp/${beeCMD[2]}"
-  elif [[ $provbeetmp =~ ^NexClipper_GLOBAL\..*$ ]]; then
-    sed -i 's/\\n//g' /tmp/${beeCMD[2]}.base64
-    base64 -d /tmp/${beeCMD[2]}.base64 > /tmp/${beeCMD[2]}
-    filepath="-f /tmp/${beeCMD[2]}" 
-    GLOBAL_VIEW="Y"
-  else
-    GLOBAL_VIEW="N"
-  fi
   case ${beeCMD[0]} in
-    install) 
+    install)
+    ## install value file decoding
+      sed -i 's/\\n//g' /tmp/${beeCMD[2]}.base64; base64 -d /tmp/${beeCMD[2]}.base64 > /tmp/${beeCMD[2]}; filepath="-f /tmp/${beeCMD[2]}"
+    ## helm chart update & tobs install 
       helm repo add nexclipper https://nexclipper.github.io/helm-charts/ >> $tobslog 2>&1
       helm repo update >> $tobslog 2>&1
       tobs install -n nc -c nexclipper/tobs --namespace ${beeCMD[1]} $filepath >> $tobslog 2>&1
@@ -39,16 +28,32 @@ tobscmd(){
       webstork_inst=$(curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/webstork.yaml \
       | sed -e "s#\${KUBENAMESPACE}#$provbeens#g" \
       | sed -e "s#\${KUBESERVICEACCOUNT}#$provbeesa#g" \
-      | kubectl create -f - 2>&1|egrep -v "AlreadyExists")
-      if [[ $webstork_inst == "AlreadyExists" ]]; then webstork_inst="AlreadyExists";fi 
+      | kubectl create -f - 2>&1)
+      if [[ $(echo $webstork_inst|grep "AlreadyExists") != "" ]]; then webstork_inst="AlreadyExists";fi 
       #webstork_inst_status=$(echo $webstork_inst|awk '{print $NF}')
       webstork_status=",\"WEBSTORK_INSTALL\": \"${webstork_inst##*\ }\""
     ## GLOBAL VIEW
-      #if [[ $GLOBAL_VIEW == "Y" ]]; then kubectl patch service -n nex-system ws-grafana --type=json -p='[{"op": "replace", "path": "/spec/ports/0/nodePort", "value": 32600}]';fi 
-    if [[ $GLOBAL_VIEW == "Y" ]]; then echo "GLOBAL_VIEW" > /tmp/ggggggggg ;fi
-      ## JSON
+      #####  kubectl patch service -n ${beeCMD[1]} nc-promscale-connector --type=json -p='[{"op": "replace", "path": "/spec/ports/0/nodePort", "value": 30000}]' -p='[{"op": "replace", "path": "/spec/type", "value": "NodePort"}]'
+      svc_type=$(kubectl get service nc-promscale-connector -n ${beeCMD[1]} -o jsonpath='{.spec.type}')
+      if [[ $svc_type == "NodePort" ]]; then
+        nodeport_ip_info=$(kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"\n"}{end}'|head -n1)
+        nodeport_port_info=$(kubectl get service nc-promscale-connector -n ${beeCMD[1]} -o jsonpath='{range .spec.ports[*]}{.nodePort}{"\n"}{end}')
+        promscale_info="${nodeport_ip_info}:${nodeport_port_info}"
+      elif [[ $svc_type == "LoadBalancer" ]]; then
+        while [ "$lb_ip_info" == "" ]; do
+          ipchkzzz=$((ipchkzzz+1))
+          lb_ip_info=$(kubectl get service nc-promscale-connector -n ${beeCMD[1]} -o jsonpath='{.status.loadBalancer.ingress[]}'|jq -r 'if .ip !=null then (.ip) else (.hostname) end')
+          sleep 3
+          if [ $ipchkzzz == "20" ]; then STATUS_JSON="FAIL";lb_ip_info="Pending"; fi
+        done  
+        lb_port_info=$(kubectl get service nc-promscale-connector -n ${beeCMD[1]} -o jsonpath='{range .spec.ports[*]}{.port}{"\n"}{end}')
+        promscale_info="${lb_ip_info}:${lb_port_info}"
+      fi
+      global_view=",\"GLOBAL_VIEW_ENDPOINT\": \"${promscale_info:=null}\""
+    
+    ## JSON
       tobsinst_status="TobsOK"
-      TOTAL_JSON="{\"P8S_INSTALL\":\"$tobsinst_status\"${webstork_status}}"
+      TOTAL_JSON="{\"P8S_INSTALL\":\"$tobsinst_status\"${webstork_status}${global_view}}"
       beejson
     ;;
     check)
