@@ -9,6 +9,11 @@ tobscmd(){
     sed -i 's/\\n//g' /tmp/${beeCMD[2]}.base64
     base64 -d /tmp/${beeCMD[2]}.base64 > /tmp/${beeCMD[2]}
     filepath="-f /tmp/${beeCMD[2]}"
+  elif [[ $provbeetmp =~ ^NexClipper_GLOBAL\..*$ ]]; then
+    sed -i 's/\\n//g' /tmp/${beeCMD[2]}.base64
+    base64 -d /tmp/${beeCMD[2]}.base64 > /tmp/${beeCMD[2]}
+    filepath="-f /tmp/${beeCMD[2]}" 
+    GLOBAL_VIEW="Y"
   fi
   case ${beeCMD[0]} in
     install) 
@@ -36,7 +41,10 @@ tobscmd(){
       if [[ $webstork_inst == "AlreadyExists" ]]; then webstork_inst="AlreadyExists";fi 
       #webstork_inst_status=$(echo $webstork_inst|awk '{print $NF}')
       webstork_status=",\"WEBSTORK_INSTALL\": \"${webstork_inst##*\ }\""
-    ## JSON
+    ## GLOBAL VIEW
+      #if [[ $GLOBAL_VIEW == "Y" ]]; then kubectl patch service -n nex-system ws-grafana --type=json -p='[{"op": "replace", "path": "/spec/ports/0/nodePort", "value": 32600}]';fi 
+    if [[ $GLOBAL_VIEW == "Y" ]]; then echo "GLOBAL_VIEW" > /tmp/ggggggggg ;fi
+      ## JSON
       tobsinst_status="TobsOK"
       TOTAL_JSON="{\"P8S_INSTALL\":\"$tobsinst_status\"${webstork_status}}"
       beejson
