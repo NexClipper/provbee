@@ -76,7 +76,7 @@ while read beeA beeCMD ; do
     
     ## update busybee
     update) 
-    curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/scripts/provbeecmd.sh -o /tmp/busybee
+    curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/scripts/busybee.sh -o /tmp/busybee
     cp -Rfp /tmp/busybee /usr/bin/busybee
     rm -rf /tmp/busybee 
     ;;
