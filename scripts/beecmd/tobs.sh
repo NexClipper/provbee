@@ -14,6 +14,8 @@ tobscmd(){
     base64 -d /tmp/${beeCMD[2]}.base64 > /tmp/${beeCMD[2]}
     filepath="-f /tmp/${beeCMD[2]}" 
     GLOBAL_VIEW="Y"
+  else
+    GLOBAL_VIEW="N"
   fi
   case ${beeCMD[0]} in
     install) 
