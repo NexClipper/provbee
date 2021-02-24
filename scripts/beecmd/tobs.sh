@@ -8,11 +8,18 @@ tobscmd(){
     ## install value file decoding
       sed -i 's/\\n//g' /tmp/${beeCMD[2]}.base64; base64 -d /tmp/${beeCMD[2]}.base64 > /tmp/${beeCMD[2]}; filepath="-f /tmp/${beeCMD[2]}"
     ## helm chart update & tobs install 
-      helm repo add nexclipper https://nexclipper.github.io/helm-charts/ >> $tobslog 2>&1
+      helm repo add nexclipper https://nexclipper.github.io/helm-charts/ > $tobslog 2>&1
       helm repo update >> $tobslog 2>&1
       tobs install -n nc -c nexclipper/tobs --namespace ${beeCMD[1]} $filepath >> $tobslog 2>&1
     ############ tobs install chk start
-      if [[ $(kubectl get ns ${beeCMD[1]} 2>&1|grep "NotFound") != ""  ]]; then fatal "Tobs install FAIL"; fi
+      if [[ $(kubectl get ns ${beeCMD[1]} 2>&1|grep "NotFound") != ""  ]]; then 
+        fatal "Tobs install FAIL"
+      else
+        tobslogchk=$(cat $tobslog|egrep "^Error:")
+        if [[ $tobslogchk != "" ]]; then fatal "$(echo $tobslogchk| sed -e 's#"#@#g' -e '{N;s/\n//}')";fi  
+      fi
+
+    ##  
       tobs_status=$(kubectl get pods -n ${beeCMD[1]} 2>/dev/null |egrep ^nc-|egrep -v 'unning.|ompleted'|wc -l)
         sleep 3
       while [ $tobs_status != "0" ]; do
@@ -57,6 +64,7 @@ tobscmd(){
       beejson
     ;;
     check)
+      if [[ $(kubectl get ns ${beeCMD[1]} 2>&1|grep "NotFound") != ""  ]]; then fatal "Tobs not installed : ${beeCMD[1]}";fi 
       tobs_nschk=$(kubectl get po -n ${beeCMD[1]} 2>&1)
       if [[ $(echo ${tobs_nschk%%found*}) == "No resources" ]]; then
         STATUS_JSON="ERROR"; tobsinst_status="$tobs_nschk";beejson;exit 0
