@@ -67,7 +67,9 @@ tobscmd(){
       if [[ $(kubectl get ns ${beeCMD[1]} 2>&1|grep "NotFound") != ""  ]]; then fatal "Tobs not installed : ${beeCMD[1]}";fi 
       tobs_nschk=$(kubectl get po -n ${beeCMD[1]} 2>&1)
       if [[ $(echo ${tobs_nschk%%found*}) == "No resources" ]]; then
-        STATUS_JSON="ERROR"; tobsinst_status="$tobs_nschk";beejson;exit 0
+        STATUS_JSON="ERROR"; tobsinst_status="$tobs_nschk"
+        TOTAL_JSON="{\"P8S_INSTALL\":\"$tobsinst_status\"}"
+        beejson;exit 0
       fi 
       tobs_chk=$(kubectl get po -n ${beeCMD[1]} 2>/dev/null |egrep ^nc-|egrep -v 'unning.|ompleted'|awk '{print $1"-"$3}')
       if [[ $tobs_chk == "" ]]; then
