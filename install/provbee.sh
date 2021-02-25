@@ -194,7 +194,7 @@ if [[ $K3S_SET =~ ^([yY][eE][sS]|[yY])$ ]]; then k3s_checking ; fi
 ############
 if [[ $K_PLATFORM == "kubernetes" ]]; then
     if [ $(which kubectl|wc -l) -eq 0 ]; then fatal "Kubectl run failed!, Your command server check plz."; fi
-    if [ $(kubectl version --short | grep Server | wc -l) -eq 0 ]; then warn "kubernetes cluster check plz."; cat ~/.kube/config; exit 1; fi 
+    if [ $(kubectl version --short | grep Server | wc -l) -eq 0 ]; then warn "kubernetes cluster check plz."; fatal "chkeck : \$cat ~/.kube/config"; fi 
 ################################
 ### sed
 SED_NS="s/\${KUBENAMESPACE}/$KUBENAMESPACE/g"

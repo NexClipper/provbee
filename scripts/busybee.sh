@@ -22,6 +22,15 @@ withnexclipper
 provbeestatus(){
   case ${beeCMD[0]} in
     hello) echo "hi" ;;
+    k8s) 
+    case ${beeCMD[2]} in
+      ns) kubectl get ns ;;
+      node) kubectl get node ;;
+      svc) kubectl get svc -A ;;
+      pod) kubectl get pod -A ;;
+      *) echo "busybee beestatus k8s {NAMESPACE} ns/node/svc/pod";;
+    esac
+    ;;
     help|*) info "busybee beestatus hello" ;;
   esac
 }
@@ -57,7 +66,7 @@ while read beeA beeCMD ; do
     beestatus) provbeestatus ;;
 
     ######### NodePort search
-    nodesearch) nodesearch ;;
+    #nodesearch) nodesearch ;;
 
     ######### tobs command
     tobs) source $beecmdpath/tobs.sh ${beeCMD[@]};;
