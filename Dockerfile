@@ -31,7 +31,8 @@ RUN curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v
     rm -rf helm*.tar.gz linux-amd64
 
 ## tobs Download ##
-RUN curl -LO https://github.com/`curl -sL https://github.com/timescale/tobs/releases | egrep -v 'rc|beta|v2'| grep Linux | grep x86 | head -n1 | awk -F"\"" '{print $2}'`  && \
+#RUN curl -LO https://github.com/`curl -sL https://github.com/timescale/tobs/releases | egrep -v 'rc|beta|v2'| grep Linux | grep x86 | head -n1 | awk -F"\"" '{print $2}'`  && \
+RUN curl -LO https://github.com/timescale/tobs/releases/download/0.2.1/tobs_0.2.1_Linux_x86_64  && \
     chmod +x tobs* && mv tobs* /usr/bin/tobs
 
 COPY .ssh /root/.ssh
