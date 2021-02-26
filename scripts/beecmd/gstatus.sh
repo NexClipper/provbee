@@ -1,4 +1,6 @@
 #!/bin/bash
+##DNS
+promscale_DNS="http://nc-promscale-connector.${beeCMD[1]}.svc.cluster.local:9201"
 
 ## promql query
 ### 
@@ -13,19 +15,19 @@ status_node_process='query=kube_node_status_condition{condition="PIDPressure",st
 ## API list
 #############################################
 global_api(){
-  status_node_process_va=`$curlcmd "${status_node_process}" $promsvr_DNS/api/v1/query \
+  status_node_process_va=`$curlcmd "${status_node_process}" $promscale_DNS/api/v1/query \
   | jq '.data'`
   if [[ $status_node_process_va == "" ]]; then status_node_process_va="\""\"; fi
 
-  status_promscale_instance_va=`$curlcmd "${status_promscale_instance}" $promsvr_DNS/api/v1/query \
+  status_promscale_instance_va=`$curlcmd "${status_promscale_instance}" $promscale_DNS/api/v1/query \
   | jq '.data'`
   if [[ $status_promscale_instance_va == "" ]]; then status_promscale_instance_va="\""\"; fi
 
-  status_kube_api_va=`$curlcmd "${status_kube_api}" $promsvr_DNS/api/v1/query \
+  status_kube_api_va=`$curlcmd "${status_kube_api}" $promscale_DNS/api/v1/query \
   | jq '.data'`
   if [[ $status_kube_api_va == "" ]]; then status_kube_api_va="\""\"; fi
   
-  status_node_ready_va=`$curlcmd "${status_node_ready}" $promsvr_DNS/api/v1/query \
+  status_node_ready_va=`$curlcmd "${status_node_ready}" $promscale_DNS/api/v1/query \
   | jq '.data'`
   if [[ $status_node_ready_va == "" ]]; then status_node_ready_va="\""\"; fi
 
@@ -33,11 +35,11 @@ global_api(){
   | jq '.data'`
   if [[ $status_node_mem_va == "" ]]; then status_node_mem_va="\""\"; fi
 
-  status_node_disk_va=`$curlcmd "${status_node_disk}" $promsvr_DNS/api/v1/query \
+  status_node_disk_va=`$curlcmd "${status_node_disk}" $promscale_DNS/api/v1/query \
   | jq '.data'`
   if [[ $status_node_disk_va == "" ]]; then status_node_disk_va="\""\"; fi
 
-  status_node_pod_va=`$curlcmd "${status_node_pod}" $promsvr_DNS/api/v1/query \
+  status_node_pod_va=`$curlcmd "${status_node_pod}" $promscale_DNS/api/v1/query \
   | jq '.data'`
   if [[ $status_node_pod_va == "" ]]; then status_node_pod_va="\""\"; fi
 
