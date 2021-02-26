@@ -31,7 +31,7 @@ global_api(){
   | jq '.data'`
   if [[ $status_node_ready_va == "" ]]; then status_node_ready_va="\""\"; fi
 
-  status_node_mem_va=`$curlcmd "${status_node_mem}" $promsvr_DNS/api/v1/query \
+  status_node_mem_va=`$curlcmd "${status_node_mem}" $promscale_DNS/api/v1/query \
   | jq '.data'`
   if [[ $status_node_mem_va == "" ]]; then status_node_mem_va="\""\"; fi
 
