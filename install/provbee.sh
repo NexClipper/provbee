@@ -13,7 +13,7 @@ fi
 
 ### console connection check
 nexconsolechk(){
-urltest="curl -o /dev/null --silent --head --write-out '%{http_code}' ${K_MANAGER_URL}/swagger/doc.json"
+urltest="curl -o /dev/null --silent --head --write-out '%{http_code}' ${K_MANAGER_URL}/swagger/doc.json --connect-timeout 3"
 if $urltest &>/dev/null ; then
 	printf "%s\n" "NexClipper serivce first checking"
 else
