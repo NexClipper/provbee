@@ -93,6 +93,8 @@ while read beeA beeCMD ; do
     ;;
 
     ############## help
+    xxx) echo "exit test xxx"; exit 1 ;;
+    zzz) fatal "exit test zzz";;
     help|*) info "for NexClipper System....";;
   esac
 done < <(echo $busybeecmd)
