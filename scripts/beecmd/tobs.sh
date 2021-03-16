@@ -90,6 +90,7 @@ tobscmd(){
       #tobs uninstall -n nc --namespace ${beeCMD[1]} $filepath >> $tobslog 2>&1
       tobs uninstall -n nc --namespace ${beeCMD[1]} >> $tobslog 2>&1
       tobs helm delete-data -n nc --namespace ${beeCMD[1]} >> $tobslog 2>&1
+      #kubectl delete ns ${beeCMD[1]}
       tobsinst_status="Deleted"
       webstork_inst=$(kubectl delete deployment/webstork -n ${KUBENAMESPACE} 2>&1|egrep -v "NotFound")
       if [[ $webstork_inst == "" ]]; then webstork_inst="Not_Installed"; fi
