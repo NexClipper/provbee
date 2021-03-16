@@ -8,7 +8,7 @@ tobscmd(){
     ## install value file decoding
       sed -i 's/\\n//g' /tmp/${beeCMD[2]}.base64; base64 -d /tmp/${beeCMD[2]}.base64 > /tmp/${beeCMD[2]}; filepath="-f /tmp/${beeCMD[2]}"
     ## helm chart update & tobs install 
-      helm repo add nexclipper https://nexclipper.github.io/helm-charts/ > $tobslog 2>&1
+      helm repo add nexclipper https://nexclipper.github.io/helm-charts/ >> $tobslog 2>&1
       helm repo update >> $tobslog 2>&1
       tobs install -n nc -c nexclipper/tobs --namespace ${beeCMD[1]} $filepath >> $tobslog 2>&1
     ############ tobs install chk start

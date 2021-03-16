@@ -150,6 +150,8 @@ pkgchk(){
 if [[ $K_PLATFORM == "baremetal" ]]; then
 	info "baremetal install"
   info "curl zxz.kr/docker|bash ............ Docker install test" 
+  ##temp
+  K_PLATFORM="kubernetes"
 fi
 #########################################################################
 
