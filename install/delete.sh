@@ -22,7 +22,7 @@ goodbye_provbee(){
   $kubedel ${KUBENAMESPACE} secret ${KUBESERVICEACCOUNT}-ssh-key
   $kubedel ${KUBENAMESPACE} sa ${KUBESERVICEACCOUNT}
   kubectl delete ns $NEXNS
-  kubedel delete ns ${KUBENAMESPACE}
+  kubectl delete ns ${KUBENAMESPACE}
 }
 
 
