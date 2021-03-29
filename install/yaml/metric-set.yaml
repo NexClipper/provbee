@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metricops
+  namespace: ${KUBENAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metricops
+  template:
+    metadata:
+      labels:
+        app: metricops
+    spec:
+      serviceAccountName: ${KUBESERVICEACCOUNT}
+      containers:
+      - image: public.ecr.aws/nexclipper/metric-operator:0.2.0
+        imagePullPolicy: IfNotPresent 
+        name: metricops
+        ports:
+        - containerPort: 6379
+        volumeMounts:
+        - name: data
+          mountPath: /redis-master-data             
+      volumes:
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metricops
+  namespace: ${KUBENAMESPACE}
+spec:
+  ports:
+  - name: "6379"
+    port: 6379
+    targetPort: 6379
+  selector:
+    app: metricops
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metricark-api
+  labels:
+    app: metricark-api
+    version: v1
+  namespace: ${KUBENAMESPACE}
+spec:
+  selector:
+    matchLabels:
+      app: metricark-api
+  template:
+    metadata:
+      name: metricark-api
+      labels:
+        app: metricark-api
+    spec:
+      containers:
+        - name: metricark-api
+          image: public.ecr.aws/nexclipper/metricark-api:main
+          # resources:
+          #   limits:
+          #     memory: 1Gi
+          #   requests:
+          #     memory: 512Mi
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9000
+              name: metricark-api
+          env:
+            - name: PROMETHEUS_ENDPOINT
+              value: "http://nc-promscale-connector.nexclipper:9201"
+            - name: REDIS_ENDPOINT
+              value: "metricops"
+            - name: REDIS_PORT
+              value: '6379'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metricark-api
+  labels:
+    app: metricark-api
+  namespace: ${KUBENAMESPACE}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9000
+      protocol: TCP
+      targetPort: 9000
+      name: http
+  selector:
+    app: metricark-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metricark
+  labels:
+    app: metricark
+    version: v1
+  namespace: ${KUBENAMESPACE}
+spec:
+  selector:
+    matchLabels:
+      app: metricark
+  template:
+    metadata:
+      name: metricark
+      labels:
+        app: metricark
+    spec:
+      containers:
+        - name: metricark
+          image: public.ecr.aws/nexclipper/metricark:main
+          # resources:
+          #   limits:
+          #     memory: 1Gi
+          #   requests:
+          #     memory: 512Mi
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: metricark

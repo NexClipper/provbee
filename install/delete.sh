@@ -27,12 +27,16 @@ goodbye_provbee(){
   chk2=$(kubectl get ns $KUBENAMESPACE 2>/dev/null |wc -l)
   if [ $chk1 -eq 0 ] && [ $chk2 -eq 0 ]; then
     echo "Good Bye :'-( Beeeeeeeeeeeeeeeee 🐝"
+    if [[ $CALLBACK != "" ]]; then callback; fi 
   else
     echo "Check your NAMESPACE : $NEXNS, $KUBENAMESPACE "
     kubectl get ns
   fi
 }
-
-
+############ RUN CALLBACK
+callback(){
+  callurl=$(echo $CALLBACK|base64 -d)
+  curl -sL -X DELETE $callurl > /tmp/provbee_bye.log
+}
 ############ RUN CHK
 if [[ $DEL =~ ^([yY][eE][sS]|[yY])$ ]]; then goodbye_provbee ; fi
