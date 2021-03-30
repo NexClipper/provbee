@@ -41,7 +41,7 @@ tobscmd(){
       metric_inst=$(curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/metric-set.yaml \
       | sed -e "s#\${KUBENAMESPACE}#$provbeens#g" \
       | sed -e "s#\${KUBESERVICEACCOUNT}#$provbeesa#g" \
-      | kubectl create -f - 2>&1
+      | kubectl create -f - 2>&1)
       if [[ $(echo $metric_inst|grep "AlreadyExists") != "" ]]; then metric_inst="AlreadyExists";fi 
     ## Json
       #webstork_inst_status=$(echo $webstork_inst|awk '{print $NF}')
