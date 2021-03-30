@@ -1,5 +1,5 @@
 #!/bin/bash
-tobslog="/tmp/tobs_busybee.log"
+tobslog="/tmp/tobs_busybee_$(date "+%Y%m%d_%H%M%S").log"
 
 #############################################
 tobscmd(){
@@ -68,7 +68,7 @@ tobscmd(){
     
     ## JSON
       tobsinst_status="TobsOK"
-      TOTAL_JSON="{\"P8S_INSTALL\":\"$tobsinst_status\"${webstork_status}${global_view}}"
+      TOTAL_JSON="{\"P8S_INSTALL\":\"$tobsinst_status\"${webstork_status}${global_view}${metric_status}}"
       beejson
     ;;
     check)
