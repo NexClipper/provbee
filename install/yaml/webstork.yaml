@@ -1,21 +1,7 @@
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: webstork-service
-#  namespace: ${KUBENAMESPACE}
-#spec:
-#  selector:
-#    name: webstork
-#  clusterIP: None
-#  ports:
-#  - name: webstork # Actually, no port is needed.
-#    port: 8282
-#    targetPort: 80
-#---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: nex-system
+  namespace: ${KUBENAMESPACE}
   name: webstork
   labels:
     name: webstork
@@ -28,13 +14,12 @@ spec:
       labels:
         name: webstork
     spec:
-      serviceAccountName: nexc
+      serviceAccountName: ${KUBESERVICEACCOUNT}
       containers:
       - name: webstork
-        image: public.ecr.aws/nexclipper/webstork:latest
+        image: public.ecr.aws/nexclipper/webstork:nginx-alpine
+        #imagePullPolicy: Always
         imagePullPolicy: IfNotPresent
-        command: ['sh', '-c', '/entrypoint.sh']
-#        command: ['/usr/bin/tail', '-f', '/tmp/webstork_portforward.log']
 #        resources:
 #          requests:
 #            memory: "128Mi"
@@ -42,149 +27,13 @@ spec:
 #          limits:
 #            memory: "256Mi"
 #            cpu: "500m"
-        livenessProbe:
-          exec:
-            command:
-              - /bin/sh
-              - -c
-              - >-
-                tail /tmp/webstork_portforward.log  |
-                awk '/error/ { print | "done" }'
-          initialDelaySeconds: 5
-          periodSeconds: 3
-          failureThreshold: 1
-      initContainers:
-      - name: init-myservice
-        image: public.ecr.aws/nexclipper/webstork:latest
-        command: ["/bin/sh","-c"]
-        args:
-        - |-
-          until [[ $(kubectl get pods -n nex-system -o jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Ready")].status}{"\t"}{.status.containerStatuses[*].name}{"\n"}{end}' | grep -v webstork | grep -v True | wc -l) = '0' ]]; do sleep 3; done
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: metricops
-  namespace: ${KUBENAMESPACE}
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: metricops
-  template:
-    metadata:
-      labels:
-        app: metricops
-    spec:
-      serviceAccountName: ${KUBESERVICEACCOUNT}
-      containers:
-      - image: public.ecr.aws/nexclipper/metric-operator:0.2.0
-        imagePullPolicy: IfNotPresent 
-        name: metricops
         ports:
-        - containerPort: 6379
-        volumeMounts:
-        - name: data
-          mountPath: /redis-master-data             
-      volumes:
-      - name: data
-        emptyDir: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: metricops
-  namespace: ${KUBENAMESPACE}
-spec:
-  ports:
-  - name: "6379"
-    port: 6379
-    targetPort: 6379
-  selector:
-    app: metricops
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: metricark-api
-  labels:
-    app: metricark-api
-    version: v1
-  namespace: nex-system
-spec:
-  selector:
-    matchLabels:
-      app: metricark-api
-  template:
-    metadata:
-      name: metricark-api
-      labels:
-        app: metricark-api
-    spec:
-      containers:
-        - name: metricark-api
-          image: public.ecr.aws/nexclipper/metricark-api:main
-          # resources:
-          #   limits:
-          #     memory: 1Gi
-          #   requests:
-          #     memory: 512Mi
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 9000
-              name: metricark-api
-          env:
-            - name: PROMETHEUS_ENDPOINT
-              value: "http://nc-promscale-connector.nexclipper:9201"
-            - name: REDIS_ENDPOINT
-              value: "metricops"
-            - name: REDIS_PORT
-              value: '6379'
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: metricark-api
-  labels:
-    app: metricark-api
-  namespace: nex-system
-spec:
-  type: ClusterIP
-  ports:
-    - port: 9000
-      protocol: TCP
-      targetPort: 9000
-      name: http
-  selector:
-    app: metricark-api
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: metricark
-  labels:
-    app: metricark
-    version: v1
-  namespace: nex-system
-spec:
-  selector:
-    matchLabels:
-      app: metricark
-  template:
-    metadata:
-      name: metricark
-      labels:
-        app: metricark
-    spec:
-      containers:
-        - name: metricark
-          image: public.ecr.aws/nexclipper/metricark:main
-          # resources:
-          #   limits:
-          #     memory: 1Gi
-          #   requests:
-          #     memory: 512Mi
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 80
-              name: metricark
+        - containerPort: 8081 #alertmanager
+        - containerPort: 80 #grafana
+        - containerPort: 8282 #metricark
+        - containerPort: 9090 #prometheus
+        - containerPort: 8080 #promlens
+        - containerPort: 9201 #promscale
+        - containerPort: 9091 #pushgateway
+        - containerPort: 30003 #test
+      

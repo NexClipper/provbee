@@ -29,16 +29,24 @@ tobscmd(){
         if [ $tobszzz == "99" ]; then STATUS_JSON="FAIL"; tobsinst_status="tobs running check Time out";beejson; exit 0;fi
       done
     ###
-    ## Webstork Install
       provbeens=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
       provbeesa="nexc"
+    ## Webstork Install
       webstork_inst=$(curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/webstork.yaml \
       | sed -e "s#\${KUBENAMESPACE}#$provbeens#g" \
       | sed -e "s#\${KUBESERVICEACCOUNT}#$provbeesa#g" \
       | kubectl create -f - 2>&1)
       if [[ $(echo $webstork_inst|grep "AlreadyExists") != "" ]]; then webstork_inst="AlreadyExists";fi 
+    ## Metric-Set Install
+      metric_inst=$(curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/install/yaml/metric-set.yaml \
+      | sed -e "s#\${KUBENAMESPACE}#$provbeens#g" \
+      | sed -e "s#\${KUBESERVICEACCOUNT}#$provbeesa#g" \
+      | kubectl create -f - 2>&1
+      if [[ $(echo $metric_inst|grep "AlreadyExists") != "" ]]; then metric_inst="AlreadyExists";fi 
+    ## Json
       #webstork_inst_status=$(echo $webstork_inst|awk '{print $NF}')
       webstork_status=",\"WEBSTORK_INSTALL\": \"${webstork_inst##*\ }\""
+      metric_status=",\"METRIC_INSTALL\": \"${metric_inst##*\ }\""
     ## GLOBAL VIEW
       #####  kubectl patch service -n ${beeCMD[1]} nc-promscale-connector --type=json -p='[{"op": "replace", "path": "/spec/ports/0/nodePort", "value": 30000}]' -p='[{"op": "replace", "path": "/spec/type", "value": "NodePort"}]'
       svc_type=$(kubectl get service nc-promscale-connector -n ${beeCMD[1]} -o jsonpath='{.spec.type}' 2>/dev/null)
