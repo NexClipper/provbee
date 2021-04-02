@@ -3,6 +3,15 @@ KUBENAMESPACE="nex-system"
 KUBESERVICEACCOUNT="nexc"
 if [[ $NEXNS == "" ]]; then NEXNS="nexclipper"; fi
 ###
+zoneID_CHK(){
+  ## Temporary information
+  if [[ $CALLBACK == "" ]]; then goodbye_provbee; fi 
+  ## ZoneID Chk
+  zoneID_pod=$(kubectl get -n ${KUBENAMESPACE} daemonset/klevr-agent -o jsonpath='{.spec.template.spec.containers[*].env[?(@.name=="K_ZONE_ID")].value}')
+  zoneID_call=$(echo $CALLBACK |base64 -d|awk -F"/|?" '{print $6}')
+  if [[ $zoneID_pod == $zoneID_call ]]; then goodbye_provbee ; echo  ;else echo "Incorrect cluster information"; exit 1;fi 
+}
+
 
 #GoodBye!!
 goodbye_provbee(){
@@ -10,8 +19,6 @@ goodbye_provbee(){
   kubectl exec -it -n ${KUBENAMESPACE} deployment/provbee -- busybee tobs uninstall $NEXNS 2>/dev/null
   $kubedel ${KUBENAMESPACE} service/provbee-service 2>/dev/null
   $kubedel ${KUBENAMESPACE} deployment/provbee 2>/dev/null
-  #kubectl get po -n ${KUBENAMESPACE} -o jsonpath='{range $.items[?(@.metadata.ownerReferences[*].name == "klevr-agent")]}{.metadata.name}{"\n"}{end}'| xargs kubectl delete -n ${KUBENAMESPACE} po
-  #kubectl delete -n ${KUBENAMESPACE} po provbee
   $kubedel ${KUBENAMESPACE} daemonset/klevr-agent 2>/dev/null
   $kubedel ${KUBENAMESPACE} clusterrolebinding ${KUBESERVICEACCOUNT}-rbac 2>/dev/null
   $kubedel ${KUBENAMESPACE} secret ${KUBESERVICEACCOUNT}-secrets 2>/dev/null
@@ -27,6 +34,7 @@ goodbye_provbee(){
   chk2=$(kubectl get ns $KUBENAMESPACE 2>/dev/null |wc -l)
   if [ $chk1 -eq 0 ] && [ $chk2 -eq 0 ]; then
     echo "Good Bye :'-( Beeeeeeeeeeeeeeeee 🐝"
+    ## Temporary information
     if [[ $CALLBACK != "" ]]; then callback; fi 
   else
     echo "Check your NAMESPACE : $NEXNS, $KUBENAMESPACE "
@@ -39,4 +47,4 @@ callback(){
   curl -sL -X DELETE $callurl > /tmp/provbee_bye.log
 }
 ############ RUN CHK
-if [[ $DEL =~ ^([yY][eE][sS]|[yY])$ ]]; then goodbye_provbee ; fi
+if [[ $DEL =~ ^([yY][eE][sS]|[yY])$ ]]; then zoneID_CHK ; fi
