@@ -51,7 +51,11 @@ tobscmd(){
       #####  kubectl patch service -n ${beeCMD[1]} nc-promscale-connector --type=json -p='[{"op": "replace", "path": "/spec/ports/0/nodePort", "value": 30000}]' -p='[{"op": "replace", "path": "/spec/type", "value": "NodePort"}]'
       svc_type=$(kubectl get service nc-promscale-connector -n ${beeCMD[1]} -o jsonpath='{.spec.type}' 2>/dev/null)
       if [[ $svc_type == "NodePort" ]]; then
-        nodeport_ip_info=$(kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"\n"}{end}'|head -n1)
+      ## ExternalIP Priority
+        nodeport_ip_info=$(kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="ExternalIP")].address }{"\n"}{end}'|head -n1)
+        if [[ $nodeport_ip_info == "" ]]; then 
+          nodeport_ip_info=$(kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"\n"}{end}'|head -n1)
+        fi
         nodeport_port_info=$(kubectl get service nc-promscale-connector -n ${beeCMD[1]} -o jsonpath='{range .spec.ports[*]}{.nodePort}{"\n"}{end}')
         promscale_info="${nodeport_ip_info}:${nodeport_port_info}"
       elif [[ $svc_type == "LoadBalancer" ]]; then
