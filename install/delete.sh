@@ -8,7 +8,8 @@ zoneID_CHK(){
   if [[ $CALLBACK == "" ]]; then goodbye_provbee; fi 
   ## ZoneID Chk
   zoneID_pod=$(kubectl get -n ${KUBENAMESPACE} daemonset/klevr-agent -o jsonpath='{.spec.template.spec.containers[*].env[?(@.name=="K_ZONE_ID")].value}')
-  zoneID_call=$(echo $CALLBACK |base64 -d|awk -F"/|?" '{print $6}')
+  #zoneID_call=$(echo $CALLBACK |base64 -d|awk -F"/|?" '{print $6}')
+  zoneID_call=$(echo $CALLBACK ||base64 -d|awk -F"/" '{print $6}'|awk -F"?" '{print $1}')
   if [[ $zoneID_pod == $zoneID_call ]]; then goodbye_provbee ; echo  ;else echo "Incorrect cluster information"; exit 1;fi 
 }
 
