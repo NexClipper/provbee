@@ -1,8 +1,10 @@
 name: ECR Public Build & Push
 on:
   push:
-    branches:
-      - '!main'
+    # Sequence of patterns matched against refs/heads
+    branches-ignore:
+      # Push events to branches matching refs/heads/mona/octocat
+      - 'master'
       
 jobs:
   ecr_public:
