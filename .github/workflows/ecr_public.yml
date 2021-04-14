@@ -1,7 +1,7 @@
 name: ECR Public Build & Push
 on:
   push:
-    tags:
+    branches:
       - '!main'
       
 jobs:
