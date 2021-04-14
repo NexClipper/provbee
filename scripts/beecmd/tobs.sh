@@ -10,7 +10,7 @@ tobscmd(){
     ## helm chart update & tobs install 
       helm repo add nexclipper https://nexclipper.github.io/helm-charts/ >> $tobslog 2>&1
       helm repo update >> $tobslog 2>&1
-      tobs install -n nc -c nexclipper/tobs --namespace ${beeCMD[1]} $filepath >> $tobslog 2>&1
+      tobs install -n nc -c nexclipper/tobs-dev --namespace ${beeCMD[1]} $filepath >> $tobslog 2>&1
     ############ tobs install chk start
       if [[ $(kubectl get ns ${beeCMD[1]} 2>&1|grep "NotFound") != ""  ]]; then 
         fatal "Tobs install FAIL"
