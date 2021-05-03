@@ -35,26 +35,6 @@ provbeestatus(){
   esac
 }
 
-#nodesearch(){
-#  case ${beeCMD[1]} in
-#    *)
-#      NODEPORT=$(kubectl get svc -A -o jsonpath='{.items[?(@.metadata.name == "'${beeCMD[1]}'")].spec.ports[0].nodePort}')
-#      NODEOSIMAGE=$(kubectl get node -o jsonpath='{.items[*].status.nodeInfo.osImage}')
-#      if [[ $NODEPORT == "" ]]; then
-#        fatal "Not found K8s Service : ${beeCMD[1]}"
-#      else
-#        if [[ $NODEOSIMAGE == "Docker Desktop" ]]; then
-#          echo "localhost:$NODEPORT"
-#        else
-#          kubectl get nodes -o jsonpath='{range $.items[*]}{.status.addresses[?(@.type=="InternalIP")].address }{"':$NODEPORT'\n"}{end}'|head -n1
-#        fi
-#      fi
-#    ;;
-#    help|HELP)  info "busybee nodesearch {K8s Service}" ;;
-#  esac
-#}
-#
-
 ################################################################ value
 while read beeA beeCMD ; do
   beeCMD=($beeCMD)

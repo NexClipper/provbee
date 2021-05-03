@@ -1,7 +1,7 @@
 #!/bin/bash
-OPENAPIKEY=$(curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/scripts/OPENAPI)
-
-
+if [ -f /tmp/whoisapi ]; then OPENAPIKEY=$(cat /tmp/whoisapi)
+else OPENAPIKEY=$(curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/scripts/OPENAPI); echo $OPENAPIKEY > /tmp/whoisapi
+fi
 
 IPAddr=${beeCMD[2]}
 ### External IP connection check
@@ -57,6 +57,8 @@ else
 	fi
 fi
 #printf "%-2s : %-10s %-20s %-30s\n" $countryCodeCHK $registryRIRCHK $whoisNAME "$whoisORG"
+
+##### CSP Search
 cspNAME=$(echo $whoisORG|tr '[:upper:]' '[:lower:]')
 if [[ $cspNAME =~ ^.*amazon|aws.*$ ]]; then cspNAME="AWS"
     elif [[ $cspNAME =~ ^.*google|gcp.*$ ]]; then cspNAME="GCP"
@@ -64,6 +66,9 @@ if [[ $cspNAME =~ ^.*amazon|aws.*$ ]]; then cspNAME="AWS"
     elif [[ $cspNAME =~ ^.*oracle|oci.*$ ]]; then cspNAME="OCI"
     else cspNAME="unknown" 
 fi
+
+
+##### TOTAL JSON
 TYPE_JSON="json"
 TOTAL_JSON="{\"EXT_IP\":\"$IPAddr\",\"COUNTRY_CODE\":\"$countryCodeCHK\",\"REGISTRY_RIR\":\"$registryRIRCHK\",\"WHOIS_NAME\":\"$whoisNAME\",\"WHOIS_ORG\":\"$whoisORG\",\"CSP_NAME\":\"$cspNAME\"}"
 ################Print JSON
