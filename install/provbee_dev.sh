@@ -195,6 +195,7 @@ if [[ $K3S_SET =~ ^([yY][eE][sS]|[yY])$ ]]; then k3s_checking ; fi
 # KUBERNETES
 ############
 if [[ $K_PLATFORM == "kubernetes" ]]; then
+    PATH=/usr/local/bin/:$PATH
     if [ $(which kubectl|wc -l) -eq 0 ]; then fatal "Kubectl run failed!, Your command server check plz."; fi
     if [ $(kubectl version --short | grep Server | wc -l) -eq 0 ]; then warn "kubernetes cluster check plz."; fatal "chkeck : \$cat ~/.kube/config"; fi 
 ################################
