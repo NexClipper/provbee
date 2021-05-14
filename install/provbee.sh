@@ -114,8 +114,7 @@ k3s_rootchecking(){
 
 k3s_install() {
 #K3s Server Install
-curl -sfL https://get.k3s.io | sh -
-#curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.18.10+k3s2 sh -
+curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" sh -
 
 ## cluster-ip change
 if [ -f /etc/systemd/system/k3s.service ]; then
@@ -132,8 +131,9 @@ if [[ $K3S_SET =~ ^([yY][eE][sS]|[yY])$ ]]; then k3s_checking ; fi
 # KUBERNETES
 ############
 if [[ $K_PLATFORM == "kubernetes" ]]; then
-    if [ $(which kubectl|wc -l) -eq 0 ]; then fatal "Kubectl run failed!, Your command server check plz."; fi
-    if [ $(kubectl version --short | grep Server | wc -l) -eq 0 ]; then warn "kubernetes cluster check plz."; fatal "chkeck : \$cat ~/.kube/config"; fi 
+  PATH=/usr/local/bin:$PATH
+  if [ $(which kubectl|wc -l) -eq 0 ]; then fatal "Kubectl run failed!, Your command server check plz."; fi
+  if [ $(kubectl version --short | grep Server | wc -l) -eq 0 ]; then warn "kubernetes cluster check plz."; fatal "chkeck : \$cat ~/.kube/config"; fi 
 ################################
 ### sed
 SED_NS="s/\${KUBENAMESPACE}/$KUBENAMESPACE/g"
