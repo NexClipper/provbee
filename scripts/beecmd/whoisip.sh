@@ -1,9 +1,12 @@
 #!/bin/bash
+BEE_INFO="from_ip"
+apikeychk(){
 if [ -f /tmp/whoisapi ]; then OPENAPIKEY=$(cat /tmp/whoisapi)
 else OPENAPIKEY=$(curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/scripts/OPENAPI); echo $OPENAPIKEY > /tmp/whoisapi
 fi
+}
+apikeychk
 
-IPAddr=${beeCMD[2]}
 ### External IP connection check
 whoisipchk(){
 if [ "$IPAddr" = "" ]; then
@@ -13,19 +16,25 @@ else
 fi
 if [ "$IPAddr" = "" ];then fatal "Your IP address checking fail" ; fi
 }
-if [ "$IPAddr" = "" ];then whoisipchk ;fi
+if [ "${beeCMD[0]}" = "" ];then whoisipchk ;else IPAddr=${beeCMD[0]};fi
 
 
 ### IP country Code 
 IPcountry="http://whois.kisa.or.kr/openapi/ipascc.jsp?query=${IPAddr}&key=${OPENAPIKEY}&answer=json"
-KRURL="http://whois.kisa.or.kr/openapi/whois.jsp?query=${IPAddr}&key=${OPENAPIKEY}&answer=json"
 countryCode=$(curl -sL $IPcountry)
+if [ "$(echo $countryCode|jq -r '.whois.error.error_code')" = "022" ]; then 
+	rm -rf /tmp/whoisapi
+	apikeychk
+	IPcountry="http://whois.kisa.or.kr/openapi/ipascc.jsp?query=${IPAddr}&key=${OPENAPIKEY}&answer=json"
+	countryCode=$(curl -sL $IPcountry)
+fi 
 registryRIRCHK=$(echo $countryCode|jq -r '.whois.registry')
 countryCodeCHK=$(echo $countryCode|jq -r '.whois.countryCode')
 
 
 ##### query
 if [ "$countryCodeCHK" = "KR" ]; then
+	KRURL="http://whois.kisa.or.kr/openapi/whois.jsp?query=${IPAddr}&key=${OPENAPIKEY}&answer=json"
 	zzz=$(curl -sL $KRURL)
 	whoisNAME=$(echo $zzz|jq -r '.whois.english.ISP.netinfo.servName')
 	whoisORG=$(echo $zzz|jq -r '.whois.english.ISP.netinfo.orgName')
@@ -66,6 +75,11 @@ if [[ $cspNAME =~ ^.*amazon|aws.*$ ]]; then cspNAME="AWS"
     elif [[ $cspNAME =~ ^.*oracle|oci.*$ ]]; then cspNAME="OCI"
     else cspNAME="unknown" 
 fi
+#### IP range TEST
+#https://ip-ranges.amazonaws.com/ip-ranges.json
+#https://www.gstatic.com/ipranges/cloud.json
+
+
 
 
 ##### TOTAL JSON
@@ -74,9 +88,9 @@ TOTAL_JSON="{\"EXT_IP\":\"$IPAddr\",\"COUNTRY_CODE\":\"$countryCodeCHK\",\"REGIS
 ################Print JSON
 beejson(){
 if [[ $TYPE_JSON == "json" ]]; then
-  BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[${TOTAL_JSON}]}]}"
+  BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beeinfo\":\"${BEE_INFO}\",\"beetype\":\"${TYPE_JSON}\",\"data\":[${TOTAL_JSON}]}]}"
 elif [[ $TYPE_JSON == "base64" ]] || [[ $TYPE_JSON == "string" ]]; then
-  BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beetype\":\"${TYPE_JSON}\",\"data\":[\""${TOTAL_JSON}"\"]}]}"
+  BEE_JSON="{\"provbee\":\"v1\",\"busybee\":[{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beeinfo\":\"${BEE_INFO}\",\"beetype\":\"${TYPE_JSON}\",\"data\":[\""${TOTAL_JSON}"\"]}]}"
 else
   BEE_JSON="Bee!"
 fi

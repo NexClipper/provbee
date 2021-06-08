@@ -39,8 +39,11 @@ provbeestatus(){
 while read beeA beeCMD ; do
   beeCMD=($beeCMD)
   curlcmd="curl -sL -G --data-urlencode"
-  promsvr_DNS="http://nc-prometheus-server.${beeCMD[1]}.svc.cluster.local"
-  alertsvr_DNS="http://nc-prometheus-alertmanager.${beeCMD[1]}.svc.cluster.local"
+  runbeeNS="${beeCMD[1]}"
+  if [ "${beeCMD[1]}" = "" ]; then runbeeNS="nexclipper";fi 
+  promsvr_DNS="http://nc-prometheus-server.$runbeeNS.svc.cluster.local"
+  alertsvr_DNS="http://nc-prometheus-alertmanager.$runbeeNS.svc.cluster.local"
+  promscale_DNS="http://nc-promscale-connector.$runbeeNS.svc.cluster.local:9201"
   case $beeA in
     ######### bee status check
     beestatus) provbeestatus ;;
