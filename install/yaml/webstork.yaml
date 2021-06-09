@@ -31,6 +31,7 @@ spec:
         - containerPort: 8081 #alertmanager
         - containerPort: 80 #grafana
         - containerPort: 8282 #metricark
+        - containerPort: 9000 #metricark-api
         - containerPort: 9090 #prometheus
         - containerPort: 8080 #promlens
         - containerPort: 9201 #promscale
