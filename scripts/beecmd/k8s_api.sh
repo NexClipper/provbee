@@ -226,8 +226,13 @@ k8s_status(){
         stats_usage
         wowjson="{\"k8sapi\":\"provbee-test\",\"data\":{\"lookup\":[${next_json%?}]}}"
         #wowjson="{\"k8s_status\":[${next_json%?}]}"
+##### TEST RUN
+      test_json="{\"k8s_status\":[${next_json%?}]}"
+#     echo $test_json |jq
+##### TEST END
         TOTAL_JSON=$(echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/ //g') 
         TYPE_JSON="base64"
+        BEE_INFO="k8s_status"
       ;;
       help) fatal "Help me~~~~";;
       ${beeCMD[0]}) ${beeCMD[0]} > /dev/null 2>&1
@@ -236,16 +241,19 @@ k8s_status(){
     esac
 }
 k8s_status
-############### TEST
+
 metricark_api(){
 local BEE_INFO="metricark"
 local TYPE_JSON="base64" 
-local TOTAL_JSON=$(curl -X GET --header 'Accept: application/json' 'http://metricark-api.nex-system.svc.cluster.local:9000/v1/cluster/1/query/key/kubernetes/field/services'|base64 | tr '\n' ' ' | sed -e 's/ //g')
+local TOTAL_JSON=$(curl -sL -X GET --header 'Accept: application/json' 'http://metricark-api.nex-system.svc.cluster.local:9000/v1/cluster/1/query/key/kubernetes/field/services'|base64 | tr '\n' ' ' | sed -e 's/ //g')
 local STATUS_JSON="OK"
 XXX=",{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beeinfo\":\"${BEE_INFO}\",\"beetype\":\"${TYPE_JSON}\",\"data\":[\""${TOTAL_JSON}"\"]}"
-
+##### TEST RUN
+#echo ${XXX#?}|jq 
 }
-#metricark_api
+metricark_api
+
+
 ################Print JSON
 beejson(){
 if [[ $TYPE_JSON == "json" ]]; then
@@ -256,7 +264,7 @@ elif [[ $TYPE_JSON == "base64" ]] || [[ $TYPE_JSON == "string" ]]; then
 else
   BEE_JSON="Bee!"
 fi
-echo $BEE_JSON
+echo $BEE_JSON |jq
 }
 beejson
 
