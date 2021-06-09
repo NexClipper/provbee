@@ -125,3 +125,20 @@ spec:
           ports:
             - containerPort: 80
               name: metricark
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metricark
+  labels:
+    app: metricark
+  namespace: ${KUBENAMESPACE}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+      name: http
+  selector:
+    app: metricark
