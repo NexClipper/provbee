@@ -198,34 +198,34 @@ k8s_status(){
   }
 
     ################ Case
-    case ${beeCMD[0]} in
+  case ${beeCMD[0]} in
 #cat /usr/bin/beecmd/k8s_api.sh |grep "^  .*(){"
 #egrep -v '^[[:space:]]*(#.*)?$'
-      wow)
-        cluster_age
-        cluster_status
-        cluster_memory_use
-        cluster_cpu_use
-        cluster_store_use
-        cluster_pod_use
-        total_node
-        total_unavail_node
-        total_namespace
-        total_pods
-        count_restart_pod
-        count_failed_pod
-        count_pending_pod
-        total_pvcs
-        status_prometheus
-        status_alertmanager
-        status_cluster_api
-        rate_cluster_api
-        total_alerts
-        stats_capacity
-        stats_used
-        stats_usage
-        wowjson="{\"k8sapi\":\"provbee-test\",\"data\":{\"lookup\":[${next_json%?}]}}"
-        #wowjson="{\"k8s_status\":[${next_json%?}]}"
+    wow)
+      cluster_age
+      cluster_status
+      cluster_memory_use
+      cluster_cpu_use
+      cluster_store_use
+      cluster_pod_use
+      total_node
+      total_unavail_node
+      total_namespace
+      total_pods
+      count_restart_pod
+      count_failed_pod
+      count_pending_pod
+      total_pvcs
+      status_prometheus
+      status_alertmanager
+      status_cluster_api
+      rate_cluster_api
+      total_alerts
+      stats_capacity
+      stats_used
+      stats_usage
+      wowjson="{\"k8sapi\":\"provbee-test\",\"data\":{\"lookup\":[${next_json%?}]}}"
+      #wowjson="{\"k8s_status\":[${next_json%?}]}"
 ##### TEST RUN
       test_json="{\"k8s_status\":[${next_json%?}]}"
 #     echo $test_json |jq
