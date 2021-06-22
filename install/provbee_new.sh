@@ -4,8 +4,6 @@ KUBENAMESPACE="nex-system"
 KUBESERVICEACCOUNT="nexc"
 #INST_SRC="https://raw.githubusercontent.com/NexClipper/provbee/master"
 INST_SRC="https://raw.githubusercontent.com/NexClipper/provbee/installer"
-PATH=/usr/local/bin:$PATH
-KU_CMD=$(command -v kubectl)
 TMP_DIR=$(mktemp -d -t provbee-inst.XXXXXXXXXX)
 ################ TEMP
 K_PLATFORM="kubernetes"
@@ -111,6 +109,8 @@ fi
 
 ### KUBERNETES
 if [[ $K_PLATFORM == "kubernetes" ]]; then
+PATH=/usr/local/bin:$PATH
+KU_CMD=$(command -v kubectl)
   if [ "$KU_CMD" = "" ]; then fatal "Kubectl run failed!, Your command server check plz."; fi
   if [ "$($KU_CMD version --short | grep Server | wc -l)" -eq 0 ]; then warn "kubernetes cluster check plz."; fatal "chkeck : \$cat ~/.kube/config"; fi 
 ################################
