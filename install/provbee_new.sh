@@ -134,7 +134,9 @@ namespacechk
 
 
 case $K_PLATFORM in 
+echo $K_PLATFORM
   kubernetes|baremetal) kubernetes ;;
   nomad) nomad ;;
   openstack) openstack;;
+  help|*) fatal "install scripts checking plz";;
 esac 
