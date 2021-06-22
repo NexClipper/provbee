@@ -111,8 +111,8 @@ fi
 
 ### KUBERNETES
 if [[ $K_PLATFORM == "kubernetes" ]]; then
-  if [ $KU_CMD = "" ]; then fatal "Kubectl run failed!, Your command server check plz."; fi
-  if [ $($KU_CMD version --short | grep Server | wc -l) -eq 0 ]; then warn "kubernetes cluster check plz."; fatal "chkeck : \$cat ~/.kube/config"; fi 
+  if [ "$KU_CMD" = "" ]; then fatal "Kubectl run failed!, Your command server check plz."; fi
+  if [ "$($KU_CMD version --short | grep Server | wc -l)" -eq 0 ]; then warn "kubernetes cluster check plz."; fatal "chkeck : \$cat ~/.kube/config"; fi 
 ################################
 
 
