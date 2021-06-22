@@ -95,7 +95,7 @@ systemchk
 
 ### K3s Install check
 if [[ $K3S_SET =~ ^([yY][eE][sS]|[yY])$ ]]; then
-  curl -sL ${INST_SRC}/install/provbee_k3s.sh -O ${TMP_DIR}
+  curl -sL ${INST_SRC}/install/provbee_k3s.sh -o ${TMP_DIR}/provbee_k3s.sh
   chmod +x ${TMP_DIR}/provbee_k3s.sh
   source ${TMP_DIR}/provbee_k3s.sh
 
@@ -117,7 +117,7 @@ if [[ $K_PLATFORM == "kubernetes" ]]; then
 
 
 ### Kubernetes deploy
-  curl -sL ${INST_SRC}/install/provbee_kubernetes.sh -O ${TMP_DIR}
+  curl -sL ${INST_SRC}/install/provbee_kubernetes.sh -o ${TMP_DIR}/provbee_kubernetes.sh
   chmod +x ${TMP_DIR}/provbee_kubernetes.sh
   source ${TMP_DIR}/provbee_kubernetes.sh
 
