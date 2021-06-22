@@ -3,9 +3,12 @@ UNAMECHK=`uname`
 KUBENAMESPACE="nex-system"
 KUBESERVICEACCOUNT="nexc"
 INST_SRC="https://raw.githubusercontent.com/NexClipper/provbee/master"
+#INST_SRC="https://raw.githubusercontent.com/NexClipper/provbee/installer"
 PATH=/usr/local/bin:$PATH
 KU_CMD=$(command -v kubectl)
 TMP_DIR=$(mktemp -d -t provbee-inst.XXXXXXXXXX)
+################ TEMP
+K_PLATFORM="kubernetes"
 
 ## information
 info(){ echo -e '\033[92m[INFO]  \033[0m' "$@";}
@@ -13,52 +16,56 @@ warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
 fatal(){ echo -e '\033[91m[ERROR] \033[0m' "$@" >&2;exit 1;}
 ######################################################################################
 
-## Provbee, Klevr-agent img ##
-envchk(){}
-if [[ $TAGPROV == "" ]]; then TAGPROV="latest" ; fi
-if [[ $TAGKLEVR == "" ]]; then TAGKLEVR="latest" ; fi
-if [[ $K_API_KEY == "" ]] || [[ $K_PLATFORM == "" ]] || [[ $K_MANAGER_URL == "" ]] || [[ $K_ZONE_ID == "" ]]; then
-    echo "NexClipper Console Page's install script check"
-    echo "bye~~"
-    exit 1
-fi
+###  ##
+default_chk(){
+# Provbee, Klevr-agent img  
+  if [[ $TAGPROV == "" ]]; then TAGPROV="latest" ; fi
+  if [[ $TAGKLEVR == "" ]]; then TAGKLEVR="latest" ; fi
+# Klevr Value check
+  if [[ $K_API_KEY == "" ]] || [[ $K_PLATFORM == "" ]] || [[ $K_MANAGER_URL == "" ]] || [[ $K_ZONE_ID == "" ]]; then
+    fatal "NexClipper Console Page's install script check"
+  fi
+# console connection check
+  urltest="curl -o /dev/null --silent --head --write-out '%{http_code}' ${K_MANAGER_URL}/swagger/doc.json --connect-timeout 3"
+  if $urltest &>/dev/null ; then
+  	info "NexClipper serivce connection checking"
+  else
+  	fatal "\033[91m$K_MANAGER_URL\033[0m Not connection. check your network"
+  fi
 }
-envchk
-
-################ TEMP
-K_PLATFORM="kubernetes"
-
-### console connection check
-nexconsolechk(){
-urltest="curl -o /dev/null --silent --head --write-out '%{http_code}' ${K_MANAGER_URL}/swagger/doc.json --connect-timeout 3"
-if $urltest &>/dev/null ; then
-	printf "%s\n" "NexClipper serivce first checking"
-else
-	printf "%b%s\n" "\033[91m$K_MANAGER_URL\033[0m Not connection. check your network"
-  if [[ $DELTEST == "" ]]; then exit 1; fi
-fi
-}
-nexconsolechk
-
+default_chk
 
 
 ### System check
 systemchk(){
+# WorkDIR check or create
 if [ -z $WORKDIR ]; then WORKDIR="$HOME/provbee";fi
 if [ ! -d $WORKDIR ]; then mkdir -p $WORKDIR; fi
 
-KUBECONFIG_FILE="$WORKDIR/kube-config-nexc"
-#Host IP Check
+# Host IP check
 if [[ $HOSTIP == "" ]]; then
 	if [[ $UNAMECHK == "Darwin" ]]; then
-		HOSTIP=$(ifconfig | grep "inet " | grep -v  "127.0.0.1" | awk -F " " '{print $2}'|head -n1)
+    eth_name=$(netstat -nr|grep default|head -n1|grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|awk '{print $NF}')
+		HOSTIP=$(ifconfig $eth_name | grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'| awk -F " " '{print $2}')
 	else
-		HOSTIP=$(ip a | grep "inet " | grep -v  "127.0.0.1" | awk -F " " '{print $2}'|awk -F "/" '{print $1}'|head -n1)
+    eth_name=$(ip r | grep default|head -n1|awk '{print $5}')
+    HOSTIP=$(ip a show dev ${eth_name}|grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | awk -F " " '{print $2}'|awk -F "/" '{print $1}')
 	fi
 fi
-}
-systemchk
 
+# SSH KEY Create
+  mkdir -p $WORKDIR/.ssh
+  cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f $WORKDIR/.ssh/id_rsa > /dev/null
+  cat $WORKDIR/.ssh/id_rsa.pub > $WORKDIR/.ssh/authorized_keys
+  cat << EOF > $WORKDIR/.ssh/config
+Host *
+	StrictHostKeyChecking no
+	UserKnownHostsFile /dev/null
+  LogLevel ERROR
+EOF
+}
+
+systemchk
 
 ##Linux sudo auth check
 #sudopermission(){
@@ -91,6 +98,7 @@ if [[ $K3S_SET =~ ^([yY][eE][sS]|[yY])$ ]]; then
   curl -sL ${INST_SRC}/install/provbee_k3s.sh -O ${TMP_DIR}
   chmod +x ${TMP_DIR}/provbee_k3s.sh
   source ${TMP_DIR}/provbee_k3s.sh
+
 fi
 
 
@@ -106,19 +114,7 @@ if [[ $K_PLATFORM == "kubernetes" ]]; then
   if [ $KU_CMD = "" ]; then fatal "Kubectl run failed!, Your command server check plz."; fi
   if [ $($KU_CMD version --short | grep Server | wc -l) -eq 0 ]; then warn "kubernetes cluster check plz."; fatal "chkeck : \$cat ~/.kube/config"; fi 
 ################################
-####################################### SSH KEY Create
-ssh_keycreate(){
-  mkdir -p $WORKDIR/.ssh
-  cat /dev/zero | ssh-keygen -t rsa -b 4096 -q -P "" -f $WORKDIR/.ssh/id_rsa > /dev/null
-  cat $WORKDIR/.ssh/id_rsa.pub > $WORKDIR/.ssh/authorized_keys
-  cat << EOF > $WORKDIR/.ssh/config
-Host *
-	StrictHostKeyChecking no
-	UserKnownHostsFile /dev/null
-  LogLevel ERROR
-EOF
-}
-ssh_keycreate
+
 
 ### Kubernetes deploy
   curl -sL ${INST_SRC}/install/provbee_kubernetes.sh -O ${TMP_DIR}
@@ -127,15 +123,7 @@ ssh_keycreate
 
 
 
-#### K3s User permission Checking!
-  K3SPERM=$($KU_CMD cluster-info 2>&1 | grep -E "k3s.*permission"|wc -l)
-  if [ $K3SPERM -eq 0 ]; then
-    if [[ $($KU_CMD get node -o jsonpath='{.items[*].metadata.managedFields[*].manager}') == "k3s" ]]; then
-      if [ $(id -u) -ne 0 ]; then echo "run as root user";exit 1 ; fi
-    fi
-  else    
-    echo "run as root user"
-  fi
+
 
 fi ######## kubectl command END
 
