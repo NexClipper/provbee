@@ -35,12 +35,12 @@ fi
 
 k3s_checking
 
-### K3s User permission Checking!
-K3SPERM=$($KU_CMD cluster-info 2>&1 | grep -E "k3s.*permission"|wc -l)
-if [ $K3SPERM -eq 0 ]; then
-  if [[ $($KU_CMD get node -o jsonpath='{.items[*].metadata.managedFields[*].manager}') == "k3s" ]]; then
-    if [ $(id -u) -ne 0 ]; then fatal "run as root user" ; fi
-  fi
-else    
-  fatal "run as root user"
-fi
+#### K3s User permission Checking!
+#K3SPERM=$($KU_CMD cluster-info 2>&1 | grep -E "k3s.*permission"|wc -l)
+#if [ $K3SPERM -eq 0 ]; then
+#  if [[ $($KU_CMD get node -o jsonpath='{.items[*].metadata.managedFields[*].manager}') == "k3s" ]]; then
+#    if [ $(id -u) -ne 0 ]; then fatal "run as root user" ; fi
+#  fi
+#else    
+#  fatal "run as root user"
+#fi
