@@ -23,7 +23,8 @@ k3s_rootchecking(){
 k3s_install() {
 #K3s Server Install
 curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" sh -
-
+PATH=/usr/local/bin:$PATH
+KU_CMD=$(command -v kubectl)
 ## cluster-ip change
 if [ -f /etc/systemd/system/k3s.service ]; then
 	#sed -i 's/server \\/server --bind-address 0.0.0.0 \\/g' /etc/systemd/system/k3s.service

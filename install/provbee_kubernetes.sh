@@ -12,7 +12,7 @@ SED_K_ZID="s/\${K_ZONE_ID}/$K_ZONE_ID/g"
 SED_TAG_K="s/\${TAGKLEVR}/$TAGKLEVR/g"
 SED_TAG_P="s/\${TAGPROV}/$TAGPROV/g"
 
-############## kube-config file gen.
+### kube-config file gen.
 kubeconfig_gen() {
 CLUSTERNAME=$($KU_CMD config get-contexts $($KU_CMD config current-context) | awk '{print $3}' | grep -v CLUSTER)
 SVRCLUSTER=$($KU_CMD config view -o jsonpath='{.clusters[?(@.name == "'$CLUSTERNAME'")].cluster.server}')
@@ -47,9 +47,8 @@ $KU_CMD -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-kubeconfig -
 }
 
 
-##################### First Banner
-info "Welcome to NexClipper!"
-############################################### kubectl command RUN
+
+### kubectl command RUN
 #info #namespace, serviceaccount create
 curl -sL ${INST_SRC}/install/yaml/provbee-00.yaml \
 |sed -e $SED_NS -e $SED_SVCAC \
@@ -81,4 +80,47 @@ curl -sL ${INST_SRC}/install/yaml/provbee-91.yaml \
 #|sed -e $SED_NS -e $SED_SVCAC \
 #|$KU_CMD apply -f - 
 
-#######################################
+
+#provbee run chk
+namespacechk(){
+  echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
+  namespchk=$($KU_CMD get ns $KUBENAMESPACE 2>/dev/null |grep -v NAME| wc -l )
+  echo -n -e "## Namespace \"$KUBENAMESPACE\" check\t" "\033[91mwait...🍯 \033[0m"
+  sleep 3
+  while [ $namespchk != "1" ]
+  do
+          nszzz=$((nszzz+1))
+          echo -n -e "\r## Namespace \"$KUBENAMESPACE\" check\t" "\033[91m $(seq -f "%02g" $nszzz|tail -n1)/99 wait...\033[0m"
+          namespchk=$($KU_CMD get ns $KUBENAMESPACE 2>/dev/null |grep -v NAME| wc -l)
+          sleep 3
+          if [ $nszzz == "99" ]; then echo "failed. restart plz."; exit 1; fi
+  done
+  echo -e "\r## Namespace \"$KUBENAMESPACE\" check\t" "\033[92m OK.            \033[0m"
+  provbeeok
+}
+
+provbeeok(){
+  echo -n -e "## NexClipper system check\t" "\033[91mwait...🍯 \033[0m"
+  sleep 5
+  provinstchk=$($KU_CMD get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep -v Running | wc -l)
+  while [ $provinstchk != "0" ];
+  do
+    przzz=$((przzz+1))
+    beechk=$($KU_CMD get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep provbee | grep unning | wc -l)
+    agentchk=$($KU_CMD get pods -n $KUBENAMESPACE 2>/dev/null |grep -v NAME| grep klevr-agent | grep unning | wc -l)
+    if [ $beechk -eq 1 ]; then provb="\033[92mProvBee\033[0m";else provb="\033[91mProvBee\033[0m" ;fi
+    if [ $agentchk -ge 1 ]; then klevra="\033[92mKlevr\033[0m";else klevra="\033[91mKlevr\033[0m" ;fi
+    if [ $beechk -eq 1 ] && [ $agentchk -ge 1 ]; then
+      provinstchk=0
+    else
+      provinstchk=1
+    fi
+    echo -n -e "\r## $provb / $klevra check  \t" "\033[91m $(seq -f "%02g" $przzz|tail -n1)/99 wait...🐝\033[0m"
+    sleep 3
+    if [ $przzz == "99" ]; then echo "Status check failed. restart plz."; exit 1; fi
+  done
+  echo -e "\r## NexClipper system check\t" "\033[92m OK. 🍯❤️🐝                \033[0m"
+  echo -e "\a\033[92m ⛵ Enjoy NexClipper! :) \033[0m"
+  echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
+}
+namespacechk
