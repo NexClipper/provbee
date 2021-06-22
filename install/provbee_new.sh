@@ -22,7 +22,7 @@ default_chk(){
   if [[ $K_API_KEY == "" ]] || [[ $K_PLATFORM == "" ]] || [[ $K_MANAGER_URL == "" ]] || [[ $K_ZONE_ID == "" ]]; then
     fatal "NexClipper Console Page's install script check"
   fi
-  
+
 # console connection check
   urltest="curl -o /dev/null --silent --head --write-out '%{http_code}' ${K_MANAGER_URL}/swagger/doc.json --connect-timeout 3"
   if $urltest &>/dev/null ; then
@@ -41,10 +41,10 @@ systemchk(){
   if [ ! -d $WORKDIR ]; then mkdir -p $WORKDIR; fi
 
 # Host IP check
-  if [[ $HOSTIP == "" ]]; then
-  	if [[ $UNAMECHK == "Darwin" ]]; then
+  if [ "$HOSTIP" = "" ]; then
+    if [ $UNAMECHK = "Darwin" ]; then
       eth_name=$(netstat -nr|grep default|head -n1|grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|awk '{print $NF}')
-  		HOSTIP=$(ifconfig $eth_name | grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'| awk -F " " '{print $2}')
+  		HOSTIP=$(ifconfig ${eth_name} | grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'| awk -F " " '{print $2}')
   	else
       eth_name=$(ip r | grep default|head -n1|awk '{print $5}')
       HOSTIP=$(ip a show dev ${eth_name}|grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | awk -F " " '{print $2}'|awk -F "/" '{print $1}')
