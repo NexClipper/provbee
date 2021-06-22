@@ -2,8 +2,8 @@
 UNAMECHK=`uname`
 KUBENAMESPACE="nex-system"
 KUBESERVICEACCOUNT="nexc"
-INST_SRC="https://raw.githubusercontent.com/NexClipper/provbee/master"
-#INST_SRC="https://raw.githubusercontent.com/NexClipper/provbee/installer"
+#INST_SRC="https://raw.githubusercontent.com/NexClipper/provbee/master"
+INST_SRC="https://raw.githubusercontent.com/NexClipper/provbee/installer"
 PATH=/usr/local/bin:$PATH
 KU_CMD=$(command -v kubectl)
 TMP_DIR=$(mktemp -d -t provbee-inst.XXXXXXXXXX)
