@@ -67,11 +67,11 @@ systemchk
 
 ### K3s Install 
 k3s_install(){
-  INFO "K3s check & install"
+  info "K3s check & install"
   curl -sL ${INST_SRC}/install/provbee_k3s.sh -o ${TMP_DIR}/provbee_k3s.sh
   chmod +x ${TMP_DIR}/provbee_k3s.sh
   source ${TMP_DIR}/provbee_k3s.sh
-  INFO "K3s checked"
+  info "K3s checked"
 }
 
 
