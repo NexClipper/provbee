@@ -44,7 +44,7 @@ systemchk(){
   if [ "$HOSTIP" = "" ]; then
     if [ $UNAMECHK = "Darwin" ]; then
       eth_name=$(netstat -nr|grep default|head -n1|grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|awk '{print $NF}')
-  		HOSTIP=$(ifconfig ${eth_name} | grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'| awk -F " " '{print $2}')
+  		HOSTIP=$(ifconfig ${eth_name}|grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'| awk -F " " '{print $2}')
   	else
       eth_name=$(ip r | grep default|head -n1|awk '{print $5}')
       HOSTIP=$(ip a show dev ${eth_name}|grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | awk -F " " '{print $2}'|awk -F "/" '{print $1}')
@@ -90,7 +90,19 @@ kubernetes(){
 
 
 ### First Banner
-info "Welcome to NexClipper!"
+provbee_banner(){
+  print_char="Welcome to NexClipper!"
+  print_run=0
+  while [ $print_run != ${#print_char} ]
+  do
+          echo -n "${print_char:$print_run:1}";sleep 0.1
+          #if [ "$print_run" = 6 ]; then echo -n "🐝"; sleep 0.1 ; fi
+          print_run=$((print_run+1))
+
+  done
+}
+provbee_banner
+
 
 case $K_PLATFORM in 
   kubernetes|baremetal) 

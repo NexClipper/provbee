@@ -12,8 +12,22 @@ SED_K_ZID="s/\${K_ZONE_ID}/$K_ZONE_ID/g"
 SED_TAG_K="s/\${TAGKLEVR}/$TAGKLEVR/g"
 SED_TAG_P="s/\${TAGPROV}/$TAGPROV/g"
 
-### kube-config file gen.
-kubeconfig_gen() {
+
+### kubectl command RUN
+# info namespace create
+$KU_CMD create namespace $KUBENAMESPACE
+# info serviceaccount create
+$KU_CMD -n $KUBENAMESPACE create serviceaccount $KUBESERVICEACCOUNT 
+
+#info '### sample ssh secret'
+$KU_CMD -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config
+
+#info '### Secret??? create'
+curl -sL ${INST_SRC}/install/yaml/provbee-01.yaml \
+|sed -e $SED_NS -e $SED_SVCAC -e $SED_K_API -e $SED_K_ZID \
+|$KU_CMD apply -f - 
+
+#info kubeconfig gen
 CLUSTERNAME=$($KU_CMD config get-contexts $($KU_CMD config current-context) | awk '{print $3}' | grep -v CLUSTER)
 SVRCLUSTER=$($KU_CMD config view -o jsonpath='{.clusters[?(@.name == "'$CLUSTERNAME'")].cluster.server}')
 USERTOKENNAME=$($KU_CMD get serviceaccount $KUBESERVICEACCOUNT --namespace $KUBENAMESPACE -o jsonpath='{.secrets[*].name}')
@@ -44,26 +58,6 @@ $KU_CMD config use-context \
 
 #kube config file secert
 $KU_CMD -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-kubeconfig --from-file=kubeconfig=$KUBECONFIG_FILE
-}
-
-
-
-### kubectl command RUN
-#info #namespace, serviceaccount create
-curl -sL ${INST_SRC}/install/yaml/provbee-00.yaml \
-|sed -e $SED_NS -e $SED_SVCAC \
-|$KU_CMD apply -f -
-
-#info '### sample ssh secret'
-$KU_CMD -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config
-
-#info '### Secret??? create'
-curl -sL ${INST_SRC}/install/yaml/provbee-01.yaml \
-|sed -e $SED_NS -e $SED_SVCAC -e $SED_K_API -e $SED_K_ZID \
-|$KU_CMD apply -f - 
-
-#info kubeconfig gen
-kubeconfig_gen
 
 ############# Provbee-Deployment & Service
 curl -sL ${INST_SRC}/install/yaml/provbee-90.yaml \
@@ -81,7 +75,7 @@ curl -sL ${INST_SRC}/install/yaml/provbee-91.yaml \
 #|$KU_CMD apply -f - 
 
 
-#provbee run chk
+### provbee run chk
 namespacechk(){
   echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
   namespchk=$($KU_CMD get ns $KUBENAMESPACE 2>/dev/null |grep -v NAME| wc -l )
@@ -124,3 +118,4 @@ provbeeok(){
   echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 }
 namespacechk
+
