@@ -86,22 +86,22 @@ kubernetes(){
   curl -sL ${INST_SRC}/install/provbee_kubernetes.sh -o ${TMP_DIR}/provbee_kubernetes.sh
   chmod +x ${TMP_DIR}/provbee_kubernetes.sh
   source ${TMP_DIR}/provbee_kubernetes.sh
+
+# done
+provbee_banner
 }
 
 
 ### First Banner
 provbee_banner(){
-  print_char="Welcome to NexClipper!"
+  print_char=" ⛵ Enjoy NexClipper! :) "
   print_run=0
   while [ $print_run != ${#print_char} ]
   do
-          echo -n "${print_char:$print_run:1}";sleep 0.1
-          #if [ "$print_run" = 6 ]; then echo -n "🐝"; sleep 0.1 ; fi
-          print_run=$((print_run+1))
-
+          echo -en "\a\033[92m${print_char:$print_run:1}";sleep 0.1;print_run=$((print_run+1))
   done
+  echo -e "\033[0m"
 }
-provbee_banner
 
 
 case $K_PLATFORM in 
