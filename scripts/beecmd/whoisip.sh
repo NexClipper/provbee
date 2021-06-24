@@ -73,6 +73,7 @@ if [[ $cspNAME =~ ^.*amazon|aws.*$ ]]; then cspNAME="AWS"
     elif [[ $cspNAME =~ ^.*google|gcp.*$ ]]; then cspNAME="GCP"
     elif [[ $cspNAME =~ ^.*naver|nbp.*$ ]]; then cspNAME="NBP"
     elif [[ $cspNAME =~ ^.*oracle|oci.*$ ]]; then cspNAME="OCI"
+	elif [[ $cspNAME =~ ^.*microsoft|msft.*$ ]]; then cspNAME="Azure"
     else cspNAME="unknown" 
 fi
 #### IP range TEST

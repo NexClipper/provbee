@@ -84,3 +84,7 @@ while read beeA beeCMD ; do
     help|*) info "for NexClipper System....";;
   esac
 done < <(echo $busybeecmd)
+
+
+####################################Sample cmd
+#kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, cap: .status.capacity}'
