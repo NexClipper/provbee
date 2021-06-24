@@ -88,19 +88,20 @@ kubernetes(){
   source ${TMP_DIR}/provbee_kubernetes.sh
 
 # done
-provbee_banner
+provbee_banner " ⛵ Enjoy NexClipper! :) "
 }
 
 
 ### First Banner
 provbee_banner(){
-  print_char=" ⛵ Enjoy NexClipper! :) "
+  print_char=$1
+  if [ "$print_char" = "" ]; then print_char=" ｡･ﾟﾟ･(>д<)･ﾟﾟ･｡ ";fi 
   print_run=0
   while [ $print_run != ${#print_char} ]
   do
-          echo -en "\a\033[92m${print_char:$print_run:1}";sleep 0.1;print_run=$((print_run+1))
+    echo -en "\a\033[92m${print_char:$print_run:1}\033[0m";sleep 0.1;print_run=$((print_run+1))
   done
-  echo -e "\033[0m"
+  echo ""
 }
 
 
