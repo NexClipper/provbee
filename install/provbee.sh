@@ -2,8 +2,7 @@
 UNAMECHK=`uname`
 KUBENAMESPACE="nex-system"
 KUBESERVICEACCOUNT="nexc"
-#INST_SRC="https://raw.githubusercontent.com/NexClipper/provbee/master"
-INST_SRC="https://raw.githubusercontent.com/NexClipper/provbee/installer"
+INST_SRC="https://raw.githubusercontent.com/NexClipper/provbee/master"
 TMP_DIR=$(mktemp -d -t provbee-inst.XXXXXXXXXX)
 
 ## information
