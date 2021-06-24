@@ -2,7 +2,14 @@
 UNAMECHK=`uname`
 KUBENAMESPACE="nex-system"
 KUBESERVICEACCOUNT="nexc"
+## information
+info(){ echo -e '\033[92m[INFO]  \033[0m' "$@";}
+warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
+fatal(){ echo -e '\033[91m[ERROR] \033[0m' "$@" >&2;exit 1;}
+######################################################################################
+
 ## Provbee, Klevr-agent img ##
+envchk(){}
 if [[ $TAGPROV == "" ]]; then TAGPROV="latest" ; fi
 if [[ $TAGKLEVR == "" ]]; then TAGKLEVR="latest" ; fi
 if [[ $K_API_KEY == "" ]] || [[ $K_PLATFORM == "" ]] || [[ $K_MANAGER_URL == "" ]] || [[ $K_ZONE_ID == "" ]]; then
@@ -10,6 +17,8 @@ if [[ $K_API_KEY == "" ]] || [[ $K_PLATFORM == "" ]] || [[ $K_MANAGER_URL == "" 
     echo "bye~~"
     exit 1
 fi
+}
+envchk
 
 ### console connection check
 nexconsolechk(){
@@ -26,7 +35,7 @@ nexconsolechk
 
 
 ### System check
-######################################################################################
+systemchk(){
 if [[ $WORKDIR == "" ]]; then
     WORKDIR="$HOME/klevry"
 else
@@ -47,38 +56,34 @@ if [[ $HOSTIP == "" ]]; then
 		HOSTIP=$(ip a | grep "inet " | grep -v  "127.0.0.1" | awk -F " " '{print $2}'|awk -F "/" '{print $1}'|head -n1)
 	fi
 fi
-######################################################################################
-## information
-info(){ echo -e '\033[92m[INFO]  \033[0m' "$@";}
-warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
-fatal(){ echo -e '\033[91m[ERROR] \033[0m' "$@" >&2;exit 1;}
-######################################################################################
+}
+systemchk
 
-#########################################################################
+
 ##Linux sudo auth check
-sudopermission(){
-if SUDOCHK=$(sudo -n -v 2>&1);test -z "$SUDOCHK"; then
-    SUDO=sudo
-    if [ $(id -u) -eq 0 ]; then SUDO= ;fi
-else
-	echo "root permission required"
-	exit 1
-fi
-##OS install package mgmt check
-pkgchk
-}
-##OSX timeout command : brew install coreutils
-## package cmd Check
-pkgchk(){
-	LANG=en_US.UTF-8
-	yum > /tmp/check_pkgmgmt 2>&1
-	if [[ `(grep 'yum.*not\|not.*yum' /tmp/check_pkgmgmt)` == "" ]];then
-		centosnap
-	#else
-		#Pkg_mgmt="apt-get"
-		#apt update
-	fi
-}
+#sudopermission(){
+#if SUDOCHK=$(sudo -n -v 2>&1);test -z "$SUDOCHK"; then
+#    SUDO=sudo
+#    if [ $(id -u) -eq 0 ]; then SUDO= ;fi
+#else
+#	echo "root permission required"
+#	exit 1
+#fi
+###OS install package mgmt check
+#pkgchk
+#}
+###OSX timeout command : brew install coreutils
+### package cmd Check
+#pkgchk(){
+#	LANG=en_US.UTF-8
+#	yum > /tmp/check_pkgmgmt 2>&1
+#	if [[ `(grep 'yum.*not\|not.*yum' /tmp/check_pkgmgmt)` == "" ]];then
+#		centosnap
+#	#else
+#		#Pkg_mgmt="apt-get"
+#		#apt update
+#	fi
+#}
 #
 
 ############
@@ -92,38 +97,10 @@ if [[ $K_PLATFORM == "baremetal" ]]; then
 fi
 #########################################################################
 
-############
-# K3S INSTALL
-############
-k3s_checking(){
-if [[ $UNAMECHK == "Linux" ]]; then
-  k3s_rootchecking
-  else
-  warn ">> K3s Install - only Linux"
-  fatal ">> https://rancher.com/docs/k3s/latest/en/installation/installation-requirements/#operating-systems"
-fi  
-}
 
-k3s_rootchecking(){
-  if [ $(id -u) -eq 0 ]; then 
-    k3s_install 
-  else
-    fatal "Run as Root user"
-  fi
-}
 
-k3s_install() {
-#K3s Server Install
-curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" sh -
 
-## cluster-ip change
-if [ -f /etc/systemd/system/k3s.service ]; then
-	#sed -i 's/server \\/server --bind-address 0.0.0.0 \\/g' /etc/systemd/system/k3s.service
-	sed -i 's/server \\/server --bind-address '$HOSTIP' \\/g' /etc/systemd/system/k3s.service
-	systemctl daemon-reload
-	systemctl restart k3s
-fi
-}
+#####################################
 if [[ $K3S_SET =~ ^([yY][eE][sS]|[yY])$ ]]; then k3s_checking ; fi
 #########################################################################
 
