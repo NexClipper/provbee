@@ -114,7 +114,6 @@ provbeeok(){
     if [ $przzz == "99" ]; then echo "Status check failed. restart plz."; exit 1; fi
   done
   echo -e "\r## NexClipper system check\t" "\033[92m OK. 🍯❤️🐝                \033[0m"
-  echo -e "\a\033[92m ⛵ Enjoy NexClipper! :) \033[0m"
   echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
 }
 namespacechk
