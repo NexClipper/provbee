@@ -68,6 +68,9 @@ while read beeA beeCMD ; do
     
     ######### IP Search
     whoisip) source $beecmdpath/whoisip.sh ${beeCMD[@]} ;;
+
+    ######### Helm charts 
+    charts) source $beecmdpath/charts.sh ${beeCMD[@]} ;; 
      
     ## update busybee
     update) 
