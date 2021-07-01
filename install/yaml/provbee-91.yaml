@@ -17,6 +17,13 @@ spec:
       containers:
       - image: public.ecr.aws/nexclipper/klevr-agent:${TAGKLEVR}
         name: klevr-agent
+        resources:
+          limits:
+            cpu: 200m
+            memory: 300Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
         env:
         - name: K_API_KEY
           value: "${K_API_KEY}"
