@@ -14,9 +14,12 @@ SED_TAG_P="s/\${TAGPROV}/$TAGPROV/g"
 
 ### kubectl command RUN
 # info namespace create
-info `$KU_CMD create namespace $KUBENAMESPACE 2>&1`
+#info `$KU_CMD create namespace $KUBENAMESPACE 2>&1`
+#info `$KU_CMD -n $KUBENAMESPACE create serviceaccount $KUBESERVICEACCOUNT 2>&1`
 # info serviceaccount create
-info `$KU_CMD -n $KUBENAMESPACE create serviceaccount $KUBESERVICEACCOUNT 2>&1`
+curl -sL ${INST_SRC}/install/yaml/provbee-00.yaml \
+|sed -e $SED_NS -e $SED_SVCAC \
+|$KU_CMD apply -f - 
 
 #info '### sample ssh secret'
 info `$KU_CMD -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config 2>&1`
@@ -31,13 +34,15 @@ CLUSTERNAME=$($KU_CMD config get-contexts $($KU_CMD config current-context) | aw
 echo "CLUSTERNAME : $CLUSTERNAME"
 SVRCLUSTER=$($KU_CMD config view -o jsonpath='{.clusters[?(@.name == "'$CLUSTERNAME'")].cluster.server}')
 echo "SVRCLUSTER : $SVRCLUSTER"
+
 USERTOKENNAME=$($KU_CMD get serviceaccount $KUBESERVICEACCOUNT --namespace $KUBENAMESPACE -o jsonpath='{.secrets[*].name}')
 echo "USERTOKENNAME : $USERTOKENNAME"
+
 $KU_CMD get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.ca\.crt}'|base64 -d > $WORKDIR/temp.zzz 2>&1
+cat $WORKDIR/temp.zzz
+
 TOKEN=$($KU_CMD get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.token}'|base64 -d)
 echo "TOKEN : $TOKEN"
-#TES
-cat $WORKDIR/temp.zzz
 
 $KU_CMD config set-cluster "${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
