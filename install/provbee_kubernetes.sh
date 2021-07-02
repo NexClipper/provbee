@@ -14,41 +14,31 @@ SED_TAG_P="s/\${TAGPROV}/$TAGPROV/g"
 
 ### kubectl command RUN
 # info namespace create
-#info `$KU_CMD create namespace $KUBENAMESPACE 2>&1`
-#info `$KU_CMD -n $KUBENAMESPACE create serviceaccount $KUBESERVICEACCOUNT 2>&1`
+info `$KU_CMD create namespace $KUBENAMESPACE 2>&1`
 # info serviceaccount create
-curl -sL ${INST_SRC}/install/yaml/provbee-00.yaml \
-|sed -e $SED_NS -e $SED_SVCAC \
-|$KU_CMD apply -f - 
+info `$KU_CMD -n $KUBENAMESPACE create serviceaccount $KUBESERVICEACCOUNT 2>&1`
 
 #info '### sample ssh secret'
 info `$KU_CMD -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-ssh-key --from-file=pubkey=$WORKDIR/.ssh/id_rsa.pub --from-file=prikey=$WORKDIR/.ssh/id_rsa --from-file=conf=$WORKDIR/.ssh/config 2>&1`
 
 #info '### Secret??? create'
-curl -sL ${INST_SRC}/install/yaml/provbee-01.yaml \
+info `curl -sL ${INST_SRC}/install/yaml/provbee-01.yaml \
 |sed -e $SED_NS -e $SED_SVCAC -e $SED_K_API -e $SED_K_ZID \
-|$KU_CMD apply -f - 
+|$KU_CMD apply -f - `
 
 #info kubeconfig gen
 CLUSTERNAME=$($KU_CMD config get-contexts $($KU_CMD config current-context) | awk '{print $3}' | grep -v CLUSTER)
-echo "CLUSTERNAME : $CLUSTERNAME"
 SVRCLUSTER=$($KU_CMD config view -o jsonpath='{.clusters[?(@.name == "'$CLUSTERNAME'")].cluster.server}')
-echo "SVRCLUSTER : $SVRCLUSTER"
-
+sleep 2
 USERTOKENNAME=$($KU_CMD get serviceaccount $KUBESERVICEACCOUNT --namespace $KUBENAMESPACE -o jsonpath='{.secrets[*].name}')
-echo "USERTOKENNAME : $USERTOKENNAME"
-
 $KU_CMD get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.ca\.crt}'|base64 -d > $WORKDIR/temp.zzz 2>&1
-cat $WORKDIR/temp.zzz
-
 TOKEN=$($KU_CMD get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.token}'|base64 -d)
-echo "TOKEN : $TOKEN"
 
-$KU_CMD config set-cluster "${CLUSTERNAME}" \
+info `$KU_CMD config set-cluster "${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
     --server="${SVRCLUSTER}" \
     --certificate-authority="$WORKDIR/temp.zzz" \
-    --embed-certs=true
+    --embed-certs=true `
 rm -rf $WORKDIR/temp.zzz
 
 $KU_CMD config set-credentials \
