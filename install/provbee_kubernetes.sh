@@ -1,7 +1,7 @@
 #!/bin/bash
 KUBECONFIG_FILE="$WORKDIR/kube-config-nexc"
 
-
+echo "$KU_CMD / $WORKDIR / $UNAMECHK / $KUBENAMESPACE / $KUBESERVICEACCOUNT / $KUBECONFIG_FILE "
 ### sed
 SED_NS="s/\${KUBENAMESPACE}/$KUBENAMESPACE/g"
 SED_SVCAC="s/\${KUBESERVICEACCOUNT}/$KUBESERVICEACCOUNT/g"
@@ -33,6 +33,9 @@ SVRCLUSTER=$($KU_CMD config view -o jsonpath='{.clusters[?(@.name == "'$CLUSTERN
 USERTOKENNAME=$($KU_CMD get serviceaccount $KUBESERVICEACCOUNT --namespace $KUBENAMESPACE -o jsonpath='{.secrets[*].name}')
 $KU_CMD get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.ca\.crt}'|base64 -d > $WORKDIR/temp.zzz 2>&1
 TOKEN=$($KU_CMD get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.token}'|base64 -d)
+
+#TES
+cat $WORKDIR/temp.zzz
 
 $KU_CMD config set-cluster "${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
