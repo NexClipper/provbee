@@ -28,7 +28,9 @@ curl -sL ${INST_SRC}/install/yaml/provbee-01.yaml \
 
 #info kubeconfig gen
 CLUSTERNAME=$($KU_CMD config get-contexts $($KU_CMD config current-context) | awk '{print $3}' | grep -v CLUSTER)
+echo "CLUSTERNAME : $CLUSTERNAME"
 SVRCLUSTER=$($KU_CMD config view -o jsonpath='{.clusters[?(@.name == "'$CLUSTERNAME'")].cluster.server}')
+echo "SVRCLUSTER : $SVRCLUSTER"
 USERTOKENNAME=$($KU_CMD get serviceaccount $KUBESERVICEACCOUNT --namespace $KUBENAMESPACE -o jsonpath='{.secrets[*].name}')
 echo "USERTOKENNAME : $USERTOKENNAME"
 $KU_CMD get secret $USERTOKENNAME --namespace $KUBENAMESPACE -o jsonpath='{.data.ca\.crt}'|base64 -d > $WORKDIR/temp.zzz 2>&1
