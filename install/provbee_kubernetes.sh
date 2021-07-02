@@ -41,33 +41,34 @@ info `$KU_CMD config set-cluster "${CLUSTERNAME}" \
     --embed-certs=true `
 rm -rf $WORKDIR/temp.zzz
 
-$KU_CMD config set-credentials \
+info `$KU_CMD config set-credentials \
     "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
-    --token="${TOKEN}"
+    --token="${TOKEN}" `
 
-$KU_CMD config set-context \
+info `$KU_CMD config set-context \
     "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
     --kubeconfig="${KUBECONFIG_FILE}" \
     --cluster="${CLUSTERNAME}" \
     --user="${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
-    --namespace="${KUBENAMESPACE}"
-$KU_CMD config use-context \
+    --namespace="${KUBENAMESPACE}" `
+
+info `$KU_CMD config use-context \
     "${KUBESERVICEACCOUNT}-${KUBENAMESPACE}-${CLUSTERNAME}" \
-    --kubeconfig="${KUBECONFIG_FILE}"
+    --kubeconfig="${KUBECONFIG_FILE}" `
 
 #kube config file secert
-$KU_CMD -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-kubeconfig --from-file=kubeconfig=$KUBECONFIG_FILE
+info `$KU_CMD -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-kubeconfig --from-file=kubeconfig=$KUBECONFIG_FILE`
 
 ############# Provbee-Deployment & Service
-curl -sL ${INST_SRC}/install/yaml/provbee-90.yaml \
+info `curl -sL ${INST_SRC}/install/yaml/provbee-90.yaml \
 |sed -e $SED_NS -e $SED_SVCAC -e $SED_TAG_P \
-|$KU_CMD apply -f - 
+|$KU_CMD apply -f - `
 
 ########## Klevr-agent Deamonset
-curl -sL ${INST_SRC}/install/yaml/provbee-91.yaml \
+info `curl -sL ${INST_SRC}/install/yaml/provbee-91.yaml \
 |sed -e $SED_NS -e $SED_SVCAC -e $SED_TAG_K -e $SED_K_API -e $SED_K_PLT -e $SED_K_MURL -e $SED_K_ZID \
-|$KU_CMD apply -f - 
+|$KU_CMD apply -f - `
 
 ########## Webstork
 #curl -sL ${INST_SRC}/install/yaml/webstork.yaml \
