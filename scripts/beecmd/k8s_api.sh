@@ -245,8 +245,9 @@ k8s_status
 metricark_api(){
 local BEE_INFO="metricark"
 local TYPE_JSON="base64" 
-local TOTAL_JSON=$(curl -sL -X GET --header 'Accept: application/json' 'http://metricark-api.nex-system.svc.cluster.local:9000/v1/cluster/1/query/key/kubernetes/field/services'|base64 | tr '\n' ' ' | sed -e 's/ //g')
 local STATUS_JSON="OK"
+local TOTAL_JSON=$(curl -sL -X GET --header 'Accept: application/json' 'http://metricark-api.nex-system.svc.cluster.local:9000/v1/cluster/1/query/key/kubernetes/field/services'|base64 | tr '\n' ' ' | sed -e 's/ //g')
+if [ "$TOTAL_JSON" = "" ]; then local STATUS_JSON="FAIL";fi
 XXX=",{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beeinfo\":\"${BEE_INFO}\",\"beetype\":\"${TYPE_JSON}\",\"data\":[\""${TOTAL_JSON}"\"]}"
 ##### TEST RUN
 #echo ${XXX#?}|jq 
@@ -264,7 +265,7 @@ elif [[ $TYPE_JSON == "base64" ]] || [[ $TYPE_JSON == "string" ]]; then
 else
   BEE_JSON="Bee!"
 fi
-echo $BEE_JSON |jq
+echo $BEE_JSON
 }
 beejson
 
