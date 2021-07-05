@@ -224,10 +224,10 @@ k8s_status(){
       stats_capacity
       stats_used
       stats_usage
-      wowjson="{\"k8sapi\":\"provbee-test\",\"data\":{\"lookup\":[${next_json%?}]}}"
-      #wowjson="{\"k8s_status\":[${next_json%?}]}"
+      #wowjson="{\"k8sapi\":\"provbee-test\",\"data\":{\"lookup\":[${next_json%?}]}}"
+      wowjson="{\"k8s_status\":[${next_json%?}]}"
 ##### TEST RUN
-      test_json="{\"k8s_status\":[${next_json%?}]}"
+#      test_json="{\"k8s_status\":[${next_json%?}]}"
 #     echo $test_json |jq
 ##### TEST END
         TOTAL_JSON=$(echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/ //g') 
