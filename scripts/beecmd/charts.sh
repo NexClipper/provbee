@@ -10,13 +10,13 @@ chartscmd(){
   install) 
     ## install value file decoding
     sed -i 's/\\n//g' /tmp/${beeCMD[3]}.base64; base64 -d /tmp/${beeCMD[3]}.base64 > /tmp/${beeCMD[3]}.yaml; filepath="-f /tmp/${beeCMD[3]}.yaml"
-    helm_repo_add=`helm repo add ${beeCMD[1]} $NEX_CHARTS 2>&1`
+    helm_repo_add=`helm repo add $runbeeNS $NEX_CHARTS 2>&1`
     helm_repo_up=`helm repo update 2>&1`
-    helm_inst=`helm install ${beeCMD[2]} -n ${beeCMD[1]} ${filepath} ${beeCMD[4]} 2>&1`
+    helm_inst=`helm install ${beeCMD[2]} -n $runbeeNS ${filepath} ${beeCMD[4]} 2>&1`
     if [ "$(echo $helm_inst | egrep "^Error")" = "" ]; then 
       TYPE_JSON="json"
       BEE_INFO="Helm ${beeCMD[0]} info : ${beeCMD[2]}"
-      TOTAL_JSON=`helm list -n ${beeCMD[1]} --filter "^${beeCMD[2]}$" -o json 2>&1`
+      TOTAL_JSON=`helm list -n $runbeeNS --filter "^${beeCMD[2]}$" -o json 2>&1`
       beejson
     else
       STATUS_JSON="FAIL"
@@ -29,7 +29,7 @@ chartscmd(){
   update) echo "";;
   uninstall) 
     TYPE_JSON="string"
-    helm_uninst=`helm uninstall ${beeCMD[2]} -n ${beeCMD[1]} 2>&1`
+    helm_uninst=`helm uninstall ${beeCMD[2]} -n $runbeeNS 2>&1`
     if [ "$(echo $helm_uninst | egrep "^Error")" = "" ]; then
       BEE_INFO="Helm ${beeCMD[0]} info : ${beeCMD[2]}"
       TOTAL_JSON="${beeCMD[2]} uninstalled"
@@ -44,7 +44,7 @@ chartscmd(){
   list)
     TYPE_JSON="json"
     BEE_INFO="Helm ${beeCMD[0]} info : ${beeCMD[2]}"
-    TOTAL_JSON=`helm list -n ${beeCMD[1]} --filter "^${beeCMD[2]}$" -o json 2>&1`
+    TOTAL_JSON=`helm list -n $runbeeNS --filter "^${beeCMD[2]}$" -o json 2>&1`
     if [ "$(echo $TOTAL_JSON | egrep -v "\[\]")" = "" ]; then STATUS_JSON="FAIL";fi 
     beejson 
   ;;

@@ -4,6 +4,7 @@ KUBENAMESPACE="nex-system"
 KUBESERVICEACCOUNT="nexc"
 INST_SRC="https://raw.githubusercontent.com/NexClipper/provbee/master"
 TMP_DIR=$(mktemp -d -t provbee-inst.XXXXXXXXXX)
+PATH=/usr/local/bin:$PATH
 
 ## information
 info(){ echo -e '\033[92m[INFO]  \033[0m' "$@";}
@@ -14,8 +15,8 @@ fatal(){ echo -e '\033[91m[ERROR] \033[0m' "$@" >&2;exit 1;}
 ### default check
 default_chk(){
 # Provbee, Klevr-agent tag check
-  if [[ $TAGPROV == "" ]]; then TAGPROV="latest" ; fi
-  if [[ $TAGKLEVR == "" ]]; then TAGKLEVR="latest" ; fi
+  if [[ $TAGPROV == "" ]]; then TAGPROV="latest" ; else info "Provbee Image Tag : $TAGPROV ";fi
+  if [[ $TAGKLEVR == "" ]]; then TAGKLEVR="latest" ; else info "Klevr Image Tag : $TAGKLEVR ";fi
 
 # Klevr Value check
   if [[ $K_API_KEY == "" ]] || [[ $K_PLATFORM == "" ]] || [[ $K_MANAGER_URL == "" ]] || [[ $K_ZONE_ID == "" ]]; then
@@ -70,13 +71,14 @@ k3s_install(){
   curl -sL ${INST_SRC}/install/provbee_k3s.sh -o ${TMP_DIR}/provbee_k3s.sh
   chmod +x ${TMP_DIR}/provbee_k3s.sh
   source ${TMP_DIR}/provbee_k3s.sh
+  KU_CMD=$(command -v kubectl)
+  if [ "$KU_CMD" = "" ]; then fatal "K3s not installed, Reinstall k3s plz."; fi
   info "K3s checked"
 }
 
 
 ### KUBERNETES
 kubernetes(){
-  PATH=/usr/local/bin:$PATH
   KU_CMD=$(command -v kubectl)
   if [ "$KU_CMD" = "" ]; then fatal "Kubectl run failed!, Your command server check plz."; fi
   if [ "$($KU_CMD version --short | grep Server | wc -l)" -eq 0 ]; then warn "kubernetes cluster check plz."; fatal "chkeck : \$cat ~/.kube/config"; fi 
