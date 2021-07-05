@@ -133,14 +133,14 @@ k8s_status(){
     local query_name="status_prometheus"
     local query_value=`curl -sL -G -o /dev/null -w "%{http_code}"  $promsvr_DNS/-/healthy`
     if [[ $query_value == "" ]]; then query_value="\""\"; fi
-    local query_json="{\"name\":\"$query_name\",\"type\":\"string\",\"values\":$query_value},"
+    local query_json="{\"name\":\"$query_name\",\"type\":\"string\",\"values\":\"$query_value\"},"
     next_json="${next_json}${query_json}" 
   }
   status_alertmanager(){
     local query_name="status_alertmanager" 
     local query_value=`curl -sL -G -o /dev/null -w "%{http_code}" $alertsvr_DNS/-/healthy`
     if [[ $query_value == "" ]]; then query_value="\""\"; fi
-    local query_json="{\"name\":\"$query_name\",\"type\":\"string\",\"values\":$query_value},"
+    local query_json="{\"name\":\"$query_name\",\"type\":\"string\",\"values\":\"$query_value\"},"
     next_json="${next_json}${query_json}" 
   }
   status_cluster_api(){
@@ -224,12 +224,7 @@ k8s_status(){
       stats_capacity
       stats_used
       stats_usage
-      #wowjson="{\"k8sapi\":\"provbee-test\",\"data\":{\"lookup\":[${next_json%?}]}}"
       wowjson="{\"k8s_status\":[${next_json%?}]}"
-##### TEST RUN
-#      test_json="{\"k8s_status\":[${next_json%?}]}"
-#     echo $test_json |jq
-##### TEST END
         TOTAL_JSON=$(echo $wowjson |base64 | tr '\n' ' ' | sed -e 's/ //g') 
         TYPE_JSON="base64"
         BEE_INFO="k8s_status"
@@ -249,8 +244,6 @@ local STATUS_JSON="OK"
 local TOTAL_JSON=$(curl -sL -X GET --header 'Accept: application/json' 'http://metricark-api.nex-system.svc.cluster.local:9000/v1/cluster/1/query/key/kubernetes/field/services'|base64 | tr '\n' ' ' | sed -e 's/ //g')
 if [ "$TOTAL_JSON" = "" ]; then local STATUS_JSON="FAIL";fi
 XXX=",{\"beecmd\":\"$beeA\",\"cmdstatus\":\""${STATUS_JSON}"\",\"beeinfo\":\"${BEE_INFO}\",\"beetype\":\"${TYPE_JSON}\",\"data\":[\""${TOTAL_JSON}"\"]}"
-##### TEST RUN
-#echo ${XXX#?}|jq 
 }
 metricark_api
 

@@ -1,8 +1,5 @@
 #!/bin/bash
 
-## promql query
-### 
-
 ## API list
 #############################################
 global_api(){
