@@ -20,18 +20,12 @@ k3s_rootchecking(){
   fi
 }
 
+#K3s Server Install scripts
 k3s_install() {
-#K3s Server Install
-curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" sh -
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 " sh -s - server --bind-address $HOSTIP
+#--datastore-endpoint "mysql://nex:nexcloud@tcp(db.zxz.kr:3306)/k3s"
 PATH=/usr/local/bin:$PATH
 KU_CMD=$(command -v kubectl)
-## cluster-ip change
-if [ -f /etc/systemd/system/k3s.service ]; then
-	#sed -i 's/server \\/server --bind-address 0.0.0.0 \\/g' /etc/systemd/system/k3s.service
-	sed -i 's/server \\/server --bind-address '$HOSTIP' \\/g' /etc/systemd/system/k3s.service
-	systemctl daemon-reload
-	systemctl restart k3s
-fi
 }
 
 k3s_checking
