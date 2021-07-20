@@ -75,7 +75,9 @@ if [[ $HELMVERSION != "" ]]; then helmdownload; fi
 
 
 #if [ -f /data/klevry/kube-config ]; then cp -Rfvp /data/klevry/kube-config ~/.kube/config; fi
-
+cp /data/.provbee/configmap_authkey /root/.ssh/authorized_keys
+chmod 400 /root/.ssh/authorized_keys
+echo "Welcome to Provbee" > /etc/motd
 ##ssh start
 /etc/init.d/sshd --dry-run start
 /etc/init.d/sshd start

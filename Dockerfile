@@ -40,14 +40,14 @@ COPY entrypoint.sh /entrypoint.sh
 COPY ./scripts/provider.sh /usr/bin/tfprovider
 COPY ./scripts/beecmd /usr/bin/beecmd
 COPY ./scripts/busybee.sh /usr/bin/busybee
-COPY ./scripts/get_pubkey.sh /usr/local/bin/get_pubkey.sh
+#COPY ./scripts/get_pubkey.sh /usr/local/bin/get_pubkey.sh
 
 # ssh setting
 RUN echo "root:dkdhajfldkvmek!" | chpasswd
 RUN mv /etc/ssh/sshd_config /etc/ssh/sshd_config.ori; \
-sed -e "s|[#]*AuthorizedKeysCommand none|AuthorizedKeysCommand /usr/local/bin/get_pubkey.sh|g" \
-    -e "s|[#]*AuthorizedKeysCommandUser nobody|AuthorizedKeysCommandUser nobody|g" \
-    -e "s|[#]*PermitRootLogin prohibit-password|PermitRootLogin yes|g" \
+#sed -e "s|[#]*AuthorizedKeysCommand none|AuthorizedKeysCommand /usr/local/bin/get_pubkey.sh|g" \
+#    -e "s|[#]*AuthorizedKeysCommandUser nobody|AuthorizedKeysCommandUser nobody|g" \
+sed -e "s|[#]*PermitRootLogin prohibit-password|PermitRootLogin yes|g" \
     -e "s|[#]*UsePAM yes|UsePAM no|g" \
     -e "s|[#]*PermitUserEnvironment no|PermitUserEnvironment no|g" \
     -e "s|[#]*PubkeyAuthentication yes|PubkeyAuthentication yes|g" \
