@@ -14,7 +14,7 @@ chartscmd(){
     sed -i 's/\\n//g' /tmp/${beeCMD[3]}.base64; base64 -d /tmp/${beeCMD[3]}.base64 > /tmp/${beeCMD[3]}.yaml; filepath="-f /tmp/${beeCMD[3]}.yaml"
     helm_repo_add=`helm repo add $runbeeNS $NEX_CHARTS 2>&1`
     helm_repo_up=`helm repo update 2>&1`
-    helm_inst=`helm install ${beeCMD[2]} -n $runbeeNS ${filepath} ${beeCMD[4]} 2>&1`
+    helm_inst=`helm install ${beeCMD[2]} -n $runbeeNS ${filepath} nexclipper/${beeCMD[4]} 2>&1`
     if [ "$(echo $helm_inst | egrep "^Error")" = "" ]; then 
       TOTAL_JSON=`helm list -n $runbeeNS --filter "^${beeCMD[2]}$" -o json 2>&1`
       beejson
