@@ -20,7 +20,7 @@ chartscmd(){
       beejson
     else
       STATUS_JSON="FAIL"
-      TOTAL_JSON="[{\"name\":\"${beeCMD[2]}\",\"namespace\":\"$runbeeNS\",\"message\":\"$(echo $helm_inst)\"}]"
+      TOTAL_JSON="[{\"name\":\"${beeCMD[2]}\",\"namespace\":\"$runbeeNS\",\"message\":\"$(echo $helm_inst|sed s/\"//g)\"}]"
       beejson
     fi
   ;;
@@ -34,7 +34,7 @@ chartscmd(){
       beejson
     else
       STATUS_JSON="FAIL"
-      TOTAL_JSON="[{\"name\":\"${beeCMD[2]}\",\"namespace\":\"$runbeeNS\",\"message\":\"$(echo $helm_uninst)\"}]"
+      TOTAL_JSON="[{\"name\":\"${beeCMD[2]}\",\"namespace\":\"$runbeeNS\",\"message\":\"$(echo $helm_uninst|sed s/\"//g)\"}]"
       beejson
     fi
   ;;
