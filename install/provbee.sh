@@ -12,6 +12,21 @@ warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
 fatal(){ echo -e '\033[91m[ERROR] \033[0m' "$@" >&2;exit 1;}
 ######################################################################################
 
+### CPU Architecture check
+cputype(){
+  if [ -z "$ARCH" ]; then ARCH=$(uname -m);fi
+  case $ARCH in
+    amd64|x86_64)
+      default_chk
+      ;;
+    *)
+      warn "Unsupported architecture $ARCH"
+      fatal "Currently not supported"
+      ;;
+    esac
+}
+
+
 ### default check
 default_chk(){
 # Provbee, Klevr-agent tag check
@@ -31,7 +46,7 @@ default_chk(){
   	fatal "\033[91m$K_MANAGER_URL\033[0m Not connection. check your network"
   fi
 }
-default_chk
+cputype
 
 
 ### System check
