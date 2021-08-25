@@ -17,6 +17,7 @@ zoneID_CHK(){
 goodbye_provbee(){
 ns_list=($KUBENAMESPACE $NEXNS)
 ##tobs uninstall
+echo "tobs uninstall"
 kubectl exec -it -n $KUBENAMESPACE deployment/provbee -- busybee tobs uninstall $NEXNS 2>/dev/null
 for (( i = 0 ; i < ${#ns_list[@]}; i++ )); do
   kubectl get svc -n ${ns_list[$i]}|grep -v "NAME"|awk '{print $1}' | xargs kubectl delete -n ${ns_list[$i]} --force svc 2>/dev/null
