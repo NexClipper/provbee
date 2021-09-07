@@ -15,7 +15,7 @@ spec:
         app.kubernetes.io/name: klevr-agent
     spec:
       containers:
-      - image: public.ecr.aws/nexclipper/klevr-agent:${TAGKLEVR}
+      - image: ${TAGREPO}/nexclipper/klevr-agent:${TAGKLEVR}
         name: klevr-agent
         resources:
           limits:

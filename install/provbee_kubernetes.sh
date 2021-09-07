@@ -8,6 +8,7 @@ SED_K_API="s/\${K_API_KEY}/$K_API_KEY/g"
 SED_K_PLT="s/\${K_PLATFORM}/$K_PLATFORM/g"
 SED_K_MURL="s#\${K_MANAGER_URL}#$K_MANAGER_URL#g"
 SED_K_ZID="s/\${K_ZONE_ID}/$K_ZONE_ID/g"
+SED_TAG_REPO="s/\${TAGREPO}/$TAGREPO/g"
 SED_TAG_K="s/\${TAGKLEVR}/$TAGKLEVR/g"
 SED_TAG_P="s/\${TAGPROV}/$TAGPROV/g"
 
@@ -62,12 +63,12 @@ info `$KU_CMD -n $KUBENAMESPACE create secret generic $KUBESERVICEACCOUNT-kubeco
 
 ############# Provbee-Deployment & Service
 info `curl -sL ${INST_SRC}/install/yaml/provbee-90.yaml \
-|sed -e $SED_NS -e $SED_SVCAC -e $SED_TAG_P \
+|sed -e $SED_NS -e $SED_SVCAC -e $SED_TAG_P -e $SED_TAG_REPO \
 |$KU_CMD apply -f - `
 
 ########## Klevr-agent Deamonset
 info `curl -sL ${INST_SRC}/install/yaml/provbee-91.yaml \
-|sed -e $SED_NS -e $SED_SVCAC -e $SED_TAG_K -e $SED_K_API -e $SED_K_PLT -e $SED_K_MURL -e $SED_K_ZID \
+|sed -e $SED_NS -e $SED_SVCAC -e $SED_TAG_K -e $SED_TAG_REPO -e $SED_K_API -e $SED_K_PLT -e $SED_K_MURL -e $SED_K_ZID \
 |$KU_CMD apply -f - `
 
 ########## Webstork
@@ -88,7 +89,7 @@ namespacechk(){
           echo -n -e "\r## Namespace \"$KUBENAMESPACE\" check\t" "\033[91m $(seq -f "%02g" $nszzz|tail -n1)/99 wait...\033[0m"
           namespchk=$($KU_CMD get ns $KUBENAMESPACE 2>/dev/null |grep -v NAME| wc -l)
           sleep 3
-          if [ $nszzz == "99" ]; then echo "failed. restart plz."; exit 1; fi
+          if [ $nszzz == "99" ]; then echo "failed. restart plz."; kubectl get -n $KUBENAMESPACE pod ;exit 1; fi
   done
   echo -e "\r## Namespace \"$KUBENAMESPACE\" check\t" "\033[92m OK.            \033[0m"
   provbeeok

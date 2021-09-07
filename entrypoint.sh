@@ -5,7 +5,7 @@ warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
 fatal(){ echo -e '\033[91m[ERROR] \033[0m' "$@" >&2;exit 1;}
 echo $(date "+%Y%m%d_%H%M%S") "|" "== Provbee start ==" >> /tmp/busybee.log
 ### Extract
-tar zxvfp /tmp/zzz/provbee_tools.tar.gz  -C /usr/bin/
+#tar zxvfp /tmp/zzz/provbee_tools.tar.gz  -C /usr/bin/
 #####################################################
 #Terraform Download
 terraformdownload(){

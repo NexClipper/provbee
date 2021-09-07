@@ -31,7 +31,7 @@ spec:
       serviceAccountName: ${KUBESERVICEACCOUNT}
       containers:
       - name: provbee
-        image: public.ecr.aws/nexclipper/provbee:${TAGPROV}
+        image: ${TAGREPO}/nexclipper/provbee:${TAGPROV}
         command: ['bash', '-c', '/entrypoint.sh']
 #        resources:
 #          requests:

@@ -7,7 +7,7 @@ TMP_DIR=$(mktemp -d -t provbee-inst.XXXXXXXXXX)
 PATH=/usr/local/bin:$PATH
 
 ## information
-info(){ echo -e '\033[92m[INFO]  \033[0m' "$@";}
+info(){ echo -e '\033[92m[INFO] \033[0m' "$@";}
 warn(){ echo -e '\033[93m[WARN] \033[0m' "$@" >&2;}
 fatal(){ echo -e '\033[91m[ERROR] \033[0m' "$@" >&2;exit 1;}
 ######################################################################################
@@ -30,6 +30,7 @@ cputype(){
 ### default check
 default_chk(){
 # Provbee, Klevr-agent tag check
+  if [[ $TAGREPO == "" ]]; then TAGREPO="public.ecr.aws" ; else info "Image Repo : $TAGREPO ";fi
   if [[ $TAGPROV == "" ]]; then TAGPROV="latest" ; else info "Provbee Image Tag : $TAGPROV ";fi
   if [[ $TAGKLEVR == "" ]]; then TAGKLEVR="latest" ; else info "Klevr Image Tag : $TAGKLEVR ";fi
 
