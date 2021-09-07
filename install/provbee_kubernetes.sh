@@ -89,7 +89,7 @@ namespacechk(){
           echo -n -e "\r## Namespace \"$KUBENAMESPACE\" check\t" "\033[91m $(seq -f "%02g" $nszzz|tail -n1)/99 wait...\033[0m"
           namespchk=$($KU_CMD get ns $KUBENAMESPACE 2>/dev/null |grep -v NAME| wc -l)
           sleep 3
-          if [ $nszzz == "99" ]; then echo "failed. restart plz."; kubectl get -n $KUBENAMESPACE pod ;exit 1; fi
+          if [ $nszzz == "99" ]; then echo "failed. restart plz."; exit 1; fi
   done
   echo -e "\r## Namespace \"$KUBENAMESPACE\" check\t" "\033[92m OK.            \033[0m"
   provbeeok
@@ -113,7 +113,7 @@ provbeeok(){
     fi
     echo -n -e "\r## $provb / $klevra check  \t" "\033[91m $(seq -f "%02g" $przzz|tail -n1)/99 wait...🐝\033[0m"
     sleep 3
-    if [ $przzz == "99" ]; then echo "Status check failed. restart plz."; exit 1; fi
+    if [ $przzz == "99" ]; then echo ""; echo "Status check failed. restart plz."; kubectl get -n $KUBENAMESPACE pod ;exit 1; fi
   done
   echo -e "\r## NexClipper system check\t" "\033[92m OK. 🍯❤️🐝                \033[0m"
   echo ":+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:+:"
