@@ -29,7 +29,7 @@ echo "Helm Download"
 #rm -rf helm*.tar.gz linux-$CPUARCH
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
 chmod +x get_helm.sh
-./get_helm.sh && rm -rf ./get_helm.sh 
+./get_helm.sh && rm -rf ./get_helm.sh && mv /usr/local/bin/helm $toolfile 
 
 ## tobs Download ##
 #RUN curl -LO https://github.com/`curl -sL https://github.com/timescale/tobs/releases | egrep -v 'rc|beta|v2'| grep Linux | grep $CPUARCH_TOBS | head -n1 | awk -F"\"" '{print $2}'`  && \
