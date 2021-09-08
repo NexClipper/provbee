@@ -1,6 +1,6 @@
 #!/bin/bash
 chartslog="/tmp/busybee_charts_$(date "+%Y%m%d_%H%M%S").log"
-NEX_CHART="https://nexclipper.github.io/helm-charts/"
+NEX_CHARTS="https://nexclipper.github.io/helm-charts/"
 
 #busybee charts install(0)  $GET_NS(1)  $GET_APP(2) $GET_TMP(3) $GET_TYPE(4)
 #busybee charts install     nexclipper  mysql Nex_charts.ddddd mysql-exporter              

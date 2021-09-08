@@ -23,10 +23,13 @@ chmod +x kubectl && mv kubectl $toolfile
 
 ## Helm v3 Download ##
 echo "Helm Download"
-curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v2'|grep linux-$CPUARCH |head -n1|awk -F"\"" '{print $2}'` && \
-tar zxfp helm*.tar.gz && \
-chmod +x linux-$CPUARCH/helm && mv linux-$CPUARCH/helm $toolfile && \
-rm -rf helm*.tar.gz linux-$CPUARCH
+#curl -LO `curl -sL https://github.com/helm/helm/releases|egrep -v 'rc|beta|v2'|grep linux-$CPUARCH |head -n1|awk -F"\"" '{print $2}'` && \
+#tar zxfp helm*.tar.gz && \
+#chmod +x linux-$CPUARCH/helm && mv linux-$CPUARCH/helm $toolfile && \
+#rm -rf helm*.tar.gz linux-$CPUARCH
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+chmod +x get_helm.sh
+./get_helm.sh && rm -rf ./get_helm.sh 
 
 ## tobs Download ##
 #RUN curl -LO https://github.com/`curl -sL https://github.com/timescale/tobs/releases | egrep -v 'rc|beta|v2'| grep Linux | grep $CPUARCH_TOBS | head -n1 | awk -F"\"" '{print $2}'`  && \
