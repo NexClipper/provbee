@@ -3,7 +3,9 @@ chartslog="/tmp/busybee_charts_$(date "+%Y%m%d_%H%M%S").log"
 NEX_CHARTS="https://nexclipper.github.io/helm-charts/"
 
 #busybee charts install(0)  $GET_NS(1)  $GET_APP(2) $GET_TMP(3) $GET_TYPE(4)
-#busybee charts install     nexclipper  mysql Nex_charts.ddddd mysql-exporter              
+#busybee charts install     nexclipper  mysql Nex_charts.ddddd mysql-exporter
+## temp. for other helm repo 
+reponame="nexclipper"
 #############################################
 chartscmd(){
   case ${beeCMD[0]} in
@@ -12,15 +14,18 @@ chartscmd(){
     BEE_INFO="${beeCMD[0]}"
     ## install value file decoding
     sed -i 's/\\n//g' /tmp/${beeCMD[3]}.base64; base64 -d /tmp/${beeCMD[3]}.base64 > /tmp/${beeCMD[3]}.yaml; filepath="-f /tmp/${beeCMD[3]}.yaml"
-    helm_repo_add=`helm repo add $runbeeNS $NEX_CHARTS 2>&1`
+    ## Repo name overlap check
+    #helm_repo_name=`helm repo list -o json|jq -r '.[].name'|grep ^$reponame$ 2>&1`
+    helm_repo_add=`helm repo add $reponame $NEX_CHARTS 2>&1`
+    if [ "$(echo $helm_repo_add | egrep "^Error")" != "" ]; then STATUS_JSON="FAIL";TOTAL_JSON="[{\"name\":\"${beeCMD[2]}\",\"namespace\":\"$runbeeNS\",\"message\":\"$(echo $helm_repo_add|sed s/\"//g)\"}]";beejson;fi 
     helm_repo_up=`helm repo update 2>&1`
-    helm_inst=`helm install ${beeCMD[2]} -n $runbeeNS ${filepath} nexclipper/${beeCMD[4]} 2>&1`
+    helm_inst=`helm install ${beeCMD[2]} -n $runbeeNS ${filepath} $reponame/${beeCMD[4]} 2>&1`
     if [ "$(echo $helm_inst | egrep "^Error")" = "" ]; then 
       TOTAL_JSON=`helm list -n $runbeeNS --filter "^${beeCMD[2]}$" -o json 2>&1`
       beejson
     else
       STATUS_JSON="FAIL"
-      TOTAL_JSON="[{\"name\":\"${beeCMD[2]}\",\"namespace\":\"$runbeeNS\",\"message\":\"$(echo $helm_inst|sed s/\"//g)\"}]"
+      TOTAL_JSON="[{\"name\":\"${beeCMD[2]}\",\"namespace\":\"$runbeeNS\",\"message\":\"$(echo "> Helm repository add msg : \n"$helm_repo_add|sed s/\"//g)\r\n$(echo "> Helm repository update msg : \n"$helm_repo_up|sed s/\"//g)\r\n$(echo "> Helm install msg : \n"$helm_inst|sed s/\"//g)\"}]"
       beejson
     fi
   ;;
