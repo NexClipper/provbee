@@ -71,7 +71,10 @@ while read beeA beeCMD ; do
 
     ######### Helm charts 
     charts) source $beecmdpath/charts.sh ${beeCMD[@]} ;; 
-     
+
+    ######### MetricArk Info 
+    metricark) source $beecmdpath/metricark.sh ${beeCMD[@]} ;; 
+
     ## update busybee
     update) 
     curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/scripts/busybee.sh -o /tmp/busybee
