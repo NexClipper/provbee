@@ -47,7 +47,7 @@ metricark_info(){
     pods) query_info;echo $query_json ;;
     help) fatal "Help me~~~~";;
     ${beeCMD[0]}) ${beeCMD[0]} > /dev/null 2>&1
-      if [ "$(echo $next_json 2>&1 /dev/null |grep name)" != "" ];then echo ${next_json%?};exit 0;else STATUS_JSON="FAIL";TOTAL_JSON="Not Found query name : ${beeCMD[0]}";fi
+      if [ "$(echo $next_json 2>&1 /dev/null |grep name)" != "" ];then echo ${next_json%?};exit 0;else TYPE_JSON="string" STATUS_JSON="FAIL" TOTAL_JSON="Not Found query name : ${beeCMD[0]}";fi
       beejson
     ;;
   esac

@@ -1,5 +1,6 @@
 #!/bin/bash
 beecmdpath="/usr/bin/beecmd"
+beecmd_URL="https://raw.githubusercontent.com/NexClipper/provbee/master/scripts"
 busybeecmd=$@
 beecmdlog="/tmp/busybee.log"
 KUBENAMESPACE="nex-system"
@@ -45,6 +46,7 @@ while read beeA beeCMD ; do
   alertsvr_DNS="http://nc-prometheus-alertmanager.$runbeeNS.svc.cluster.local"
   promscale_DNS="http://nc-promscale-connector.$runbeeNS.svc.cluster.local:9201"
   case $beeA in
+  #CMD_LIST_PRINT_START#
     ######### bee status check
     beestatus) provbeestatus ;;
 
@@ -75,13 +77,16 @@ while read beeA beeCMD ; do
     ######### MetricArk Info 
     metricark) source $beecmdpath/metricark.sh ${beeCMD[@]} ;; 
 
+  #CMD_LIST_PRINT_END#
     ## update busybee
     update) 
-    curl -sL https://raw.githubusercontent.com/NexClipper/provbee/master/scripts/busybee.sh -o /tmp/busybee
-    cp -Rfp /tmp/busybee /usr/bin/busybee
-    chmod -R +x /usr/bin/beecmd/
-    chmod +x /usr/bin/busybee
-    rm -rf /tmp/busybee 
+      curl -sL $beecmd_URL/busybee.sh -o /tmp/busybee
+      chmod -R +x /tmp/busybee ;cp -Rfp /tmp/busybee /usr/bin/busybee ;rm -rf /tmp/busybee 
+      cmdlist=$(awk -F" |/" '/\$beecmdpath/{print $8}' /usr/bin/busybee)
+      for i in $cmdlist ;do
+	      curl -sL $beecmd_URL/beecmd/$i -o /usr/bin/beecmd/$i
+	      chmod +x /usr/bin/beecmd/$i
+      done
     ;;
 
     help|*) info "for NexClipper System....";;
