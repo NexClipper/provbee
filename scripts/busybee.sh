@@ -77,6 +77,9 @@ while read beeA beeCMD ; do
     ######### MetricArk Info 
     metricark) source $beecmdpath/metricark.sh ${beeCMD[@]} ;; 
 
+    ######### MetricArk PromQL 
+    metricark_promql) source $beecmdpath/metricark_promql.sh ${beeCMD[@]} ;; 
+
   #CMD_LIST_PRINT_END#
     ## update busybee
     update) 
