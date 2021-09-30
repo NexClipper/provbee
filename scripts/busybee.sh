@@ -85,7 +85,7 @@ while read beeA beeCMD ; do
     update) 
       curl -sL $beecmd_URL/busybee.sh -o /tmp/busybee
       chmod -R +x /tmp/busybee ;cp -Rfp /tmp/busybee /usr/bin/busybee ;rm -rf /tmp/busybee 
-      cmdlist=$(awk -F" |/" '/\$beecmdpath/{print $8}' /usr/bin/busybee)
+      cmdlist=$(awk -F" |/" '/\$beecmdpath\/.*.sh/{print $8}' /usr/bin/busybee)
       for i in $cmdlist ;do
 	      curl -sL $beecmd_URL/beecmd/$i -o /usr/bin/beecmd/$i
 	      chmod +x /usr/bin/beecmd/$i
