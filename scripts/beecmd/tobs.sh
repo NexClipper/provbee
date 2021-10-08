@@ -26,7 +26,8 @@ tobscmd(){
         tobszzz=$((tobszzz+1))
         tobs_status=$(kubectl get pods -n ${beeCMD[1]} 2>/dev/null |egrep ^nc-|egrep -v 'unning.|ompleted'|wc -l) 
         sleep 3
-        if [ $tobszzz == "99" ]; then STATUS_JSON="FAIL"; tobsinst_status="tobs running check Time out";beejson; exit 0;fi
+        #if [ $tobszzz == "99" ]; then STATUS_JSON="FAIL"; tobsinst_status="tobs running check Time out";beejson; exit 0;fi
+        if [ $tobszzz == "199" ]; then STATUS_JSON="FAIL"; tobsinst_status="tobs running check Time out";beejson; exit 0;fi
       done
     ###
       provbeens=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
@@ -63,7 +64,8 @@ tobscmd(){
           ipchkzzz=$((ipchkzzz+1))
           lb_ip_info=$(kubectl get service nc-promscale-connector -n ${beeCMD[1]} -o jsonpath='{.status.loadBalancer.ingress[]}'|jq -r 'if .ip !=null then (.ip) else (.hostname) end')
           sleep 3
-          if [ $ipchkzzz == "20" ]; then STATUS_JSON="FAIL";lb_ip_info="Pending"; fi
+          #if [ $ipchkzzz == "20" ]; then STATUS_JSON="FAIL";lb_ip_info="Pending"; fi
+          if [ $ipchkzzz == "40" ]; then STATUS_JSON="FAIL";lb_ip_info="Pending"; fi
         done  
         lb_port_info=$(kubectl get service nc-promscale-connector -n ${beeCMD[1]} -o jsonpath='{range .spec.ports[*]}{.port}{"\n"}{end}')
         promscale_info="${lb_ip_info}:${lb_port_info}"
