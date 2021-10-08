@@ -30,9 +30,13 @@ cputype(){
 ### default check
 default_chk(){
 # Provbee, Klevr-agent tag check
-  if [[ $TAGREPO == "" ]]; then TAGREPO="public.ecr.aws" ; else info "Image Repo : $TAGREPO ";fi
-  if [[ $TAGPROV == "" ]]; then TAGPROV="latest" ; else info "Provbee Image Tag : $TAGPROV ";fi
-  if [[ $TAGKLEVR == "" ]]; then TAGKLEVR="latest" ; else info "Klevr Image Tag : $TAGKLEVR ";fi
+TAGREPO="${TAGREPO:-public.ecr.aws}"; info "Image Repo : $TAGREPO "
+TAGPROV="${TAGPROV:-latest}"; info "Provbee Image Tag : $TAGPROV " 
+TAGKLEVR="${TAGKLEVR:-latest}"; info "Klevr Image Tag : $TAGKLEVR "
+
+#  if [[ $TAGREPO == "" ]]; then TAGREPO="public.ecr.aws" ; else info "Image Repo : $TAGREPO ";fi
+#  if [[ $TAGPROV == "" ]]; then TAGPROV="latest" ; else info "Provbee Image Tag : $TAGPROV ";fi
+#  if [[ $TAGKLEVR == "" ]]; then TAGKLEVR="latest" ; else info "Klevr Image Tag : $TAGKLEVR ";fi
 
 # Klevr Value check
   if [[ $K_API_KEY == "" ]] || [[ $K_PLATFORM == "" ]] || [[ $K_MANAGER_URL == "" ]] || [[ $K_ZONE_ID == "" ]]; then
