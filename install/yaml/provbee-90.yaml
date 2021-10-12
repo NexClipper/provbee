@@ -32,6 +32,7 @@ spec:
       containers:
       - name: provbee
         image: ${TAGREPO}/nexclipper/provbee:${TAGPROV}
+        imagePullPolicy: Always
         command: ['bash', '-c', '/entrypoint.sh']
 #        resources:
 #          requests:
