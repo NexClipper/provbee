@@ -80,6 +80,9 @@ while read beeA beeCMD ; do
     ######### MetricArk PromQL 
     metricark_promql) source $beecmdpath/metricark_promql.sh ${beeCMD[@]} ;; 
 
+    ######### MetricArk OpensatackNodes
+    metricark_openstack_nodes) source $beecmdpath/metricark_openstack.sh ${beeCMD[@]} ;; 
+
     ######### Grafana API 
     grafana) source $beecmdpath/grafana.sh ${beeCMD[@]} ;;
 
