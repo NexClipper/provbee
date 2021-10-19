@@ -7,7 +7,7 @@ domainId=${beeCMD[1]}
 #############################################
 metricark_OpenstackNodes(){
 ql_string="projectName=$projectName&domainId=$domainId"
-BEE_INFO="Openstack Nodes"
+BEE_INFO="nodes"
 query_value=$(curl -sL "${metricark_openstack_nodes}?$ql_string")
 echo $query_value
 if [ $(echo $query_value|jq '.response_code') -eq 200 ]; then
