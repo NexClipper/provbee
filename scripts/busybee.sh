@@ -82,6 +82,9 @@ while read beeA beeCMD ; do
 
     ######### MetricArk OpensatackNodes
     metricark_openstack_nodes) source $beecmdpath/metricark_openstack.sh ${beeCMD[@]} ;; 
+    
+    ######### MetricArk Api query 
+    metricark) source $beecmdpath/metricark_api.sh ${beeCMD[@]} ;; 
 
     ######### Grafana API 
     grafana) source $beecmdpath/grafana.sh ${beeCMD[@]} ;;
