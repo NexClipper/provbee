@@ -7,7 +7,7 @@ apiUri=${beeCMD[0]}
 params=${beeCMD[1]}
 p8sEP=${beeCMD[2]}
 #############################################
-metricark_promql(){
+metricark_queryapi(){
 ql_string="${params}&endpoint=$p8sEP"
 BEE_INFO="Api Query"
 query_value=$(curl -sL "${metricark_base_uri}${apiUri}?$ql_string")
@@ -32,4 +32,4 @@ else
 fi
 echo $BEE_JSON
 }
-metricark_promql
+metricark_queryapi
