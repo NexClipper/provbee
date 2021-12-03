@@ -7,7 +7,7 @@ promQL=${beeCMD[0]}
 p8sEP=${beeCMD[1]}
 #############################################
 metricark_promql(){
-ql_string="promql=$promQL&endpoint=$p8sSVR"
+ql_string="promql=$promQL&endpoint=$p8sEP"
 BEE_INFO="P8S Query"
 query_value=$(curl -sL "${metricark_promQL}?$ql_string")
 if [ $(echo $query_value|jq '.response_code') -eq 200 ]; then
