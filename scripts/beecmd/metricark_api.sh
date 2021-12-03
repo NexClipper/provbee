@@ -4,7 +4,7 @@ TYPE_JSON="base64"
 #metricark_DNS="http://metricark-api.nex-system.svc.cluster.local:9000/v1/cluster/1/query/key/kubernetes/field"
 metricark_base_uri="http://metricark-api.nex-system.svc.cluster.local:9000"
 apiUri=${beeCMD[0]}
-params=${beeCMD[1]}
+params=$(echo ${beeCMD[1]} | base64 -d)
 p8sEP=${beeCMD[2]}
 #############################################
 metricark_queryapi(){
