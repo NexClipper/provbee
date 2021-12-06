@@ -5,7 +5,6 @@ TYPE_JSON="base64"
 metricark_base_uri="http://metricark-api.nex-system.svc.cluster.local:9000"
 apiUri=${beeCMD[0]}
 params=$(echo ${beeCMD[1]} | base64 -d)
-#p8sEP=${beeCMD[2]}
 #############################################
 metricark_queryapi(){
 ql_string="${params}"
