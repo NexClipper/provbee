@@ -5,9 +5,10 @@ TYPE_JSON="base64"
 metricark_base_uri="http://metricark-api.nex-system.svc.cluster.local:9000"
 apiUri=${beeCMD[0]}
 params=$(echo ${beeCMD[1]} | base64 -d)
+openstackEP=${beeCMD[2]}
 #############################################
 metricark_queryapi(){
-ql_string="${params}"
+ql_string="${params}&endpoint=$openstackEP"
 BEE_INFO="Api Query"
 query_value=$(curl -sL "${metricark_base_uri}${apiUri}?$ql_string")
 if [ $(echo $query_value|jq '.response_code') -eq 200 ]; then
