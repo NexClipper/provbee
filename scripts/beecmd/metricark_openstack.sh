@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TYPE_JSON="base64"
-metricark_openstack_nodes="http://metricark-api.nex-system.svc.cluster.local:9000/v1/nodes"
+metricark_openstack_nodes="http://metricark-api.nex-system.svc.cluster.local:9000/v0/servers/detail"
 projectName=${beeCMD[0]}
 domainId=${beeCMD[1]}
 #############################################
